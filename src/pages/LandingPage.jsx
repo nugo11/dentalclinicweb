@@ -104,7 +104,8 @@ const LandingPage = ({ user }) => {
           city: doc.data().city || "თბილისი",
           category: (doc.data().plan || "Solo").toUpperCase(),
           promo: doc.data().description || "სტომატოლოგიური კლინიკა DentalHub-ის პარტნიორი.",
-          logoUrl: doc.data().logoUrl || null
+          logoUrl: doc.data().logoUrl || null,
+          address: doc.data().address || ""
         }));
         
         if (list.length > 0) {
@@ -131,32 +132,125 @@ const LandingPage = ({ user }) => {
     <div className="min-h-screen bg-white font-nino selection:bg-brand-purple/10 overflow-x-hidden">
       <MainHeader user={user} />
 
-      {/* 2. Hero Section - WHITE BG */}
-      <section className="min-h-screen flex items-center px-4 md:px-6 bg-white relative">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center w-full relative z-10">
+      {/* 2. Hero Section - ENHANCED */}
+      <section className="min-h-screen flex items-center px-4 md:px-6 bg-white relative overflow-hidden">
+        {/* Background Ornaments */}
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-brand-purple/5 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #7C3AED 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center w-full relative z-10 pt-20 md:pt-0">
           <div className="animate-in fade-in slide-in-from-left-10 duration-1000">
-            <SectionTag>Premium Software</SectionTag>
-            <h1 className="text-5xl md:text-7xl font-black text-brand-deep leading-[1.1] mb-8 tracking-tighter italic">
+            <div className="flex items-center gap-2 mb-6">
+              <SectionTag>Premium Software 2026</SectionTag>
+              <div className="flex -space-x-3 mb-6">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 overflow-hidden shadow-sm">
+                    <img src={`https://i.pravatar.cc/100?u=${i}`} alt="User" />
+                  </div>
+                ))}
+                <div className="w-8 h-8 rounded-full border-2 border-white bg-brand-purple text-white text-[8px] font-black flex items-center justify-center shadow-sm">
+                  +1k
+                </div>
+              </div>
+            </div>
+
+            <h1 className="text-5xl md:text-8xl font-black text-brand-deep leading-[0.9] mb-8 tracking-tighter italic">
               მართე კლინიკა <br />
-              <span className="text-brand-purple font-black">ციფრულად.</span>
+              <span className="bg-gradient-to-r from-brand-purple to-blue-600 bg-clip-text text-transparent">ციფრულად.</span>
             </h1>
-            <p className="text-lg text-gray-500 mb-10 max-w-lg leading-relaxed font-medium">
-              გაამარტივეთ პაციენტებთან ურთიერთობა და გაზარდეთ კლინიკის
-              ეფექტურობა ჩვენი ინტელექტუალური პლატფორმით.
+            
+            <p className="text-lg md:text-xl text-gray-500 mb-10 max-w-xl leading-relaxed font-medium italic">
+              DentalHub არის ყველაზე მოქნილი პლატფორმა ქართული სტომატოლოგიური კლინიკებისთვის. გაზარდეთ შემოსავალი 40%-ით პირველივე თვეში.
             </p>
-            <Link
-              to="/auth"
-              className="bg-brand-purple text-white px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-brand-purple/30 hover:-translate-y-1 transition-all flex items-center gap-3 w-fit"
-            >
-              დაიწყე უფასოდ <ArrowRight size={20} />
-            </Link>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                to="/auth"
+                className="bg-brand-purple text-white px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-brand-purple/30 hover:bg-brand-deep hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group"
+              >
+                დაიწყე უფასოდ <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+              </Link>
+              <a href="#features" className="px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest text-brand-deep border-2 border-slate-100 hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
+                <Play size={18} fill="currentColor" /> დემო ვერსია
+              </a>
+            </div>
+
+            <div className="mt-12 grid grid-cols-3 gap-8 border-t border-slate-100 pt-10">
+              <div>
+                <p className="text-2xl font-black text-brand-deep italic">100+</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-1">კლინიკა</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black text-brand-deep italic">50k+</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-1">პაციენტი</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black text-brand-deep italic">99.9%</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mt-1">Uptime</p>
+              </div>
+            </div>
           </div>
-          <div className="relative hidden lg:block">
-            <img
-              src="https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&q=80&w=1200"
-              className="relative rounded-[40px] shadow-2xl border-[12px] border-white object-cover h-[500px] w-full"
-              alt="Dental"
-            />
+
+          <div className="relative animate-in fade-in zoom-in duration-1000 delay-300">
+            <div className="relative z-10 rounded-[56px] overflow-hidden shadow-[0_50px_100px_-20px_rgba(124,58,237,0.25)] border-[16px] border-white">
+              <img
+                src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200"
+                className="w-full h-[600px] object-cover group-hover:scale-110 transition-transform duration-1000"
+                alt="Dental Tech"
+              />
+            </div>
+            
+            {/* Floating Stats Card */}
+            <div className="absolute -left-12 top-1/4 bg-white/80 backdrop-blur-xl p-6 rounded-[32px] shadow-2xl border border-white/50 animate-bounce-slow hidden md:block z-20">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                  <Activity size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Live Analytics</p>
+                  <p className="text-lg font-black text-brand-deep italic">+24% Growth</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating User Card */}
+            <div className="absolute -right-8 bottom-1/4 bg-brand-deep text-white p-6 rounded-[32px] shadow-2xl animate-bounce-slow delay-500 hidden md:block z-20">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-brand-purple rounded-2xl flex items-center justify-center">
+                  <Users size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">New Appointment</p>
+                  <p className="text-lg font-black italic">John Doe</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- How It Works Section --- */}
+      <section className="py-24 bg-slate-50/50 border-y border-slate-100 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="md:col-span-1">
+               <SectionTag>Work Process</SectionTag>
+               <h2 className="text-3xl font-black text-brand-deep italic tracking-tighter uppercase leading-none">როგორ <br />ვმუშაობთ?</h2>
+            </div>
+            {[
+              { title: "რეგისტრაცია", desc: "შექმენი პროფილი 1 წუთში", icon: User },
+              { title: "პერსონალიზაცია", desc: "მოარგე სისტემა შენს საჭიროებებს", icon: Sparkles },
+              { title: "ავტომატიზაცია", desc: "დაიწყე მუშაობა და დაზოგე დრო", icon: Zap }
+            ].map((step, i) => (
+              <div key={i} className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
+                <div className="w-14 h-14 bg-slate-50 text-brand-purple rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand-purple group-hover:text-white transition-all">
+                  <step.icon size={24} />
+                </div>
+                <h4 className="text-lg font-black text-brand-deep italic mb-2 uppercase">{step.title}</h4>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -273,29 +367,54 @@ const LandingPage = ({ user }) => {
         </div>
       </section>
 
-      {/* 4. Features Section - WHITE BG */}
-      <section id="features" className="py-32 px-6 bg-white">
+      {/* 4. Features Section - ENHANCED */}
+      <section id="features" className="py-32 px-6 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto text-center mb-20">
           <SectionTag>შესაძლებლობები</SectionTag>
-          <h2 className="text-4xl md:text-5xl font-black text-brand-deep tracking-tighter mb-6">
-            ყველაფერი ერთ სივრცეში
-          </h2>
+          <h2 className="text-4xl md:text-6xl font-black text-brand-deep tracking-tighter mb-6 italic leading-none">ყველაფერი ერთ <br /><span className="text-brand-purple">ციფრულ სივრცეში</span></h2>
+          <p className="text-gray-400 font-medium max-w-2xl mx-auto italic">ჩვენი ფუნქციონალი შექმნილია იმისთვის, რომ ექიმს მეტი დრო დარჩეს პაციენტისთვის.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           <FeatureCard
             icon={Users}
             title="პაციენტთა CRM"
-            desc="სრული სამედიცინო ბარათები, რენტგენის არქივი და მკურნალობის ისტორია."
+            desc="სრული სამედიცინო ბარათები, რენტგენის არქივი, მკურნალობის ისტორია და პერსონალური მონაცემების დაცვა."
           />
           <FeatureCard
             icon={Zap}
             title="ავტო-ჯავშნები"
-            desc="ონლაინ რეგისტრაცია პაციენტებისთვის და ავტომატური SMS შეხსენებები."
+            desc="ონლაინ რეგისტრაცია პაციენტებისთვის 24/7, ავტომატური SMS/WhatsApp შეხსენებები და კალენდრის სინქრონიზაცია."
           />
           <FeatureCard
             icon={BarChart3}
             title="ანალიტიკა"
-            desc="დეტალური ფინანსური რეპორტები და კლინიკის ზრდის მაჩვენებლები."
+            desc="დეტალური ფინანსური რეპორტები, ექიმების ეფექტურობის მონიტორინგი და კლინიკის ზრდის პროგნოზირება."
+          />
+          <FeatureCard
+            icon={Shield}
+            title="უსაფრთხოება"
+            desc="მონაცემთა ყოველდღიური დაშიფრული რეზერვირება (Backup) და წვდომის კონტროლი როლების მიხედვით."
+          />
+          <FeatureCard
+            icon={Stethoscope}
+            title="კბილების რუკა"
+            desc="ინტერაქტიული 3D-სტილის კბილების რუკა, რომელიც საშუალებას გაძლევთ მონიშნოთ პრობლემები 1 წამში."
+          />
+          <FeatureCard
+            icon={Activity}
+            title="EHR სინქრონიზაცია"
+            desc="მონაცემთა ავტომატური გაცვლა სახელმწიფო EHR სისტემასთან (ფორმა 100-ის გენერირება)."
+          />
+          <FeatureCard
+            icon={Clock}
+            title="სამუშაო გრაფიკი"
+            desc="ექიმების სამუშაო საათების მართვა, შვებულებების და ცვლების მარტივი დაგეგმვა."
+          />
+          <FeatureCard
+            icon={CheckCircle2}
+            title="ინვოისები"
+            desc="პროფესიონალური ინვოისების და ჩეკების ბეჭდვა, სადაზღვევო კომპანიებთან ანგარიშსწორება."
           />
         </div>
       </section>
@@ -386,7 +505,7 @@ const LandingPage = ({ user }) => {
               ხშირად დასმული კითხვები
             </h2>
           </div>
-          <div className="grid lg:grid-cols-2 gap-x-8">
+          <div className="grid lg:grid-cols-2 gap-x-8 items-start">
             <FAQItem
               question="რამდენი ხანი სჭირდება დანერგვას?"
               answer="სისტემის გამართვა და პერსონალის ტრენინგი სულ რაღაც 1-2 სამუშაო დღეში სრულდება."
@@ -566,20 +685,20 @@ const LandingPage = ({ user }) => {
 
 // --- შვილობილი კომპონენტები ---
 const FeatureCard = ({ icon: Icon, title, desc }) => (
-  <div className="p-12 bg-bg-soft rounded-[40px] border border-gray-100 hover:bg-white hover:shadow-2xl transition-all duration-500 group">
+  <div className="p-8 md:p-12 bg-bg-soft rounded-[40px] border border-gray-100 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 group">
     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-brand-purple mb-8 group-hover:bg-brand-purple group-hover:text-white transition-all shadow-sm">
       <Icon size={30} />
     </div>
-    <h3 className="text-2xl font-black text-brand-deep mb-4 tracking-tighter leading-none italic">
+    <h3 className="text-xl md:text-2xl font-black text-brand-deep mb-4 tracking-tighter leading-none italic uppercase">
       {title}
     </h3>
-    <p className="text-gray-500 font-medium text-sm leading-relaxed tracking-tight italic">
+    <p className="text-gray-500 font-medium text-xs md:text-sm leading-relaxed tracking-tight italic">
       {desc}
     </p>
   </div>
 );
 
-const CatalogClinicCard = ({ id, name, city, category, promo, logoUrl }) => (
+const CatalogClinicCard = ({ id, name, city, address, category, promo, logoUrl }) => (
   <Link to={`/catalog/${id}`} className="block h-full group">
     <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full relative overflow-hidden">
       <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
@@ -605,7 +724,7 @@ const CatalogClinicCard = ({ id, name, city, category, promo, logoUrl }) => (
         </h4>
         <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-6">
           <MapPin size={12} className="text-brand-purple" />
-          {city}
+          {city}${address ? `, ${address}` : ''}
         </div>
         <p className="text-sm font-medium text-gray-500 leading-relaxed italic line-clamp-4">{promo}</p>
       </div>

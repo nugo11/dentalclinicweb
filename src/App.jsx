@@ -23,6 +23,8 @@ import SuspendedPage from "./pages/SuspendedPage";
 import Documentation from "./pages/Documentation";
 import ClinicPortfolio from "./pages/settings/ClinicPortfolio";
 import ClinicPublicProfile from "./pages/ClinicPublicProfile";
+import SalaryArchive from "./pages/SalaryArchive";
+import ActivityLog from "./pages/ActivityLog";
 
 // დამხმარე კომპონენტი დაცული როუტებისთვის (RBAC)
 const PrivateRoute = ({ children, title, allowedRoles = [] }) => {
@@ -125,6 +127,12 @@ function AppContent() {
           </PrivateRoute>
         } />
         
+        <Route path="/salary-archive" element={
+          <PrivateRoute title="ხელფასების არქივი" allowedRoles={['admin', 'manager', 'accountant']}>
+            <SalaryArchive />
+          </PrivateRoute>
+        } />
+        
         <Route path="/settings/billing" element={
           <PrivateRoute title="პაკეტის მართვა" allowedRoles={['admin']}>
             <Billing />
@@ -140,6 +148,12 @@ function AppContent() {
         <Route path="/settings" element={
           <PrivateRoute title="პარამეტრები" allowedRoles={['admin', 'manager', 'doctor']}>
             <Settings />
+          </PrivateRoute>
+        } />
+
+        <Route path="/activity-log" element={
+          <PrivateRoute title="აქტივობების ჟურნალი" allowedRoles={['admin', 'manager']}>
+            <ActivityLog />
           </PrivateRoute>
         } />
 

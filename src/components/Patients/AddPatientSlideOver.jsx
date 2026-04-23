@@ -8,9 +8,10 @@ import {
 } from 'lucide-react';
 import { transliterateToGeorgian } from '../../utils/transliterateKa';
 import FormInput from '../Common/FormInput';
+import { logActivity } from '../../utils/activityLogger';
 
 const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
-  const { clinicData, userData } = useAuth();
+  const { clinicData, userData, activeStaff } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -55,7 +56,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
       if (!user) throw new Error("ავტორიზაცია საჭიროა");
       const clinicId = userData?.clinicId || user.uid;
 
-      await addDoc(collection(db, "patients"), {
+      const newPatient = await addDoc(collection(db, "patients"), {
         ...formData,
         clinicId,
         createdAt: serverTimestamp(),
@@ -63,6 +64,9 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
         appointmentCount: 0,
         status: 'active'
       });
+
+      // LOG ACTIVITY
+      await logActivity(clinicId, activeStaff || userData || { uid: user.uid, fullName: 'Unknown', role: 'unknown' }, 'patient_create', `დაემატა ახალი პაციენტი: ${formData.fullName}`, { patientId: newPatient.id, patientName: formData.fullName });
 
       onClose();
       setFormData({ 

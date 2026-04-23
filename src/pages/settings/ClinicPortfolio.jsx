@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { db } from "../../firebase";
+import { db, auth } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { PLANS } from "../../config/plans";
 import Sidebar from "../../components/Dashboard/Sidebar";
@@ -20,9 +20,11 @@ import {
   Camera,
   CheckCircle2,
   Plus,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { logActivity } from "../../utils/activityLogger";
 
 const DIRECTIONS = [
   "ბავშვთა ქირურგია",
@@ -50,6 +52,13 @@ const DIRECTIONS = [
   "კბილების გათეთრება",
   "რენტგენო-დიაგნოსტიკა"
 ];
+const UpgradeOverlay = ({ title }) => (
+  <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-slate-200 group-hover:border-brand-purple/20 transition-all">
+     <Lock className="text-slate-400 mb-2" size={24} />
+     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">{title || "Upgrade Required"}</p>
+     <Link to="/settings/billing" className="px-4 py-2 bg-brand-purple text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">გაუმჯობესება</Link>
+  </div>
+);
 
 const ClinicPortfolio = () => {
   const { clinicData, isAdmin } = useAuth();
@@ -69,7 +78,11 @@ const ClinicPortfolio = () => {
     workingHours: "",
     mapUrl: "",
     specialties: [],
-    isPublic: false
+    isPublic: false,
+    legalName: "",
+    idCode: "",
+    bankAccounts: [{ bankName: "", iban: "" }],
+    stampUrl: ""
   });
 
   useEffect(() => {
@@ -84,7 +97,11 @@ const ClinicPortfolio = () => {
         workingHours: clinicData.workingHours || "09:00 - 19:00",
         mapUrl: clinicData.mapUrl || "",
         specialties: clinicData.specialties || [],
-        isPublic: clinicData.isPublic || false
+        isPublic: clinicData.isPublic || false,
+        legalName: clinicData.legalName || "",
+        idCode: clinicData.idCode || "",
+        bankAccounts: clinicData.bankAccounts || [{ bankName: "", iban: "" }],
+        stampUrl: clinicData.stampUrl || ""
       });
     }
   }, [clinicData]);
@@ -97,10 +114,10 @@ const ClinicPortfolio = () => {
   }, [toast]);
 
   const planKey = (clinicData?.plan || "free").toLowerCase();
-  const plan = PLANS[planKey] || PLANS.free;
+  const plan = planKey === "solo" ? PLANS.basic : (PLANS[planKey] || PLANS.free);
   const features = plan.portfolioFeatures;
 
-  const compressImage = (file) => {
+  const compressImage = (file, isStamp = false) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -109,15 +126,28 @@ const ClinicPortfolio = () => {
         img.src = event.target.result;
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 400;
-          const scaleSize = MAX_WIDTH / img.width;
-          canvas.width = MAX_WIDTH;
-          canvas.height = img.height * scaleSize;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          if (isStamp) {
+            const size = 600;
+            canvas.width = size;
+            canvas.height = size;
+            const scale = Math.min(size / img.width, size / img.height);
+            const x = (size / 2) - (img.width / 2) * scale;
+            const y = (size / 2) - (img.height / 2) * scale;
+            ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+          } else {
+            const MAX_WIDTH = 600;
+            const scaleSize = MAX_WIDTH / img.width;
+            canvas.width = MAX_WIDTH;
+            canvas.height = img.height * scaleSize;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+          
+          const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
           canvas.toBlob((blob) => {
             resolve(blob);
-          }, 'image/jpeg', 0.7);
+          }, type, 0.8);
         };
       };
     });
@@ -129,33 +159,64 @@ const ClinicPortfolio = () => {
     
     setUploading(true);
     try {
-      const compressedBlob = await compressImage(file);
-    // Cloudinary upload logic
-    const CLOUD_NAME = "dxyhm9ftw"; // Use the provided Cloud Name
-    const UPLOAD_PRESET = "ml_default"; // Use the provided Upload Preset
+      const compressedBlob = await compressImage(file, false);
+      const CLOUD_NAME = "dxyhm9ftw";
+      const UPLOAD_PRESET = "ml_default";
 
-    const uploadData = new FormData();
-    uploadData.append("file", compressedBlob); // Cloudinary uses 'file' as the key for the upload
-    uploadData.append("upload_preset", UPLOAD_PRESET); // Append the upload preset
+      const uploadData = new FormData();
+      uploadData.append("file", compressedBlob);
+      uploadData.append("upload_preset", UPLOAD_PRESET);
 
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-      method: "POST",
-      body: uploadData,
-    });
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: uploadData,
+      });
 
-    const result = await response.json();
-
-    if (result.secure_url) { // Cloudinary response structure
-      setFormData(prev => ({ ...prev, logoUrl: result.secure_url }));
-      setToast({ type: "success", text: "ლოგო აიტვირთა!" });
-    } else {
-      console.error("Cloudinary Error:", result);
-      // Cloudinary errors might be in result.error.message or similar
-      throw new Error(result.error?.message || "Upload failed");
-    }
+      const result = await response.json();
+      if (result.secure_url) {
+        setFormData(prev => ({ ...prev, logoUrl: result.secure_url }));
+        setToast({ type: "success", text: "ლოგო აიტვირთა!" });
+      }
     } catch (error) {
       console.error(error);
-      setToast({ type: "error", text: `შეცდომა: ${error.message}` });
+      setToast({ type: "error", text: "ლოგოს ატვირთვა ვერ მოხერხდა" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleStampUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'image/png') {
+      setToast({ type: "error", text: "შტამპისთვის დაშვებულია მხოლოდ PNG ფორმატი!" });
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      const compressedBlob = await compressImage(file, true);
+      const CLOUD_NAME = "dxyhm9ftw";
+      const UPLOAD_PRESET = "ml_default";
+
+      const uploadData = new FormData();
+      uploadData.append("file", compressedBlob);
+      uploadData.append("upload_preset", UPLOAD_PRESET);
+
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: uploadData,
+      });
+
+      const result = await response.json();
+      if (result.secure_url) {
+        setFormData(prev => ({ ...prev, stampUrl: result.secure_url }));
+        setToast({ type: "success", text: "შტამპი აიტვირთა!" });
+      }
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "error", text: "შენახვა ვერ მოხერხდა" });
     } finally {
       setUploading(false);
     }
@@ -163,14 +224,25 @@ const ClinicPortfolio = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!isAdmin) return;
+    if (!isAdmin || !clinicData?.id) return;
     setLoading(true);
     try {
       const clinicRef = doc(db, "clinics", clinicData.id);
+      
+      // Extract URL if user pasted full iframe tag
+      const mapUrlValue = formData.mapUrl.includes('src="') 
+        ? formData.mapUrl.split('src="')[1].split('"')[0] 
+        : formData.mapUrl;
+
       await updateDoc(clinicRef, {
         ...formData,
+        mapUrl: mapUrlValue,
         updatedAt: new Date().toISOString()
       });
+
+      // LOG ACTIVITY
+      await logActivity(clinicData.id, { uid: auth.currentUser.uid, fullName: clinicData.clinicName, role: 'admin' }, 'settings_update', 'განახლდა კლინიკის პარამეტრები და პორტფოლიო', { clinicId: clinicData.id });
+
       setToast({ type: "success", text: "მონაცემები შენახულია!" });
     } catch (error) {
       console.error(error);
@@ -201,13 +273,7 @@ const ClinicPortfolio = () => {
     setCustomDir("");
   };
 
-  const UpgradeOverlay = ({ title }) => (
-    <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-slate-200 group-hover:border-brand-purple/20 transition-all">
-       <Lock className="text-slate-400 mb-2" size={24} />
-       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">{title || "Upgrade Required"}</p>
-       <Link to="/settings/billing" className="px-4 py-2 bg-brand-purple text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">გაუმჯობესება</Link>
-    </div>
-  );
+
 
   return (
     <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
@@ -226,9 +292,12 @@ const ClinicPortfolio = () => {
               </div>
               <div className="flex items-center gap-3">
                 {toast.text && (
-                  <div className={`px-5 py-3 rounded-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300 text-[11px] font-black uppercase tracking-widest ${
-                    toast.type === "success" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
+                  <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-3xl shadow-2xl border flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 text-[11px] font-black uppercase tracking-widest ${
+                    toast.type === "success" 
+                      ? "bg-white text-emerald-600 border-emerald-100" 
+                      : "bg-white text-red-500 border-red-100"
                   }`}>
+                    {toast.type === "success" ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
                     {toast.text}
                   </div>
                 )}
@@ -310,10 +379,10 @@ const ClinicPortfolio = () => {
                            {formData.specialties.filter(s => !DIRECTIONS.includes(s)).map(s => (
                               <button 
                                 key={s} type="button" onClick={() => toggleSpecialty(s)}
-                                className="flex items-center justify-between p-4 rounded-2xl border bg-brand-purple text-white border-brand-purple"
+                                className="flex items-center justify-between p-4 rounded-2xl border bg-brand-purple text-white border-brand-purple hover:bg-red-500 hover:border-red-500 transition-all group/item"
                               >
                                  <span className="text-[11px] font-black uppercase tracking-tight">{s}</span>
-                                 <X size={14} />
+                                 <X size={14} className="opacity-50 group-hover/item:opacity-100" />
                               </button>
                            ))}
                         </div>
@@ -333,12 +402,93 @@ const ClinicPortfolio = () => {
                            {!features.canShowPhone && <UpgradeOverlay title="Solo / Pro Required" />}
                         </div>
                         <div className="relative group">
+                           <FormInput label="მისამართი" icon={MapPin} value={formData.address} onChange={val => setFormData({...formData, address: val})} />
+                        </div>
+                        <div className="relative group">
                            <FormInput label="სამუშაო საათები" icon={Clock} value={formData.workingHours} onChange={val => setFormData({...formData, workingHours: val})} className={!features.canShowHours ? "opacity-30 pointer-events-none" : ""} />
                            {!features.canShowHours && <UpgradeOverlay title="Solo / Pro Required" />}
                         </div>
                         <div className="relative group">
                            <FormInput label="Google Maps (Iframe Src)" icon={Globe} value={formData.mapUrl} onChange={val => setFormData({...formData, mapUrl: val})} className={!features.canShowMap ? "opacity-30 pointer-events-none" : ""} />
                            {!features.canShowMap && <UpgradeOverlay title="Clinic Plus Required" />}
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
+                     <div className="flex items-center gap-3">
+                        <Lock className="text-brand-purple" size={20} />
+                        <h3 className="text-sm font-black uppercase tracking-widest text-brand-deep italic">იურიდიული მონაცემები (ინვოისისთვის)</h3>
+                     </div>
+
+                     <div className="space-y-6">
+                        <FormInput label="კომპანიის იურიდიული დასახელება" value={formData.legalName} onChange={val => setFormData({...formData, legalName: val})} />
+                        <FormInput label="საიდენტიფიკაციო კოდი" value={formData.idCode} onChange={val => setFormData({...formData, idCode: val})} />
+                        
+                        <div className="space-y-4 pt-4 border-t border-slate-50">
+                           <div className="flex justify-between items-center">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">საბანკო რეკვიზიტები</p>
+                              <button 
+                                 type="button" 
+                                 onClick={() => setFormData(prev => ({ ...prev, bankAccounts: [...prev.bankAccounts, { bankName: "", iban: "" }] }))}
+                                 className="text-[10px] font-black text-brand-purple hover:text-brand-deep flex items-center gap-1"
+                              >
+                                 <Plus size={14} /> ბანკის დამატება
+                              </button>
+                           </div>
+                           
+                           {formData.bankAccounts.map((acc, index) => (
+                              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl relative group/bank">
+                                 <FormInput 
+                                    label="მიმღები ბანკი" 
+                                    value={acc.bankName} 
+                                    onChange={val => {
+                                       const newBanks = [...formData.bankAccounts];
+                                       newBanks[index].bankName = val;
+                                       setFormData({...formData, bankAccounts: newBanks});
+                                    }} 
+                                 />
+                                 <FormInput 
+                                    label="საბანკო ანგარიში (IBAN)" 
+                                    value={acc.iban} 
+                                    onChange={val => {
+                                       const newBanks = [...formData.bankAccounts];
+                                       newBanks[index].iban = val;
+                                       setFormData({...formData, bankAccounts: newBanks});
+                                    }} 
+                                 />
+                                 {formData.bankAccounts.length > 1 && (
+                                    <button 
+                                       type="button" 
+                                       onClick={() => {
+                                          const newBanks = formData.bankAccounts.filter((_, i) => i !== index);
+                                          setFormData({...formData, bankAccounts: newBanks});
+                                       }}
+                                       className="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/bank:opacity-100 transition-all shadow-lg"
+                                    >
+                                       <X size={12} />
+                                    </button>
+                                 )}
+                              </div>
+                           ))}
+                        </div>
+                        
+                        <div className="pt-4 border-t border-slate-50">
+                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">კლინიკის შტამპი / ბეჭედი</p>
+                           <div className="flex items-center gap-6">
+                              <div className="w-24 h-24 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden relative group/stamp">
+                                 {formData.stampUrl ? (
+                                   <img src={formData.stampUrl} className="w-full h-full object-contain" alt="Stamp" />
+                                 ) : (
+                                   <Camera className="text-slate-200" size={24} />
+                                 )}
+                                 <label className="absolute inset-0 bg-brand-purple/80 text-white flex items-center justify-center opacity-0 group-hover/stamp:opacity-100 transition-all cursor-pointer">
+                                    <Camera size={20} />
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleStampUpload} />
+                                 </label>
+                              </div>
+                              <p className="text-[9px] text-slate-400 font-bold max-w-[200px]">ატვირთეთ PNG ან JPG ფორმატის ბეჭედი (სასურველია გამჭვირვალე ფონით)</p>
+                           </div>
                         </div>
                      </div>
                   </div>

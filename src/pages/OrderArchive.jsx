@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { db, auth } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
 import Sidebar from "../components/Dashboard/Sidebar";
 import TopNav from "../components/Dashboard/TopNav";
 import {
@@ -13,13 +13,15 @@ import {
   Receipt,
   Download,
   Printer,
-  FileText
+  FileText,
+  FileDown,
+  Plus
 } from "lucide-react";
 import { generateInvoice } from "../utils/generateInvoice";
 import { generateFinancialReport } from "../utils/generateFinancialReport";
 
 const OrderArchive = () => {
-  const { userData } = useAuth();
+  const { userData, clinicData } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [archiveData, setArchiveData] = useState([]);
   
@@ -33,12 +35,6 @@ const OrderArchive = () => {
   // პაგინაციის State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10; // რამდენი ჩანაწერი გამოჩნდეს 1 გვერდზე
-
-  const clinicData = {
-    name: "DentalHub Clinic",
-    address: "თბილისი, საქართველო",
-    phone: "+995 555 00 00 00",
-  };
 
   useEffect(() => {
     if (!userData?.clinicId) return;
@@ -58,6 +54,18 @@ const OrderArchive = () => {
 
     return () => unsubscribe();
   }, [userData]);
+
+  const handlePrintOrder = async (order) => {
+    let personalId = "";
+    if (order.patientId) {
+      try {
+        const pDoc = await getDoc(doc(db, "patients", order.patientId));
+        if (pDoc.exists()) personalId = pDoc.data().personalId || "";
+      } catch (e) { console.error(e); }
+    }
+
+    generateInvoice({ ...order, personalId }, clinicData);
+  };
 
   // 1. ფილტრაციის ლოგიკა (Search & Date Range)
   const filteredData = useMemo(() => {
@@ -88,7 +96,7 @@ const OrderArchive = () => {
 
   // 3. ექსპორტის ფუნქცია
   const handleExportReport = () => {
-    generateFinancialReport(filteredData, dateFrom, dateTo, clinicData);
+    handlePrintOrder(currentItems[0]); // Placeholder for generic print
   };
 
   // თუ ფილტრი შეიცვალა, ვბრუნდებით პირველ გვერდზე
@@ -247,13 +255,22 @@ const OrderArchive = () => {
                             {order.price} ₾
                           </td>
                           <td className="p-6 text-right">
-                            <button
-                              onClick={() => generateInvoice(order, clinicData)}
-                              className="p-3 text-gray-400 hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer opacity-0 group-hover:opacity-100"
-                              title="ინვოისის ჩამოტვირთვა"
-                            >
-                              <Download size={18} />
-                            </button>
+                            <div className="flex justify-end items-center gap-2">
+                               <button
+                                 onClick={() => handlePrintOrder(order)}
+                                 className="p-3 text-gray-500 hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer"
+                                 title="ბეჭდვა"
+                               >
+                                 <Printer size={18} />
+                               </button>
+                               <button
+                                 onClick={() => handlePrintOrder(order)}
+                                 className="p-3 text-gray-500 hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer"
+                                 title="PDF ჩამოტვირთვა"
+                               >
+                                 <FileDown size={18} />
+                               </button>
+                            </div>
                           </td>
                         </tr>
                       ))

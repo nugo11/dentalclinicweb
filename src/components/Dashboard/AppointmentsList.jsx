@@ -114,7 +114,7 @@ const AppointmentsList = () => {
         {loading ? (
           <div className="flex justify-center py-20 opacity-20"><Loader2 className="animate-spin" /></div>
         ) : filteredAndSorted.length > 0 ? (
-          <div className="space-y-0 relative before:absolute before:left-[19px] before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-100">
+          <div className="space-y-0 relative before:absolute before:left-[27px] before:top-4 before:bottom-4 before:w-0.5 before:bg-slate-100">
             {filteredAndSorted.map((app, idx) => {
               const status = getTimeStatus(app.start);
               const isNext = new Date(app.start) > new Date() && (new Date(app.start) - new Date() < 1800000);
@@ -124,34 +124,36 @@ const AppointmentsList = () => {
                 <div 
                   key={app.id}
                   onClick={() => app.patientId && app.patientId !== 'external' && navigate(`/patients/${app.patientId}`)}
-                  className="flex gap-6 pb-8 last:pb-0 group cursor-pointer relative"
+                  className="flex gap-3 md:gap-6 pb-6 md:pb-8 last:pb-0 group cursor-pointer relative"
                 >
                   {/* Time & Dot */}
-                  <div className="flex flex-col items-center shrink-0 w-10">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[11px] z-10 transition-all ${
-                      isNext ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30 scale-110' : 'bg-white text-slate-400 border-2 border-slate-100'
+                  <div className="flex flex-col items-center shrink-0 w-14">
+                    <div className={`w-14 h-10 md:h-12 rounded-xl flex items-center justify-center font-black text-[9px] md:text-[10px] z-10 transition-all whitespace-nowrap px-1 ${
+                      isNext ? 'bg-brand-purple text-white shadow-lg shadow-brand-purple/30 scale-105' : 'bg-white text-slate-400 border-2 border-slate-100'
                     }`}>
                       {timeStr}
                     </div>
                   </div>
 
                   {/* Content Card */}
-                  <div className={`flex-1 p-4 rounded-2xl border-2 transition-all ${
+                  <div className={`flex-1 p-3 md:p-4 rounded-2xl border-2 transition-all min-w-0 ${
                     isNext ? 'border-brand-purple/10 bg-brand-purple/5' : 'border-transparent bg-slate-50/50 hover:bg-white hover:shadow-lg'
                   }`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2">
-                           <p className="text-sm font-black text-brand-deep tracking-tight group-hover:text-brand-purple transition-colors">{app.patientName}</p>
+                    <div className="flex justify-between items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                           <p className="text-[13px] md:text-sm font-black text-brand-deep truncate group-hover:text-brand-purple transition-colors shrink-0 max-w-[60%] md:max-w-none">
+                             {app.patientName}
+                           </p>
                            {(role === "admin" || role === "receptionist") && app.doctorName && (
-                             <span className="text-[9px] font-black px-2 py-0.5 bg-brand-purple/10 text-brand-purple rounded-md uppercase tracking-tighter">
+                             <span className="text-[8px] md:text-[9px] font-black px-2 py-0.5 bg-brand-purple/10 text-brand-purple rounded-md uppercase tracking-tighter whitespace-nowrap truncate">
                                {app.doctorName}
                              </span>
                            )}
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{app.service}</p>
+                        <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">{app.service}</p>
                       </div>
-                      <span className={`px-2 py-1 ${status.color} text-white rounded-full text-[8px] font-black uppercase`}>
+                      <span className={`px-2 py-1 ${status.color} text-white rounded-full text-[7px] md:text-[8px] font-black uppercase shrink-0`}>
                         {status.text}
                       </span>
                     </div>

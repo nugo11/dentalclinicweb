@@ -26,7 +26,7 @@ const Finance = () => {
   const [stats, setStats] = useState({
     total: 0,
     paid: 0,
-    debt: 0,
+    vat: 0,
     expenses: 0,
     netProfit: 0
   });
@@ -51,7 +51,6 @@ const Finance = () => {
     return onSnapshot(q, (snapshot) => {
       let total = 0,
           paid = 0,
-          debt = 0,
           expenses = 0;
 
       const data = snapshot.docs.map((doc) => {
@@ -62,7 +61,6 @@ const Finance = () => {
 
         total += price;
         paid += amountPaid;
-        debt += price - amountPaid;
         expenses += materialCost;
 
         return { id: doc.id, ...item, price, amountPaid, materialCost };
@@ -73,9 +71,9 @@ const Finance = () => {
       setStats({
         total,
         paid,
-        debt,
+        vat: total * 0.18,
         expenses,
-        netProfit: paid - expenses // მოგება ითვლება რეალურად შემოსული თანხიდან
+        netProfit: paid - expenses
       });
     });
   }, [userData]);
@@ -121,11 +119,11 @@ const Finance = () => {
                 bg="bg-orange-50"
               />
               <StatCard
-                title="დავალიანება"
-                amount={stats.debt}
-                icon={AlertCircle}
-                color="text-red-500"
-                bg="bg-red-50"
+                title="დღგ (18%)"
+                amount={stats.vat}
+                icon={Tag}
+                color="text-amber-500"
+                bg="bg-amber-50"
               />
               <StatCard
                 title="წმინდა მოგება"
@@ -158,6 +156,7 @@ const Finance = () => {
                       <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">თარიღი</th>
                       <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">ფასი</th>
                       <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">ხარჯი</th>
+                      <th className="px-8 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">დღგ (18%)</th>
                       <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">გადახდილი</th>
                       <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">ინვოისი</th>
                     </tr>
@@ -179,12 +178,17 @@ const Finance = () => {
                         <td className="p-6">
                            <span className="text-[11px] font-bold text-orange-400">-{t.materialCost || 0} ₾</span>
                         </td>
+                        <td className="px-8 py-6">
+                            <span className="text-xs font-bold text-amber-600">
+                              ₾ {(t.vatAmount || (t.price * 0.18)).toFixed(2)}
+                            </span>
+                        </td>
                         <td className="p-6">
                           <span className="font-black text-emerald-500">+{t.amountPaid} ₾</span>
                         </td>
                         <td className="p-6 text-right">
                           <button
-                            onClick={() => generateInvoice(t, clinicInfo)}
+                            onClick={() => generateInvoice(t, dbClinicData)}
                             className="p-3 text-gray-400 hover:text-brand-purple hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-gray-100 cursor-pointer active:scale-90"
                           >
                             <Download size={18} />

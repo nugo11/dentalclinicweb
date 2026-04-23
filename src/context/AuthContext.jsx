@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
         // 1. მომხმარებლის დოკუმენტის მოსმენა
         unsubUserRef.current = onSnapshot(doc(db, "users", user.uid), (userDoc) => {
           if (userDoc.exists()) {
-            const uData = userDoc.data();
+            const uData = { uid: userDoc.id, ...userDoc.data() };
             setUserData(uData);
 
             // 2. კლინიკის დოკუმენტის მოსმენა რეალურ დროში

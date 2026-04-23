@@ -93,29 +93,75 @@ const MainHeader = ({ user }) => {
             </div>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 top-16 md:top-20 bg-white z-[40] animate-in slide-in-from-top-4 duration-300 overflow-y-auto">
-            <div className="p-6 flex flex-col gap-6">
-              <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-black text-brand-deep uppercase tracking-widest border-b border-gray-50 pb-4">მთავარი</Link>
-              {isLanding && (
-                <>
-                  <a href="#about" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-black text-brand-deep uppercase tracking-widest border-b border-gray-50 pb-4">ჩვენს შესახებ</a>
-                  <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-black text-brand-deep uppercase tracking-widest border-b border-gray-50 pb-4">ფუნქციები</a>
-                  <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-black text-brand-deep uppercase tracking-widest border-b border-gray-50 pb-4">ფასები</a>
-                </>
-              )}
-              <Link to="/catalog" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-black text-brand-deep uppercase tracking-widest border-b border-gray-50 pb-4">კატალოგი</Link>
+      {/* Mobile Menu Components - MOVED OUTSIDE NAV FOR BETTER Z-INDEX HANDLING */}
+      <div className="lg:hidden">
+        {/* Backdrop Overlay */}
+        <div 
+          className={`fixed inset-0 z-[9998] bg-brand-deep/80 backdrop-blur-md transition-all duration-500 ${isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} 
+          onClick={() => setIsMobileMenuOpen(false)} 
+        />
+        
+        {/* Sliding Panel */}
+        <div className={`fixed top-0 right-0 h-screen w-[85%] max-w-sm bg-white z-[9999] shadow-[-20px_0_80px_-15px_rgba(0,0,0,0.3)] transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <div className="flex flex-col h-full overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white">
+               <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-brand-deep rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <Activity size={20} />
+                  </div>
+                  <span className="text-xl font-black text-brand-deep italic tracking-tighter">DentalHub</span>
+               </div>
+               <button onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-2xl bg-gray-50 text-gray-500 hover:text-brand-purple transition-all">
+                  <X size={24} />
+               </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-white">
+               <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-gray-50/50 hover:bg-brand-purple/5 text-brand-deep font-black uppercase tracking-widest text-[11px] transition-all group">
+                  მთავარი <ChevronDown size={14} className="-rotate-90 text-gray-300 group-hover:text-brand-purple" />
+               </Link>
+               
+               {isLanding && (
+                 <>
+                   <a href="#about" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-gray-50/50 hover:bg-brand-purple/5 text-brand-deep font-black uppercase tracking-widest text-[11px] transition-all group">
+                      ჩვენს შესახებ <ChevronDown size={14} className="-rotate-90 text-gray-300 group-hover:text-brand-purple" />
+                   </a>
+                   <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-gray-50/50 hover:bg-brand-purple/5 text-brand-deep font-black uppercase tracking-widest text-[11px] transition-all group">
+                      ფუნქციები <ChevronDown size={14} className="-rotate-90 text-gray-300 group-hover:text-brand-purple" />
+                   </a>
+                   <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-gray-50/50 hover:bg-brand-purple/5 text-brand-deep font-black uppercase tracking-widest text-[11px] transition-all group">
+                      ფასები <ChevronDown size={14} className="-rotate-90 text-gray-300 group-hover:text-brand-purple" />
+                   </a>
+                 </>
+               )}
+
+               <Link to="/catalog" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-gray-50/50 hover:bg-brand-purple/5 text-brand-deep font-black uppercase tracking-widest text-[11px] transition-all group">
+                  კატალოგი <ChevronDown size={14} className="-rotate-90 text-gray-300 group-hover:text-brand-purple" />
+               </Link>
+            </div>
+
+            <div className="p-8 border-t border-gray-100 bg-white">
               {user ? (
-                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-black text-brand-purple uppercase tracking-widest">კონტროლის პანელი</Link>
+                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 p-5 bg-brand-purple text-white rounded-[28px] shadow-2xl shadow-brand-purple/30 transition-all active:scale-95">
+                  <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                    <Activity size={24} />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">კონტროლის პანელი</p>
+                    <p className="text-[13px] font-bold truncate max-w-[160px]">{user.email}</p>
+                  </div>
+                </Link>
               ) : (
-                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)} className="w-full bg-brand-deep text-white py-5 rounded-[24px] font-black text-sm uppercase tracking-widest text-center shadow-2xl">შესვლა</Link>
+                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center w-full py-6 bg-brand-deep text-white rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-brand-deep/30 transition-all active:scale-95">
+                  შესვლა სისტემაში
+                </Link>
               )}
             </div>
           </div>
-        )}
-      </nav>
+        </div>
+      </div>
       {/* Spacer to prevent content from going under the fixed navbar */}
       <div className="h-16 md:h-20 w-full" />
     </>

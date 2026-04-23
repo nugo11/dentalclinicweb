@@ -18,7 +18,8 @@ import {
   Crown,
   CreditCard,
   Globe,
-  Book
+  Book,
+  History
 } from "lucide-react";
 import { auth } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
@@ -44,7 +45,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     const isFinancePath = 
       location.pathname.startsWith("/finance") || 
       location.pathname === "/treatments" || 
-      location.pathname === "/archive";
+      location.pathname === "/archive" ||
+      location.pathname === "/salary-archive";
 
     const isManagementPath = 
       location.pathname === "/staff" || 
@@ -101,6 +103,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         { label: "მიმოხილვა", path: "/finance", icon: PieChart },
         { label: "მიმდინარე", path: "/treatments", icon: FileText }, 
         { label: "არქივი", path: "/archive", icon: Archive }, 
+        { label: "ხელფასები", path: "/salary-archive", icon: History },
       ],
     });
   }
@@ -119,6 +122,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     managementSubItems.push({ label: "პორტფოლიო", path: "/settings/portfolio", icon: Globe });
     managementSubItems.push({ label: "პარამეტრები", path: "/settings", icon: Settings });
     managementSubItems.push({ label: "ბილინგი", path: "/settings/billing", icon: CreditCard });
+    managementSubItems.push({ label: "აქტივობები", path: "/activity-log", icon: Activity });
   }
 
   if (managementSubItems.length > 0) {

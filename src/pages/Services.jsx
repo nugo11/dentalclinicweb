@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { canAddService, PLANS } from "../config/plans";
+import { logActivity } from "../utils/activityLogger";
 
 const Services = () => {
   const { userData, clinicData } = useAuth();
@@ -78,10 +79,18 @@ const Services = () => {
         await updateDoc(doc(db, "services", editingId), serviceData);
       } else {
         // ახლის დამატება
-        await addDoc(collection(db, "services"), {
+        const docRef = await addDoc(collection(db, "services"), {
           ...serviceData,
           createdAt: serverTimestamp()
         });
+        
+        // LOG ACTIVITY
+        await logActivity(userData?.clinicId || auth.currentUser.uid, userData, 'service_create', `დაემატა ახალი სერვისი: ${newService.name} (${newService.price}₾)`, { serviceId: docRef.id, name: newService.name, price: newService.price });
+      }
+
+      // LOG ACTIVITY FOR UPDATE
+      if (editingId) {
+        await logActivity(userData?.clinicId || auth.currentUser.uid, userData, 'service_update', `განახლდა სერვისი: ${newService.name} (${newService.price}₾)`, { serviceId: editingId, name: newService.name, price: newService.price });
       }
 
       closeModal();
@@ -195,7 +204,12 @@ const Services = () => {
                         <Edit3 size={18} />
                       </button>
                       <button 
-                        onClick={() => deleteDoc(doc(db, "services", s.id))}
+                        onClick={async () => {
+                          if (window.confirm("დარწმუნებული ხართ, რომ გსურთ ამ სერვისის წაშლა?")) {
+                            await deleteDoc(doc(db, "services", s.id));
+                            await logActivity(userData?.clinicId || auth.currentUser.uid, userData, 'service_delete', `წაიშალა სერვისი: ${s.name}`, { serviceId: s.id, name: s.name });
+                          }
+                        }}
                         className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all cursor-pointer"
                       >
                         <Trash2 size={18} />

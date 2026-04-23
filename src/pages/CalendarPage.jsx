@@ -198,7 +198,7 @@ const CalendarPage = () => {
               <FullCalendar
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                 initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
-                locales={[kaLocale]} // ქართული ენის ჩართვა
+                locales={[kaLocale]} 
                 locale="ka"
                 headerToolbar={{
                   left: "prev,next today",
@@ -209,8 +209,9 @@ const CalendarPage = () => {
                 events={events}
                 slotMinTime="00:00:00" 
                 slotMaxTime="24:00:00" 
+                scrollTime={`${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}:00`}
                 initialDate={new Date()} 
-                slotDuration="00:30:00" // 30 წუთიანი დაყოფა უფრო კომპაქტურია
+                slotDuration="00:30:00" 
                 slotLabelFormat={{
                   hour: "2-digit",
                   minute: "2-digit",
@@ -257,16 +258,67 @@ const CalendarPage = () => {
 
       <style>{`
         .calendar-container .fc { 
-          --fc-border-color: #E2E8F0; /* უფრო მუქი, მკაფიო ხაზები */
-          --fc-today-bg-color: #F8FAFC; /* დღევანდელი დღის ფონი */
-          --fc-now-indicator-color: #EF4444; /* წითელი ხაზი მიმდინარე დროზე */
+          --fc-border-color: #E2E8F0; 
+          --fc-today-bg-color: #F8FAFC; 
+          --fc-now-indicator-color: #FF0000; 
           font-family: 'nino', sans-serif; 
+        }
+
+        /* მიმდინარე დროის ხაზის გაძლიერება */
+        .calendar-container .fc-timegrid-now-indicator-line {
+          border-width: 3px !important;
+          z-index: 5;
+        }
+        
+        .calendar-container .fc-timegrid-now-indicator-arrow {
+          border-width: 6px !important;
+          border-left-color: #FF0000 !important;
+          margin-top: -5px !important;
+        }
+
+        .calendar-container .fc-timegrid-now-indicator-line::before {
+          content: '';
+          position: absolute;
+          left: -8px;
+          top: -5px;
+          width: 10px;
+          height: 10px;
+          background: #FF0000;
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.5); opacity: 0.5; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* უჯრების გამოკვეთა - კონტურული სტილი */
+        .calendar-container .fc-timegrid-slot {
+          border-bottom: 1px solid #CBD5E1 !important; /* უფრო მუქი კონტური */
+        }
+        
+        .calendar-container .fc-timegrid-slot-minor {
+          border-bottom: 1px solid #E2E8F0 !important;
+        }
+
+        .calendar-container .fc-timegrid-slot:hover {
+          background-color: #F8FAFC !important;
+          cursor: cell;
+        }
+
+        .calendar-container .fc-timegrid-col {
+          border-left: 1.5px solid #CBD5E1 !important;
+        }
+
+        .calendar-container .fc-daygrid-day {
+          border: 1px solid #CBD5E1 !important;
         }
         
         .calendar-container .fc-header-toolbar { margin-bottom: 1rem !important; gap: 0.5rem; flex-wrap: wrap; }
         .calendar-container .fc-toolbar-title { font-size: 1rem !important; font-weight: 900 !important; color: #1E293B; font-style: italic; }
         
-        /* ღილაკების დიზაინი (დღე, კვირა, თვე) */
         .calendar-container .fc-button { 
           background: #F1F5F9 !important; 
           border: none !important; 
@@ -283,11 +335,9 @@ const CalendarPage = () => {
         .calendar-container .fc-button:hover { background: #E2E8F0 !important; color: #1E293B !important; }
         .calendar-container .fc-button-active { background: #7C3AED !important; color: white !important; }
         
-        /* მარცხენა საათების სვეტი */
         .calendar-container .fc-timegrid-axis { background-color: #F8FAFC; border-right: 2px solid #E2E8F0; }
         .calendar-container .fc-timegrid-slot-label-cushion { font-weight: 900 !important; color: #64748B; font-size: 11px; padding: 4px 8px !important; }
         
-        /* ჯავშნის ბარათები (Events) */
         .calendar-container .fc-event { 
           border-radius: 8px !important; 
           padding: 4px 6px !important; 
@@ -298,20 +348,17 @@ const CalendarPage = () => {
           transition: transform 0.1s;
         }
 
-        /* თვის ხედის სპეციფიკური სტილი */
         .calendar-container .fc-daygrid-event {
           margin-top: 2px !important;
           margin-bottom: 2px !important;
         }
         
-        /* წერტილის ფერი თვის ხედში */
         .calendar-container .fc-daygrid-event-dot {
           border-color: #7C3AED !important;
         }
 
         .calendar-container .fc-event:hover { transform: scale(1.02); z-index: 10; cursor: pointer; }
         
-        /* დღეების ჰედერი (ორშაბათი, სამშაბათი...) */
         .calendar-container .fc-col-header-cell-cushion { font-weight: 900 !important; color: #1E293B; text-transform: uppercase; font-size: 10px; padding: 8px 0 !important; }
         @media (min-width: 768px) {
           .calendar-container .fc-header-toolbar { margin-bottom: 2rem !important; }

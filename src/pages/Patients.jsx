@@ -38,6 +38,14 @@ const Patients = () => {
     return () => unsubscribe();
   }, [userData]);
 
+  useEffect(() => {
+    if (searchParams.get('add') === 'true') {
+      setIsAddModalOpen(true);
+      // წავშალოთ პარამეტრი URL-დან სისუფთავისთვის
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [location.search]);
+
   const currentPlan = PLANS[(clinicData?.plan || "free").toLowerCase()] || PLANS.free;
   const maxPatients = currentPlan.maxPatients;
   const isLimitReached = maxPatients !== Infinity && patientsCount >= maxPatients;

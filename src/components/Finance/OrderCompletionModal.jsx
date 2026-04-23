@@ -27,6 +27,7 @@ import {
   FileText,
   Activity
 } from "lucide-react";
+import { logActivity } from "../../utils/activityLogger";
 
 const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   const { role, activeStaff, userData } = useAuth();
@@ -51,19 +52,41 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   const [payerType, setPayerType] = useState("personal"); // personal, insurance, corporate
   const [insuranceInfo, setInsuranceInfo] = useState({ company: "", policyNum: "", approvalCode: "" });
   const [customServiceErrors, setCustomServiceErrors] = useState({ name: false, price: false });
+  
+  // დამატებითი მასალების State
+  const [availableMaterials, setAvailableMaterials] = useState([]);
+  const [selectedExtraMaterials, setSelectedExtraMaterials] = useState([]);
+  const [materialSearch, setMaterialSearch] = useState("");
 
   // 1. წამოვიღოთ სერვისების კატალოგი
   useEffect(() => {
     if (isOpen && orderData?.clinicId) {
-      const q = query(
+      // სერვისები
+      const qServices = query(
         collection(db, "services"),
         where("clinicId", "==", orderData.clinicId),
       );
-      return onSnapshot(q, (snapshot) => {
+      const unsubServices = onSnapshot(qServices, (snapshot) => {
         setAvailableServices(
           snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
         );
       });
+
+      // ინვენტარი
+      const qInventory = query(
+        collection(db, "inventory"),
+        where("clinicId", "==", orderData.clinicId)
+      );
+      const unsubInventory = onSnapshot(qInventory, (snapshot) => {
+        setAvailableMaterials(
+          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+      });
+
+      return () => {
+        unsubServices();
+        unsubInventory();
+      };
     }
   }, [isOpen, orderData]);
 
@@ -109,10 +132,38 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
     );
   };
 
-  const totalAmount = selectedServices.reduce(
-    (sum, s) => sum + Number(s.price),
-    0,
-  );
+  // მასალების მართვა
+  const addExtraMaterial = (mat) => {
+    const existing = selectedExtraMaterials.find(m => m.id === mat.id);
+    if (existing) {
+      setSelectedExtraMaterials(selectedExtraMaterials.map(m => 
+        m.id === mat.id ? { ...m, amount: Number(m.amount) + 1 } : m
+      ));
+    } else {
+      setSelectedExtraMaterials([...selectedExtraMaterials, { ...mat, amount: 1 }]);
+    }
+  };
+
+  const updateMaterialAmount = (id, amount) => {
+    setSelectedExtraMaterials(selectedExtraMaterials.map(m => 
+      m.id === id ? { ...m, amount: Number(amount) } : m
+    ));
+  };
+
+  const removeExtraMaterial = (id) => {
+    setSelectedExtraMaterials(selectedExtraMaterials.filter(m => m.id !== id));
+  };
+
+  const totalAmount = 
+    selectedServices.reduce((sum, s) => sum + Number(s.price), 0) +
+    selectedExtraMaterials.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0);
+
+  const vatAmount = totalAmount * 0.18;
+
+  // Sync paidAmount with totalAmount when it changes
+  useEffect(() => {
+    setPaidAmount(totalAmount);
+  }, [totalAmount]);
 
   const handleDeleteOrder = async () => {
     if (
@@ -121,6 +172,10 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
       setLoading(true);
       try {
         await deleteDoc(doc(db, "appointments", orderData.id));
+        
+        // LOG ACTIVITY
+        await logActivity(orderData.clinicId, userData || { uid: auth.currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'appointment_delete', `წაიშალა ჯავშანი: ${orderData.patientName}`, { patientId: orderData.patientId, patientName: orderData.patientName });
+
         onClose();
       } catch (error) {
         console.error(error);
@@ -154,13 +209,24 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
         }
       }
 
+      // 1.1 დავამატოთ ექსტრა მასალების ხარჯი
+      for (const mat of selectedExtraMaterials) {
+        const matDoc = await getDoc(doc(db, "inventory", mat.id));
+        if (matDoc.exists()) {
+          const pricePerUnit = Number(matDoc.data().pricePerUnit || 0);
+          totalMaterialCost += Number(mat.amount) * pricePerUnit;
+        }
+      }
+
       // 2. ჯავშნის განახლება
       const appointmentRef = doc(db, "appointments", orderData.id);
         await updateDoc(appointmentRef, {
           status: "completed_and_billed",
           billedServices: selectedServices,
+          extraMaterials: selectedExtraMaterials,
           price: totalAmount,
           paidAmount: Number(paidAmount),
+          vatAmount: vatAmount,
           materialCost: totalMaterialCost,
           paymentMethod: paymentMethod,
           payerType: payerType,
@@ -170,25 +236,32 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
 
       // 3. საწყობის განახლება - აქ არის კრიტიკული ნაწილი!
       const inventoryUpdates = [];
+      
+      // სერვისების მასალები
       for (const service of selectedServices) {
         if (service.materials && Array.isArray(service.materials)) {
           for (const mat of service.materials) {
-            // ვამოწმებთ, რომ mat.id ნამდვილად არსებობს
             if (mat.id) {
               const materialRef = doc(db, "inventory", mat.id);
-
-              // ვიყენებთ increment-ს.
-              // ყურადღება: დარწმუნდი, რომ mat.amount არის რიცხვი
               inventoryUpdates.push(
                 updateDoc(materialRef, {
                   quantity: increment(-(Number(mat.amount) || 0)),
                 }),
               );
-              console.log(
-                `გაიგზავნა მოთხოვნა: ${mat.name}-ს აკლდება ${mat.amount}`,
-              );
             }
           }
+        }
+      }
+
+      // ექსტრა მასალები
+      for (const mat of selectedExtraMaterials) {
+        if (mat.id) {
+          const materialRef = doc(db, "inventory", mat.id);
+          inventoryUpdates.push(
+            updateDoc(materialRef, {
+              quantity: increment(-(Number(mat.amount) || 0)),
+            }),
+          );
         }
       }
 
@@ -196,6 +269,9 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
       if (inventoryUpdates.length > 0) {
         await Promise.all(inventoryUpdates);
       }
+
+      // LOG ACTIVITY
+      await logActivity(orderData.clinicId, userData || { uid: auth.currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'appointment_finalize', `დაიხურა ვიზიტი: ${orderData.patientName} (თანხა: ${totalAmount}₾)`, { patientId: orderData.patientId, patientName: orderData.patientName, amount: totalAmount });
 
       onClose();
     } catch (err) {
@@ -272,7 +348,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
               </label>
               <input
                 type="text"
-                placeholder="დასახელება"
+                placeholder="დასახელება (მაგ: დამატებითი კონსულტაცია)"
                 disabled={isReadOnly}
                 value={customService.name}
                 onChange={(e) =>
@@ -302,6 +378,47 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                   </button>
                 </div>
               )}
+            </div>
+
+            <div className="p-6 bg-amber-50/50 rounded-[32px] space-y-4 border border-amber-100/50">
+              <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest ml-2 italic">
+                დამატებითი მასალები საწყობიდან
+              </label>
+              <select
+                disabled={isReadOnly}
+                className="w-full px-4 py-3 bg-white rounded-xl outline-none text-sm font-bold border border-amber-100"
+                onChange={(e) => {
+                  const m = availableMaterials.find(mat => mat.id === e.target.value);
+                  if (m) addExtraMaterial(m);
+                  e.target.value = "";
+                }}
+              >
+                <option value="">+ მასალის დამატება</option>
+                {availableMaterials.filter(m => m.quantity > 0).map(m => (
+                  <option key={m.id} value={m.id}>{m.name} (ნაშთი: {m.quantity} {m.unit})</option>
+                ))}
+              </select>
+
+              <div className="space-y-2">
+                {selectedExtraMaterials.map(m => (
+                  <div key={m.id} className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-amber-50">
+                    <span className="text-[10px] font-bold text-slate-700 flex-1">{m.name}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[9px] font-black text-amber-600">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)}₾</span>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          value={m.amount}
+                          onChange={(e) => updateMaterialAmount(m.id, e.target.value)}
+                          className="w-12 py-1 px-2 bg-slate-50 rounded-lg text-[10px] font-black text-center outline-none border border-slate-100"
+                        />
+                        <span className="text-[8px] text-gray-400 uppercase">{m.unit}</span>
+                        <button onClick={() => removeExtraMaterial(m.id)} className="text-red-300 hover:text-red-500"><Trash2 size={12} /></button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -342,11 +459,23 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
             </div>
 
             <div className="mt-auto bg-brand-deep p-6 rounded-[32px] text-white shadow-xl">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-[10px] font-black uppercase opacity-60">
-                  სულ გადასახდელი:
-                </span>
-                <span className="text-xl font-black">{totalAmount} ₾</span>
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between items-center opacity-60">
+                  <span className="text-[9px] font-black uppercase tracking-widest">მომსახურების ჯამი:</span>
+                  <span className="text-sm font-black">{totalAmount - (selectedExtraMaterials.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0))} ₾</span>
+                </div>
+                <div className="flex justify-between items-center opacity-60">
+                  <span className="text-[9px] font-black uppercase tracking-widest">დამატებითი მასალები:</span>
+                  <span className="text-sm font-black">{selectedExtraMaterials.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0)} ₾</span>
+                </div>
+                <div className="flex justify-between items-center text-emerald-400">
+                  <span className="text-[9px] font-black uppercase tracking-widest">დღგ (18%):</span>
+                  <span className="text-sm font-black">{vatAmount.toFixed(2)} ₾</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-2">
+                  <span className="text-[10px] font-black uppercase opacity-60">სულ გადასახდელი:</span>
+                  <span className="text-xl font-black">{totalAmount.toFixed(2)} ₾</span>
+                </div>
               </div>
               <div className="space-y-4 pt-4 border-t border-white/10">
               <label className="text-[10px] font-black uppercase opacity-60 block mb-2">

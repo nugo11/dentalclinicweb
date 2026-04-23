@@ -14,6 +14,7 @@ import Sidebar from "../components/Dashboard/Sidebar";
 import TopNav from "../components/Dashboard/TopNav";
 import { useAuth } from "../context/AuthContext"; 
 import { canAddInventoryItem } from "../config/plans"; 
+import { logActivity } from "../utils/activityLogger";
 import {
   PackageSearch,
   Plus,
@@ -27,26 +28,14 @@ import {
 } from "lucide-react";
 
 const Inventory = () => {
-  const { currentUser, clinicData, userData, role } = useAuth();
+  const { currentUser, clinicData, userData, role, activeStaff } = useAuth();
   
   // წვდომის შეზღუდვა
   const isAccountant = role === 'accountant';
   const isDoctor = role === 'doctor';
   const isAdminOrManager = role === 'admin' || role === 'manager';
-  
-  if (isDoctor) {
-    return (
-      <div className="h-screen w-full bg-slate-50 flex items-center justify-center font-nino text-brand-deep">
-        <div className="text-center">
-            <Lock size={48} className="mx-auto mb-4 text-brand-purple" />
-            <h2 className="text-2xl font-black italic">წვდომა შეზღუდულია</h2>
-            <p className="text-sm font-bold mt-2 text-gray-400">საწყობის ნახვის უფლება არ გაქვთ.</p>
-        </div>
-      </div>
-    );
-  }
+  const isReadOnly = isAccountant || isDoctor;
 
-  const isReadOnly = isAccountant;
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -122,6 +111,14 @@ const Inventory = () => {
         updatedAt: new Date().toISOString(),
       });
 
+      // LOG ACTIVITY
+      const action = editingItem ? 'inventory_update' : 'inventory_create';
+      const details = editingItem 
+        ? `განახლდა მარაგი: ${formData.name} (რაოდენობა: ${formData.quantity} ${formData.unit})`
+        : `დაემატა ახალი მარაგი: ${formData.name} (რაოდენობა: ${formData.quantity} ${formData.unit})`;
+      
+      await logActivity(userData?.clinicId || currentUser.uid, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, action, details, { itemId: docId, name: formData.name });
+
       setIsModalOpen(false);
       setEditingItem(null);
       setFormErrors({});
@@ -137,7 +134,14 @@ const Inventory = () => {
 
   const confirmDelete = async () => {
     if (deleteTargetId) {
+      const itemToDelete = items.find(i => i.id === deleteTargetId);
       await deleteDoc(doc(db, "inventory", deleteTargetId));
+      
+      // LOG ACTIVITY
+      if (itemToDelete) {
+        await logActivity(userData?.clinicId || currentUser.uid, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'inventory_delete', `წაიშალა მარაგი: ${itemToDelete.name}`, { itemId: deleteTargetId, name: itemToDelete.name });
+      }
+
       setDeleteTargetId(null);
     }
   };

@@ -26,10 +26,11 @@ import TopNav from "../components/Dashboard/TopNav";
 import DentalChart from "../components/Patients/DentalChart/DentalChart";
 import { useAuth } from "../context/AuthContext";
 import { transliterateToGeorgian } from "../utils/transliterateKa";
+import { logActivity } from "../utils/activityLogger";
 
 const PatientProfile = () => {
   const { id } = useParams();
-  const { userData, currentUser } = useAuth();
+  const { userData, currentUser, activeStaff } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -76,6 +77,10 @@ const PatientProfile = () => {
       }
       const patientRef = doc(db, "patients", id);
       await updateDoc(patientRef, patientData);
+      
+      // LOG ACTIVITY
+      await logActivity(clinicId, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'patient_update', `განახლდა პაციენტის (${patientData.fullName}) მონაცემები`, { patientId: id, patientName: patientData.fullName });
+
       setIsEditing(false);
     } catch (error) {
       console.error("Update error:", error);
@@ -93,6 +98,10 @@ const PatientProfile = () => {
         return;
       }
       await deleteDoc(doc(db, "patients", id));
+
+      // LOG ACTIVITY
+      await logActivity(clinicId, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'patient_delete', `წაიშალა პაციენტი: ${patientData.fullName}`, { patientId: id, patientName: patientData.fullName });
+
       navigate("/patients");
     } catch (error) {
       console.error("Delete error:", error);
@@ -115,7 +124,12 @@ const PatientProfile = () => {
       },
     };
     try {
+      const clinicId = userData?.clinicId || currentUser?.uid;
       await updateDoc(patientRef, { teethStatus: updatedTeeth });
+      
+      // LOG ACTIVITY
+      await logActivity(clinicId, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'tooth_update', `შეიცვალა კბილის (#${toothNumber}) სტატუსი: ${newStatus || 'update'} პაციენტისთვის: ${patientData.fullName}`, { patientId: id, tooth: toothNumber, status: newStatus });
+
       setPatientData({ ...patientData, teethStatus: updatedTeeth });
       setIsStatusModalOpen(false);
     } catch (error) {

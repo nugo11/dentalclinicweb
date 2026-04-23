@@ -6,7 +6,7 @@ import {
   Activity, MapPin, Phone, Clock, 
   Star, ShieldCheck, 
   Globe, MessageSquare, Loader2,
-  Stethoscope, Info
+  Stethoscope, Info, Users
 } from "lucide-react";
 import { PLANS } from "../config/plans";
 import { useAuth } from "../context/AuthContext";
@@ -34,7 +34,8 @@ const ClinicPublicProfile = () => {
           setClinic({ id: clinicDoc.id, ...data });
           
           const planId = (data.plan || "free").toLowerCase();
-          const pFeatures = PLANS[planId]?.portfolioFeatures || PLANS.free.portfolioFeatures;
+          const pKey = planId === "solo" ? "basic" : planId;
+          const pFeatures = PLANS[pKey]?.portfolioFeatures || PLANS.free.portfolioFeatures;
 
           if (pFeatures.canShowDoctors) {
             const qDoctors = query(collection(db, "users"), where("clinicId", "==", id), where("role", "==", "doctor"));
@@ -75,7 +76,8 @@ const ClinicPublicProfile = () => {
   );
 
   const planId = (clinic.plan || "free").toLowerCase();
-  const features = PLANS[planId]?.portfolioFeatures || PLANS.free.portfolioFeatures;
+  const pKey = planId === "solo" ? "basic" : planId;
+  const features = PLANS[pKey]?.portfolioFeatures || PLANS.free.portfolioFeatures;
 
   return (
     <div className="min-h-screen bg-slate-50 font-nino selection:bg-brand-purple/10 pb-20">
@@ -84,43 +86,44 @@ const ClinicPublicProfile = () => {
       <main className="pt-12 px-6">
         <div className="max-w-7xl mx-auto">
            {/* Hero Section */}
-           <div className="bg-white rounded-[48px] p-8 md:p-16 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-12 items-center mb-12 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-12 opacity-[0.03]">
-                 <Activity size={200} />
-              </div>
+           <div className="bg-gradient-to-br from-brand-deep via-brand-deep to-brand-purple rounded-[48px] p-8 md:p-20 shadow-2xl shadow-brand-purple/20 flex flex-col md:flex-row gap-12 items-center mb-12 relative overflow-hidden group">
+              {/* Background Ornaments */}
+              <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-brand-purple/20 rounded-full blur-[120px] animate-pulse" />
+              <div className="absolute bottom-[-10%] left-[-5%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px]" />
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
 
-              <div className="w-48 h-48 md:w-64 md:h-64 bg-slate-50 rounded-[40px] border-4 border-white shadow-xl flex items-center justify-center overflow-hidden shrink-0 relative z-10">
+              <div className="w-48 h-48 md:w-72 md:h-72 bg-white/10 backdrop-blur-xl rounded-[56px] border-4 border-white/20 shadow-2xl flex items-center justify-center overflow-hidden shrink-0 relative z-10 group-hover:scale-105 transition-transform duration-700">
                  {clinic.logoUrl ? (
                     <img src={clinic.logoUrl} className="w-full h-full object-cover" alt="Logo" />
                  ) : (
-                    <div className="text-brand-purple/10"><Activity size={80} /></div>
+                    <div className="text-white/20"><Activity size={100} /></div>
                  )}
               </div>
               <div className="flex-1 text-center md:text-left relative z-10">
-                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-purple/5 text-brand-purple rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-brand-purple/10">
-                   <ShieldCheck size={14} /> ვერიფიცირებული კლინიკა
+                 <div className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-md text-white rounded-full text-[10px] font-black uppercase tracking-widest mb-8 border border-white/10">
+                   <ShieldCheck size={16} className="text-emerald-400" /> ვერიფიცირებული კლინიკა
                  </div>
-                 <h1 className="text-4xl md:text-6xl font-black text-brand-deep tracking-tighter italic mb-6 leading-tight">
+                 <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter italic mb-8 leading-[0.9] drop-shadow-2xl">
                     {clinic.clinicName}
                  </h1>
                  
-                 <div className="flex flex-wrap justify-center md:justify-start gap-6">
+                 <div className="flex flex-wrap justify-center md:justify-start gap-8">
                     {features.canShowPhone && clinic.phone && (
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-brand-purple"><Phone size={14} /></div>
-                        <span className="font-bold text-sm">{clinic.phone}</span>
+                      <div className="flex items-center gap-3 text-white/80 hover:text-white transition-colors">
+                        <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-brand-purple border border-white/10 shadow-lg"><Phone size={16} /></div>
+                        <span className="font-black text-sm tracking-widest">{clinic.phone}</span>
                       </div>
                     )}
                     {clinic.city && (
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-brand-purple"><MapPin size={14} /></div>
-                        <span className="font-bold text-sm">{clinic.city}</span>
+                      <div className="flex items-center gap-3 text-white/80 hover:text-white transition-colors">
+                        <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-brand-purple border border-white/10 shadow-lg"><MapPin size={16} /></div>
+                        <span className="font-black text-sm tracking-widest">{clinic.city}</span>
                       </div>
                     )}
                     {features.canShowHours && clinic.workingHours && (
-                      <div className="flex items-center gap-2 text-slate-500">
-                        <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-brand-purple"><Clock size={14} /></div>
-                        <span className="font-bold text-sm">{clinic.workingHours}</span>
+                      <div className="flex items-center gap-3 text-white/80 hover:text-white transition-colors">
+                        <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-brand-purple border border-white/10 shadow-lg"><Clock size={16} /></div>
+                        <span className="font-black text-sm tracking-widest">{clinic.workingHours}</span>
                       </div>
                     )}
                  </div>
@@ -131,22 +134,23 @@ const ClinicPublicProfile = () => {
               {/* About & Features */}
               <div className="lg:col-span-8 space-y-8">
                  {features.canShowAbout && clinic.description && (
-                    <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                       <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter mb-6 flex items-center gap-3">
-                          <Info className="text-brand-purple" size={24} /> კლინიკის შესახებ
+                    <div className="bg-white rounded-[40px] p-12 border border-gray-100 shadow-xl shadow-slate-200/50 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                       <h3 className="text-3xl font-black text-brand-deep italic tracking-tighter mb-8 flex items-center gap-4">
+                          <div className="w-12 h-12 bg-brand-purple/10 rounded-2xl flex items-center justify-center text-brand-purple"><Info size={24} /></div> 
+                          კლინიკის შესახებ
                        </h3>
-                       <p className="text-slate-500 font-medium leading-relaxed italic text-lg">
+                       <p className="text-slate-600 font-medium leading-relaxed italic text-xl">
                           {clinic.description}
                        </p>
                     </div>
                  )}
 
                  {features.canShowSpecialties && clinic.specialties?.length > 0 && (
-                    <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-sm">
-                       <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter mb-8">მიმართულებები</h3>
-                       <div className="flex flex-wrap gap-3">
+                    <div className="bg-white rounded-[40px] p-12 border border-gray-100 shadow-xl shadow-slate-200/50 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                       <h3 className="text-3xl font-black text-brand-deep italic tracking-tighter mb-10">მიმართულებები</h3>
+                       <div className="flex flex-wrap gap-4">
                           {clinic.specialties.map((s, i) => (
-                             <span key={i} className="px-5 py-3 bg-slate-50 text-brand-deep rounded-2xl text-[11px] font-black uppercase tracking-widest border border-slate-100 hover:border-brand-purple/20 transition-all cursor-default">
+                             <span key={i} className="px-6 py-4 bg-slate-50 text-brand-deep rounded-[24px] text-[12px] font-black uppercase tracking-widest border border-slate-100 hover:border-brand-purple/30 hover:bg-white hover:shadow-xl hover:scale-105 transition-all cursor-default">
                                 {s}
                              </span>
                           ))}
@@ -155,19 +159,18 @@ const ClinicPublicProfile = () => {
                  )}
 
                  {features.canShowServices && services.length > 0 && (
-                    <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-sm">
-                       <div className="flex items-center justify-between mb-8">
-                          <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter">მომსახურება და ფასები</h3>
-                          <div className="w-10 h-10 bg-brand-purple/5 text-brand-purple rounded-xl flex items-center justify-center font-black text-xs">{services.length}</div>
+                    <div className="bg-white rounded-[40px] p-12 border border-gray-100 shadow-xl shadow-slate-200/50 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+                       <div className="flex items-center justify-between mb-10">
+                          <h3 className="text-3xl font-black text-brand-deep italic tracking-tighter">მომსახურებები</h3>
+                          <div className="px-6 py-2 bg-brand-purple/10 text-brand-purple rounded-full font-black text-[10px] uppercase tracking-widest">{services.length} დასახელება</div>
                        </div>
-                       <div className="space-y-4">
+                       <div className="flex flex-wrap gap-4">
                           {services.map((s, i) => (
-                             <div key={i} className="flex items-center justify-between p-6 bg-slate-50 rounded-[28px] border border-transparent hover:border-brand-purple/10 transition-all group">
-                                <div className="flex items-center gap-4">
-                                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-purple shadow-sm group-hover:bg-brand-purple group-hover:text-white transition-all"><Stethoscope size={18} /></div>
-                                   <span className="font-black text-brand-deep tracking-tight">{s.name}</span>
+                             <div key={i} className="flex items-center gap-4 px-6 py-4 bg-slate-50 rounded-[28px] border border-transparent hover:border-brand-purple/20 hover:bg-white hover:shadow-xl hover:scale-105 transition-all group cursor-default">
+                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-purple shadow-sm group-hover:bg-brand-purple group-hover:text-white transition-all duration-500">
+                                   <Stethoscope size={18} />
                                 </div>
-                                <span className="text-xl font-black text-brand-purple italic">{s.price} ₾</span>
+                                <span className="font-black text-brand-deep text-sm tracking-tight">{s.name}</span>
                              </div>
                           ))}
                        </div>
@@ -178,17 +181,20 @@ const ClinicPublicProfile = () => {
               {/* Sidebar Info */}
               <div className="lg:col-span-4 space-y-8">
                  {features.canShowDoctors && doctors.length > 0 && (
-                    <div className="bg-white rounded-[40px] p-8 border border-gray-100 shadow-sm">
-                       <h3 className="text-xl font-black text-brand-deep italic tracking-tighter mb-8">ჩვენი გუნდი</h3>
+                    <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-xl shadow-slate-200/50 animate-in fade-in slide-in-from-right-8 duration-700 delay-300">
+                       <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter mb-10 flex items-center gap-4">
+                          <div className="w-12 h-12 bg-brand-purple/10 rounded-2xl flex items-center justify-center text-brand-purple"><Users size={24} /></div>
+                          ჩვენი გუნდი
+                       </h3>
                        <div className="space-y-6">
                           {doctors.map((d, i) => (
-                             <div key={i} className="flex items-center gap-4 p-4 bg-slate-50 rounded-3xl hover:bg-white hover:shadow-lg transition-all border border-transparent hover:border-gray-100 group">
-                                <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-xl flex items-center justify-center font-black text-lg group-hover:bg-brand-purple group-hover:text-white transition-all">
+                             <div key={i} className="flex items-center gap-5 p-5 bg-slate-50 rounded-[28px] hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-500 border border-transparent hover:border-gray-100 group">
+                                <div className="w-16 h-16 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center font-black text-2xl group-hover:bg-brand-purple group-hover:text-white transition-all duration-500 shadow-inner">
                                    {d.fullName ? d.fullName[0] : "?"}
                                 </div>
                                 <div>
-                                   <p className="font-black text-brand-deep text-sm leading-tight">{d.fullName}</p>
-                                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{d.role}</p>
+                                   <p className="font-black text-brand-deep text-lg leading-tight">{d.fullName}</p>
+                                   <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest mt-1.5">{d.role}</p>
                                 </div>
                              </div>
                           ))}
@@ -197,38 +203,43 @@ const ClinicPublicProfile = () => {
                  )}
 
                  {features.canShowMap && clinic.mapUrl && (
-                   <div className="bg-white rounded-[40px] p-8 border border-gray-100 shadow-sm overflow-hidden group">
-                      <h3 className="text-xl font-black text-brand-deep italic tracking-tighter mb-8">მდებარეობა</h3>
-                      <div className="rounded-3xl overflow-hidden border border-slate-100 h-64 grayscale group-hover:grayscale-0 transition-all duration-1000">
-                         <iframe 
-                            src={clinic.mapUrl} 
-                            width="100%" 
-                            height="100%" 
-                            style={{ border: 0 }} 
-                            allowFullScreen="" 
-                            loading="lazy"
-                         ></iframe>
-                      </div>
-                      <div className="mt-4 flex items-center gap-2 text-slate-400 px-2">
-                         <MapPin size={12} />
-                         <span className="text-[10px] font-bold uppercase tracking-widest">{clinic.address}</span>
-                      </div>
-                   </div>
+                    <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-xl shadow-slate-200/50 animate-in fade-in slide-in-from-right-8 duration-700 delay-400 overflow-hidden group">
+                       <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter mb-8 flex items-center gap-4">
+                          <div className="w-12 h-12 bg-brand-purple/10 rounded-2xl flex items-center justify-center text-brand-purple"><MapPin size={24} /></div>
+                          მდებარეობა
+                       </h3>
+                       <div className="rounded-[32px] overflow-hidden border-4 border-slate-50 h-80 grayscale group-hover:grayscale-0 transition-all duration-1000 shadow-inner">
+                          <iframe 
+                             src={clinic.mapUrl} 
+                             width="100%" 
+                             height="100%" 
+                             style={{ border: 0 }} 
+                             allowFullScreen="" 
+                             loading="lazy"
+                          ></iframe>
+                       </div>
+                       <div className="mt-6 flex items-center gap-3 text-slate-400 px-2 bg-slate-50 p-4 rounded-2xl">
+                          <MapPin size={16} className="text-brand-purple" />
+                          <span className="text-[11px] font-black uppercase tracking-widest">{clinic.address}</span>
+                       </div>
+                    </div>
                  )}
 
-                 <div className="bg-brand-deep rounded-[40px] p-10 text-white relative overflow-hidden group shadow-2xl shadow-brand-deep/20">
-                    <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-                    <h3 className="text-2xl font-black italic tracking-tighter mb-4 relative z-10 leading-tight">მოგვწერეთ ან <br />დაგვირეკეთ</h3>
-                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-[0.2em] mb-8 relative z-10 leading-relaxed">
+                 <div className="bg-gradient-to-br from-brand-deep to-brand-purple rounded-[48px] p-12 text-white relative overflow-hidden group shadow-2xl shadow-brand-deep/30 animate-in fade-in slide-in-from-right-8 duration-700 delay-500">
+                    <div className="absolute top-[-10%] right-[-10%] w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                    <div className="absolute bottom-[-10%] left-[-10%] w-32 h-32 bg-brand-purple/20 rounded-full blur-2xl" />
+                    
+                    <h3 className="text-3xl font-black italic tracking-tighter mb-6 relative z-10 leading-none">მოგვწერეთ ან <br />დაგვირეკეთ</h3>
+                    <p className="text-white/50 text-[11px] font-black uppercase tracking-widest mb-10 relative z-10 leading-relaxed">
                        სპეციალისტთან კონსულტაციაზე ჩასაწერად დაუკავშირდით კლინიკას.
                     </p>
-                    <div className="space-y-3 relative z-10">
-                        <a href={`tel:${clinic.phone}`} className="flex items-center justify-center gap-3 w-full py-5 bg-white text-brand-deep rounded-[24px] font-black text-xs uppercase tracking-widest hover:bg-brand-purple hover:text-white transition-all shadow-xl">
-                        <Phone size={18} /> {clinic.phone || "დარეკვა"}
+                    <div className="space-y-4 relative z-10">
+                        <a href={`tel:${clinic.phone}`} className="flex items-center justify-center gap-4 w-full py-6 bg-white text-brand-deep rounded-[28px] font-black text-xs uppercase tracking-widest hover:bg-brand-purple hover:text-white transition-all shadow-2xl hover:scale-105 active:scale-95 duration-300">
+                          <Phone size={20} /> {clinic.phone || "დარეკვა"}
                         </a>
                         {clinic.email && (
-                            <a href={`mailto:${clinic.email}`} className="flex items-center justify-center gap-3 w-full py-4 bg-white/10 text-white border border-white/10 rounded-[20px] font-black text-[10px] uppercase tracking-widest hover:bg-white/20 transition-all">
-                                <MessageSquare size={16} /> ელ-ფოსტა
+                            <a href={`mailto:${clinic.email}`} className="flex items-center justify-center gap-4 w-full py-5 bg-white/10 text-white border border-white/20 backdrop-blur-md rounded-[28px] font-black text-[11px] uppercase tracking-widest hover:bg-white/20 transition-all duration-300">
+                                <MessageSquare size={20} /> ელ-ფოსტა
                             </a>
                         )}
                     </div>
