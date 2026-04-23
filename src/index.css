@@ -1,0 +1,237 @@
+@import "bpg-nino-mtavruli/css/bpg-nino-mtavruli.min.css";
+@import "tailwindcss";
+
+@theme {
+  --color-bg-light: #ffffff;
+  --color-bg-soft: #f1f5f9;
+  --color-brand-purple: #7c3aed;
+  --color-brand-deep: #272b41;
+  --color-brand-text: #1e293b;
+  /* დარწმუნდი, რომ სახელი ზუსტად ემთხვევა პაკეტის CSS-ში არსებულს */
+  --font-nino: "BPG Nino Mtavruli", sans-serif;
+}
+
+/* Tip Card-ის სპეციალური ეფექტი */
+.tip-number {
+  -webkit-text-stroke: 1px rgba(124, 58, 237, 0.3);
+  color: transparent;
+  font-size: 80px;
+  line-height: 1;
+}
+
+.faq-content {
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.4s ease-out,
+    opacity 0.3s ease;
+  opacity: 0;
+}
+
+.faq-content.open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+body {
+  font-family: var(--font-nino);
+  margin: 0;
+  background: #f8fafc;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.section-divider {
+  border-top: 1px solid rgba(39, 43, 65, 0.05);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+  height: 100%;
+}
+
+#root {
+  min-height: 100%;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #03071237;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #7c3aed23;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed95;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-fast {
+  animation: spin 0.6s linear infinite;
+}
+
+/* Glass effect for Auth Card */
+.auth-glass {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.auth-transition {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ანიმაცია ფორმების გამოჩენისთვის */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-pop {
+  animation: fadeInScale 0.2s ease-out forwards;
+}
+
+/* Shake ანიმაცია შეცდომებისთვის */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.15s ease-in-out 0s 2;
+}
+
+/* App-like motion primitives */
+.app-overlay {
+  transition: opacity 220ms ease;
+}
+
+.app-sheet {
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease;
+  will-change: transform, opacity;
+}
+
+.app-dropdown {
+  transition:
+    max-height 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 200ms ease,
+    transform 220ms ease;
+  transform-origin: top;
+}
+
+.app-route-enter {
+  animation: appRouteEnter 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes appRouteEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tooltip Glass Effect */
+.tooltip-glass {
+  background: rgba(39, 43, 65, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* უფრო მკვეთრი Focus ეფექტი */
+.input-focus-ring {
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+}
+
+/* ფორმის კონტეინერის უფრო სოლიდური ჩრდილი */
+.auth-card-shadow {
+  box-shadow: 0 20px 50px -12px rgba(39, 43, 65, 0.15);
+}
+
+
+.autofill-fix:-webkit-autofill,
+  .autofill-fix:-webkit-autofill:hover, 
+  .autofill-fix:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px #F9FAFB inset !important;
+    -webkit-text-fill-color: #0F172A !important; /* მუქი ფერი */
+    transition: background-color 5000s ease-in-out 0s;
+  }
+  
+  /* ეს ხაზი უზრუნველყოფს რომ ტექსტი ყოველთვის გამოჩნდეს */
+  input, select, textarea {
+    color: #0F172A !important; 
+  }
+
+  input::placeholder {
+    color: #94A3B8 !important;
+  }
+
+/* App-like mobile behavior for webview */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-overlay,
+  .app-sheet,
+  .app-dropdown {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,393 @@
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { db } from "../firebase";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  deleteDoc,
+  setDoc,
+} from "firebase/firestore";
+import Sidebar from "../components/Dashboard/Sidebar";
+import TopNav from "../components/Dashboard/TopNav";
+import { useAuth } from "../context/AuthContext"; 
+import { canAddInventoryItem } from "../config/plans"; 
+import {
+  PackageSearch,
+  Plus,
+  AlertCircle,
+  TrendingDown,
+  Box,
+  Edit3,
+  Trash2,
+  Loader2,
+  Lock,
+} from "lucide-react";
+
+const Inventory = () => {
+  const { currentUser, clinicData, userData, role } = useAuth();
+  
+  // წვდომის შეზღუდვა
+  const isAccountant = role === 'accountant';
+  const isDoctor = role === 'doctor';
+  const isAdminOrManager = role === 'admin' || role === 'manager';
+  
+  if (isDoctor) {
+    return (
+      <div className="h-screen w-full bg-slate-50 flex items-center justify-center font-nino text-brand-deep">
+        <div className="text-center">
+            <Lock size={48} className="mx-auto mb-4 text-brand-purple" />
+            <h2 className="text-2xl font-black italic">წვდომა შეზღუდულია</h2>
+            <p className="text-sm font-bold mt-2 text-gray-400">საწყობის ნახვის უფლება არ გაქვთ.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isReadOnly = isAccountant;
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [filter, setFilter] = useState("ყველა");
+  const [formErrors, setFormErrors] = useState({});
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+
+  // ფორმის State
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "consumable",
+    quantity: "",
+    unit: "ცალი",
+    minThreshold: "",
+    pricePerUnit: "",
+  });
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const q = query(
+      collection(db, "inventory"),
+      where("clinicId", "==", userData?.clinicId || currentUser.uid),
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const inventoryData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setItems(inventoryData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [clinicData, userData, currentUser]);
+
+  // ლიმიტის შემოწმება (მხოლოდ ახალი ნივთის დამატებისას)
+  const isLimitReached = !editingItem && !canAddInventoryItem(clinicData?.plan, items.length);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    // 1. ვალიდაცია
+    let errors = {};
+    if (!formData.name) errors.name = "მიუთითეთ დასახელება";
+    if (!formData.quantity) errors.quantity = "მიუთითეთ რაოდენობა";
+    if (!formData.pricePerUnit) errors.pricePerUnit = "მიუთითეთ ფასი";
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    // 2. ლიმიტის შემოწმება
+    if (!editingItem && !canAddInventoryItem(clinicData?.plan, items.length)) {
+      setFormErrors({ general: "ლიმიტი ამოწურულია. გადადით პრემიუმ პაკეტზე." });
+      return;
+    }
+
+    const docId = editingItem ? editingItem.id : doc(collection(db, "inventory")).id;
+
+    try {
+      await setDoc(doc(db, "inventory", docId), {
+        ...formData,
+        clinicId: userData?.clinicId || currentUser.uid,
+        quantity: Number(formData.quantity),
+        minThreshold: Number(formData.minThreshold || 0),
+        pricePerUnit: Number(formData.pricePerUnit),
+        updatedAt: new Date().toISOString(),
+      });
+
+      setIsModalOpen(false);
+      setEditingItem(null);
+      setFormErrors({});
+      setFormData({ name: "", category: "consumable", quantity: "", unit: "ცალი", minThreshold: "", pricePerUnit: "" });
+    } catch (err) {
+      setFormErrors({ general: "შენახვა ვერ მოხერხდა." });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setDeleteTargetId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteTargetId) {
+      await deleteDoc(doc(db, "inventory", deleteTargetId));
+      setDeleteTargetId(null);
+    }
+  };
+
+  const openEditModal = (item) => {
+    setFormErrors({});
+    setEditingItem(item);
+    setFormData({
+      name: item.name || "",
+      category: item.category || "consumable",
+      quantity: item.quantity || "",
+      unit: item.unit || "ცალი",
+      minThreshold: item.minThreshold || "",
+      pricePerUnit: item.pricePerUnit || "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const filteredItems = items.filter((item) => {
+    if (filter === "ყველა") return true;
+    return item.category === filter;
+  });
+
+  const lowStockItems = items.filter((i) => i.quantity <= i.minThreshold);
+
+  return (
+    <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+
+        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+          <div className="max-w-[1600px] mx-auto space-y-8 pb-12">
+            
+            {/* Header */}
+            <div className="flex items-end justify-between">
+              <div>
+                <h1 className="text-3xl font-black text-brand-deep italic tracking-tighter">
+                  საწყობი და მარაგები
+                </h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+                    მასალების ავტომატური აღრიცხვა
+                  </p>
+                  {clinicData?.plan === "free" && (
+                    <span className="text-[9px] bg-brand-purple/10 text-brand-purple px-2 py-0.5 rounded-full font-black uppercase">
+                      Free: {items.length}/10
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {!isReadOnly && (
+                isLimitReached ? (
+                  <Link
+                    to="/settings/billing"
+                    className="flex items-center gap-2 bg-amber-500 text-white px-6 py-4 rounded-2xl shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all font-black text-[11px] uppercase tracking-widest cursor-pointer animate-pulse"
+                  >
+                    <Lock size={18} /> ლიმიტი შევსებულია
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setEditingItem(null);
+                      setFormErrors({});
+                      setFormData({ name: "", category: "consumable", quantity: "", unit: "ცალი", minThreshold: "", pricePerUnit: "" });
+                      setIsModalOpen(true);
+                    }}
+                    className="flex items-center gap-2 bg-brand-purple text-white px-6 py-4 rounded-2xl shadow-lg shadow-brand-purple/20 hover:bg-brand-deep transition-all font-black text-[11px] uppercase tracking-widest cursor-pointer"
+                  >
+                    <Plus size={18} /> ახალი ნივთი
+                  </button>
+                )
+              )}
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <StatCard title="სულ დასახელება" amount={items.length} icon={Box} color="text-brand-purple" bg="bg-brand-purple/5" />
+              <StatCard title="კრიტიკული მარაგი" amount={lowStockItems.length} icon={AlertCircle} color="text-red-500" bg="bg-red-50" alert={lowStockItems.length > 0} />
+              <StatCard title="მარაგების ღირებულება" amount={`${items.reduce((sum, item) => sum + item.quantity * item.pricePerUnit, 0).toLocaleString()} ₾`} icon={TrendingDown} color="text-emerald-500" bg="bg-emerald-50" />
+            </div>
+
+            {/* Filters */}
+            <div className="flex gap-2 pb-2 overflow-x-auto no-scrollbar">
+              {["ყველა", "consumable", "medicine", "instrument"].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer whitespace-nowrap ${
+                    filter === cat ? "bg-brand-purple text-white shadow-lg" : "bg-white text-gray-400 border border-gray-100 hover:bg-slate-50"
+                  }`}
+                >
+                  {cat === "ყველა" ? "ყველა მასალა" : cat === "consumable" ? "სახარჯი" : cat === "medicine" ? "მედიკამენტები" : "ინსტრუმენტები"}
+                </button>
+              ))}
+            </div>
+
+            {/* Table */}
+            <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
+              <div className="p-8 border-b border-gray-50">
+                <h3 className="text-xl font-black text-brand-deep italic">აქტიური მარაგები</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                      <th className="px-4 py-6 md:p-6">დასახელება / კატეგორია</th>
+                      <th className="px-4 py-6 md:p-6">რაოდენობა</th>
+                      <th className="px-4 py-6 md:p-6 hidden sm:table-cell">ერთეულის ფასი</th>
+                      <th className="px-4 py-6 md:p-6">სტატუსი</th>
+                      <th className="px-4 py-6 md:p-6 text-right">მართვა</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {loading ? (
+                      <tr><td colSpan="5" className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-brand-purple" /></td></tr>
+                    ) : filteredItems.length > 0 ? (
+                      filteredItems.map((item) => {
+                        const isLow = item.quantity <= item.minThreshold;
+                        return (
+                          <tr key={item.id} className="group hover:bg-slate-50/50 transition-all">
+                            <td className="px-4 py-6 md:p-6">
+                              <h5 className="font-bold text-slate-800 text-sm">{item.name}</h5>
+                              <p className="text-[9px] text-gray-400 uppercase font-black tracking-tighter mt-0.5">
+                                {item.category === "consumable" ? "სახარჯი" : item.category === "medicine" ? "მედიკამენტი" : "ინსტრუმენტი"}
+                              </p>
+                            </td>
+                            <td className="px-4 py-6 md:p-6 font-black text-base md:text-lg">
+                              <span className={isLow ? "text-red-500" : "text-brand-deep"}>{item.quantity}</span>
+                              <span className="text-[10px] text-gray-400 ml-1 uppercase">{item.unit}</span>
+                            </td>
+                            <td className="px-4 py-6 md:p-6 font-bold text-slate-700 text-sm hidden sm:table-cell">{item.pricePerUnit} ₾</td>
+                            <td className="px-4 py-6 md:p-6">
+                              <span className={`inline-flex px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${isLow ? "bg-red-50 text-red-600 border border-red-100" : "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}>
+                                {isLow ? "შევსება" : "ნორმა"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-6 md:p-6 text-right">
+                              {!isReadOnly && (
+                                <div className="flex justify-end gap-2 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button onClick={() => openEditModal(item)} className="p-2 md:p-3 text-slate-400 hover:text-brand-purple bg-slate-50 hover:bg-white border border-slate-100 hover:border-brand-purple/20 rounded-xl transition-all shadow-sm"><Edit3 size={16} /></button>
+                                  <button onClick={() => handleDelete(item.id)} className="p-2 md:p-3 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-white border border-slate-100 hover:border-red-200 rounded-xl transition-all shadow-sm"><Trash2 size={16} /></button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr><td colSpan="5" className="p-20 text-center text-gray-300 font-bold uppercase text-[10px]">ნივთები არ მოიძებნა</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal */}
+          {isModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+              <div className="bg-white rounded-[40px] w-full max-w-lg p-10 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200">
+                <div className="mb-8 text-center">
+                  <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter">{editingItem ? "მასალის რედაქტირება" : "ახალი მასალა"}</h3>
+                  {formErrors.general && <p className="text-[11px] text-red-500 font-black uppercase mt-2">{formErrors.general}</p>}
+                </div>
+
+                <form onSubmit={handleSave} className="space-y-5">
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="col-span-2">
+                      <InputField icon={Box} placeholder="დასახელება" label="მასალის სახელი" value={formData.name} onChange={(val) => setFormData({ ...formData, name: val })} error={formErrors.name} />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-brand-deep/40 uppercase tracking-[0.2em] ml-5 mb-2 block">ტიპი</label>
+                      <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-[22px] px-6 py-4 outline-none font-bold text-sm text-brand-deep appearance-none transition-all">
+                        <option value="consumable">📦 სახარჯი</option>
+                        <option value="medicine">💊 მედიკამენტი</option>
+                        <option value="instrument">🛠️ ინსტრუმენტი</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-brand-deep/40 uppercase tracking-[0.2em] ml-5 mb-2 block">ზომის ერთეული</label>
+                      <select value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} className="w-full bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-[22px] px-6 py-4 outline-none font-bold text-sm text-brand-deep appearance-none transition-all">
+                        <option value="ცალი">ცალი</option>
+                        <option value="გრამი">გრამი (გ)</option>
+                        <option value="მლ">მილილიტრი (მლ)</option>
+                        <option value="კოლოფი">კოლოფი</option>
+                      </select>
+                    </div>
+                    <InputField icon={TrendingDown} type="number" label="რაოდენობა" value={formData.quantity} onChange={(val) => setFormData({ ...formData, quantity: val })} error={formErrors.quantity} />
+                    <InputField icon={AlertCircle} type="number" label="მინ. ზღვარი" value={formData.minThreshold} onChange={(val) => setFormData({ ...formData, minThreshold: val })} />
+                    <div className="col-span-2">
+                      <InputField icon={TrendingDown} type="number" step="0.01" label="ერთეულის ფასი (₾)" value={formData.pricePerUnit} onChange={(val) => setFormData({ ...formData, pricePerUnit: val })} error={formErrors.pricePerUnit} />
+                    </div>
+                  </div>
+                  <div className="flex gap-4 pt-6">
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-5 bg-slate-50 text-slate-400 rounded-[24px] font-black text-[11px] uppercase tracking-widest">გაუქმება</button>
+                    <button type="submit" className="flex-1 py-5 bg-brand-deep text-white rounded-[24px] font-black text-[11px] uppercase tracking-widest shadow-xl">შენახვა</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </main>
+
+          {deleteTargetId && (
+            <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
+              <div style={{position:'fixed',inset:0,background:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}} onClick={() => setDeleteTargetId(null)} />
+              <div className="bg-white rounded-[40px] w-full max-w-sm p-10 shadow-2xl relative z-10 text-center animate-in zoom-in-95 duration-200">
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <Trash2 size={32} />
+                </div>
+                <h3 className="text-xl font-black text-brand-deep italic mb-2">ნივთის წაშლა</h3>
+                <p className="text-xs text-gray-400 font-bold leading-relaxed mb-8 uppercase tracking-widest">
+                  ეს ნივთი სამუდამოდ წაიშლება საწყობიდან.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <button onClick={() => setDeleteTargetId(null)} className="py-4 bg-slate-50 text-gray-500 rounded-2xl font-black text-[10px] uppercase tracking-widest">გაუქმება</button>
+                  <button onClick={confirmDelete} className="py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg">წაშლა</button>
+                </div>
+              </div>
+            </div>
+          )}
+      </div>
+    </div>
+  );
+};
+
+// დამხმარე კომპონენტები
+const StatCard = ({ title, amount, icon: Icon, color, bg, alert }) => (
+  <div className={`bg-white p-8 rounded-[32px] border ${alert ? "border-red-200 shadow-red-500/10 shadow-lg" : "border-gray-100 shadow-sm"} flex items-center gap-6`}>
+    <div className={`w-16 h-16 ${bg} ${color} rounded-2xl flex items-center justify-center shrink-0`}><Icon size={28} /></div>
+    <div>
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{title}</p>
+      <p className="text-2xl font-black text-brand-deep italic">{amount}</p>
+    </div>
+  </div>
+);
+
+const InputField = ({ icon: Icon, label, error, value, onChange, ...props }) => (
+  <div className="space-y-1 w-full">
+    <label className="text-[10px] font-black text-brand-deep/40 uppercase tracking-[0.2em] ml-5 mb-2 block">{label}</label>
+    <div className={`relative border-2 rounded-[22px] transition-all duration-300 ${error ? "border-red-500 bg-red-50" : "border-transparent bg-slate-50 focus-within:border-brand-purple focus-within:bg-white focus-within:shadow-lg focus-within:shadow-brand-purple/5"}`}>
+      <Icon className={`absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${error ? "text-red-500" : "text-gray-400 group-focus-within:text-brand-purple"}`} size={18} />
+      <input value={value} onChange={(e) => onChange(e.target.value)} {...props} className="w-full pl-14 pr-6 py-4 bg-transparent outline-none font-bold text-sm text-brand-deep placeholder:text-gray-300" />
+    </div>
+    {error && <p className="text-[10px] text-red-600 font-black ml-6 uppercase tracking-widest">{error}</p>}
+  </div>
+);
+
+export default Inventory;
