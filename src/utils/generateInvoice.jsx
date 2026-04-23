@@ -1,4 +1,4 @@
-export const generateInvoice = (order, clinicData) => {
+export const generateInvoice = async (order, clinicData) => {
   const vatAmount = order.vatAmount || (Number(order.price || 0) * 0.18);
   const materialsAmount = order.extraMaterials?.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0) || 0;
   const servicesAmount = Number(order.price || 0) - materialsAmount;
@@ -174,8 +174,10 @@ export const generateInvoice = (order, clinicData) => {
   pri.document.write(content);
   pri.document.close();
 
-  // Remove iframe after print (or a delay)
-  setTimeout(() => {
-    document.body.removeChild(iframe);
-  }, 1000);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+      resolve();
+    }, 1500);
+  });
 };

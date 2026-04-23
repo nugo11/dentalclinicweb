@@ -14,7 +14,10 @@ const SalaryArchive = () => {
   const navigate = useNavigate();
   // ... (states remain same)
 
-  const handlePrint = (h) => {
+  const [printingId, setPrintingId] = useState(null);
+
+  const handlePrint = async (h) => {
+    setPrintingId(h.id);
     const content = `
       <html>
         <head>
@@ -68,7 +71,6 @@ const SalaryArchive = () => {
           <script>
             window.onload = function() { 
               window.print(); 
-              window.onafterprint = function() { window.close(); };
             }
           </script>
         </body>
@@ -88,9 +90,13 @@ const SalaryArchive = () => {
     pri.document.write(content);
     pri.document.close();
 
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-    }, 1000);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        setPrintingId(null);
+        resolve();
+      }, 1500);
+    });
   };
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [history, setHistory] = useState([]);
@@ -250,21 +256,23 @@ const SalaryArchive = () => {
                             </p>
                           </td>
                           <td className="p-6">
-                            <div className="flex items-center justify-center gap-2">
-                               <button 
-                                onClick={() => handlePrint(h)}
-                                className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all"
-                                title="ბეჭდვა"
-                               >
-                                  <Printer size={16} />
-                               </button>
-                               <button 
-                                onClick={() => handlePrint(h)}
-                                className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all"
-                                title="PDF ჩამოტვირთვა"
-                               >
-                                  <FileDown size={16} />
-                               </button>
+                             <div className="flex items-center justify-center gap-2">
+                                <button 
+                                 disabled={printingId === h.id}
+                                 onClick={() => handlePrint(h)}
+                                 className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all disabled:opacity-50"
+                                 title="ბეჭდვა"
+                                >
+                                   {printingId === h.id ? <Loader2 className="animate-spin" size={16} /> : <Printer size={16} />}
+                                </button>
+                                <button 
+                                 disabled={printingId === h.id}
+                                 onClick={() => handlePrint(h)}
+                                 className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all disabled:opacity-50"
+                                 title="PDF ჩამოტვირთვა"
+                                >
+                                   {printingId === h.id ? <Loader2 className="animate-spin" size={16} /> : <FileDown size={16} />}
+                                </button>
                                {isAdmin && (
                                  <button 
                                   onClick={() => {

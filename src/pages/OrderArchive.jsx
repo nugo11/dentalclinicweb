@@ -16,7 +16,8 @@ import {
   Printer,
   FileText,
   FileDown,
-  Plus
+  Plus,
+  Loader2
 } from "lucide-react";
 import { generateInvoice } from "../utils/generateInvoice";
 import { generateFinancialReport } from "../utils/generateFinancialReport";
@@ -56,7 +57,11 @@ const OrderArchive = () => {
     return () => unsubscribe();
   }, [userData]);
 
+  const [printingId, setPrintingId] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+
   const handlePrintOrder = async (order) => {
+    setPrintingId(order.id);
     let personalId = "";
     if (order.patientId) {
       try {
@@ -65,7 +70,8 @@ const OrderArchive = () => {
       } catch (e) { console.error(e); }
     }
 
-    generateInvoice({ ...order, personalId }, clinicData);
+    await generateInvoice({ ...order, personalId }, clinicData);
+    setPrintingId(null);
   };
 
   // 1. ფილტრაციის ლოგიკა (Search & Date Range)
@@ -196,10 +202,15 @@ const OrderArchive = () => {
                 </div>
 
                 <button 
-                  onClick={handleExportReport}
-                  className="w-full sm:w-auto px-6 py-3 bg-brand-deep text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-purple transition-all flex items-center justify-center gap-2"
+                  disabled={isExporting}
+                  onClick={async () => {
+                    setIsExporting(true);
+                    await generateFinancialReport(filteredData, dateFrom, dateTo, clinicData);
+                    setIsExporting(false);
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 bg-brand-deep text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-purple transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <Printer size={16} /> ექსპორტი (PDF)
+                  {isExporting ? <Loader2 className="animate-spin" size={16} /> : <Printer size={16} />} ექსპორტი (PDF)
                 </button>
               </div>
             </div>
@@ -260,22 +271,24 @@ const OrderArchive = () => {
                             {order.price} ₾
                           </td>
                           <td className="p-6 text-right">
-                            <div className="flex justify-end items-center gap-2">
-                               <button
-                                 onClick={() => handlePrintOrder(order)}
-                                 className="p-3 text-gray-500 hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer"
-                                 title="ბეჭდვა"
-                               >
-                                 <Printer size={18} />
-                               </button>
-                               <button
-                                 onClick={() => handlePrintOrder(order)}
-                                 className="p-3 text-gray-500 hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer"
-                                 title="PDF ჩამოტვირთვა"
-                               >
-                                 <FileDown size={18} />
-                               </button>
-                            </div>
+                             <div className="flex justify-end items-center gap-2">
+                                <button
+                                  disabled={printingId === order.id}
+                                  onClick={() => handlePrintOrder(order)}
+                                  className="p-3 text-gray-500 hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                                  title="ბეჭდვა"
+                                >
+                                  {printingId === order.id ? <Loader2 className="animate-spin" size={18} /> : <Printer size={18} />}
+                                </button>
+                                <button
+                                  disabled={printingId === order.id}
+                                  onClick={() => handlePrintOrder(order)}
+                                  className="p-3 text-gray-500 hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                                  title="PDF ჩამოტვირთვა"
+                                >
+                                  {printingId === order.id ? <Loader2 className="animate-spin" size={18} /> : <FileDown size={18} />}
+                                </button>
+                             </div>
                           </td>
                         </tr>
                       ))

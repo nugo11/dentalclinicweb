@@ -62,8 +62,12 @@ const PatientsTable = ({ externalSearch = "" }) => {
     setIsModalOpen(true);
   };
 
-  const handleFinalGenerate = () => {
-    generateForm100(selectedPatient, clinicData, doctorNotes);
+  const [isGeneratingForm, setIsGeneratingForm] = useState(false);
+
+  const handleFinalGenerate = async () => {
+    setIsGeneratingForm(true);
+    await generateForm100(selectedPatient, clinicData, doctorNotes);
+    setIsGeneratingForm(false);
     setIsModalOpen(false);
   };
 
@@ -188,11 +192,12 @@ const PatientsTable = ({ externalSearch = "" }) => {
                 >
                   გაუქმება
                 </button>
-                <button
+                 <button
+                  disabled={isGeneratingForm}
                   onClick={handleFinalGenerate}
-                  className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="flex-1 py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <FileText size={14} /> PDF გენერაცია
+                  {isGeneratingForm ? <Loader2 className="animate-spin" size={14} /> : <FileText size={14} />} PDF გენერაცია
                 </button>
               </div>
             </div>

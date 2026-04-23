@@ -17,7 +17,7 @@ const statusTranslations = {
   canal_treated: "არხები"
 };
 
-export const generateForm100 = (patient, clinicData, doctorNotes = "") => {
+export const generateForm100 = async (patient, clinicData, doctorNotes = "") => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const margin = 20;
@@ -122,11 +122,15 @@ export const generateForm100 = (patient, clinicData, doctorNotes = "") => {
   iframe.style.display = 'none';
   iframe.src = url;
   document.body.appendChild(iframe);
-  iframe.onload = () => {
-    iframe.contentWindow.print();
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-      URL.revokeObjectURL(url);
-    }, 1000);
-  };
+
+  return new Promise((resolve) => {
+    iframe.onload = () => {
+      iframe.contentWindow.print();
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        URL.revokeObjectURL(url);
+        resolve();
+      }, 1500);
+    };
+  });
 };

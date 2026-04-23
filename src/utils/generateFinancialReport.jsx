@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { geofont } from './fontBase64';
 
-export const generateFinancialReport = (data, dateFrom, dateTo, clinicData) => {
+export const generateFinancialReport = async (data, dateFrom, dateTo, clinicData) => {
   try {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
@@ -86,13 +86,17 @@ export const generateFinancialReport = (data, dateFrom, dateTo, clinicData) => {
     iframe.style.display = 'none';
     iframe.src = url;
     document.body.appendChild(iframe);
-    iframe.onload = () => {
-      iframe.contentWindow.print();
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-        URL.revokeObjectURL(url);
-      }, 1000);
-    };
+
+    return new Promise((resolve) => {
+      iframe.onload = () => {
+        iframe.contentWindow.print();
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+          resolve();
+        }, 1500);
+      };
+    });
 
   } catch (error) {
     console.error("Report Error:", error);
