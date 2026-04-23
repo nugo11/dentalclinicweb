@@ -130,26 +130,29 @@ const ClinicPortfolio = () => {
     setUploading(true);
     try {
       const compressedBlob = await compressImage(file);
-      // ImgBB API მოითხოვს Base64-ს ან ფაილს FormData-ში
-      const API_KEY = "6411f58993206a599981883344607834"; // ჩავწერე პირდაპირ რომ იმუშაოს
-      
-      const uploadData = new FormData();
-      uploadData.append("image", compressedBlob);
+    // Cloudinary upload logic
+    const CLOUD_NAME = "dxyhm9ftw"; // Use the provided Cloud Name
+    const UPLOAD_PRESET = "ml_default"; // Use the provided Upload Preset
 
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
-        method: "POST",
-        body: uploadData
-      });
+    const uploadData = new FormData();
+    uploadData.append("file", compressedBlob); // Cloudinary uses 'file' as the key for the upload
+    uploadData.append("upload_preset", UPLOAD_PRESET); // Append the upload preset
 
-      const result = await response.json();
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: "POST",
+      body: uploadData,
+    });
 
-      if (result.success) {
-        setFormData(prev => ({ ...prev, logoUrl: result.data.url }));
-        setToast({ type: "success", text: "ლოგო აიტვირთა!" });
-      } else {
-        console.error("ImgBB Error:", result);
-        throw new Error(result.error?.message || "Upload failed");
-      }
+    const result = await response.json();
+
+    if (result.secure_url) { // Cloudinary response structure
+      setFormData(prev => ({ ...prev, logoUrl: result.secure_url }));
+      setToast({ type: "success", text: "ლოგო აიტვირთა!" });
+    } else {
+      console.error("Cloudinary Error:", result);
+      // Cloudinary errors might be in result.error.message or similar
+      throw new Error(result.error?.message || "Upload failed");
+    }
     } catch (error) {
       console.error(error);
       setToast({ type: "error", text: `შეცდომა: ${error.message}` });
