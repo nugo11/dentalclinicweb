@@ -3,7 +3,6 @@ export const generateInvoice = (order, clinicData) => {
   const materialsAmount = order.extraMaterials?.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0) || 0;
   const servicesAmount = Number(order.price || 0) - materialsAmount;
 
-  const printWindow = window.open('', '_blank');
   const content = `
     <html>
       <head>
@@ -156,12 +155,27 @@ export const generateInvoice = (order, clinicData) => {
         <script>
           window.onload = function() { 
             window.print(); 
-            window.onafterprint = function() { window.close(); };
           }
         </script>
       </body>
     </html>
   `;
-  printWindow.document.write(content);
-  printWindow.document.close();
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
+
+  const pri = iframe.contentWindow;
+  pri.document.open();
+  pri.document.write(content);
+  pri.document.close();
+
+  // Remove iframe after print (or a delay)
+  setTimeout(() => {
+    document.body.removeChild(iframe);
+  }, 1000);
 };

@@ -15,7 +15,6 @@ const SalaryArchive = () => {
   // ... (states remain same)
 
   const handlePrint = (h) => {
-    const printWindow = window.open('', '_blank');
     const content = `
       <html>
         <head>
@@ -75,8 +74,23 @@ const SalaryArchive = () => {
         </body>
       </html>
     `;
-    printWindow.document.write(content);
-    printWindow.document.close();
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const pri = iframe.contentWindow;
+    pri.document.open();
+    pri.document.write(content);
+    pri.document.close();
+
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+    }, 1000);
   };
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [history, setHistory] = useState([]);

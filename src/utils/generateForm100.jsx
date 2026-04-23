@@ -116,5 +116,17 @@ export const generateForm100 = (patient, clinicData, doctorNotes = "") => {
   doc.line(pageWidth - margin - 50, currentY, pageWidth - margin, currentY);
   doc.text("ბეჭდის ადგილი", pageWidth - margin - 50, currentY + 5);
 
-  doc.save(`Forma100_${patient.fullName || "პაციენტი"}.pdf`);
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = url;
+  document.body.appendChild(iframe);
+  iframe.onload = () => {
+    iframe.contentWindow.print();
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+      URL.revokeObjectURL(url);
+    }, 1000);
+  };
 };
