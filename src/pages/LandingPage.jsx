@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { PLANS } from "../config/plans";
 import {
@@ -129,7 +130,12 @@ const LandingPage = ({ user }) => {
   const prevSlide = () => setCarouselIndex((prev) => (prev - 1 + clinics.length) % Math.max(1, clinics.length));
 
   return (
-    <div className="min-h-screen bg-white font-nino selection:bg-brand-purple/10 overflow-x-hidden">
+    <>
+      <Helmet>
+        <title>DentalHub — კლინიკის მართვის ინოვაციური პლატფორმა</title>
+        <meta name="description" content="მართე შენი სტომატოლოგიური კლინიკა ციფრულად. პაციენტების აღრიცხვა, ფინანსური ანალიტიკა და ავტომატური ჯავშნები ერთ სივრცეში." />
+      </Helmet>
+      <div className="min-h-screen bg-white font-nino selection:bg-brand-purple/10 overflow-x-hidden">
       <MainHeader user={user} />
 
       {/* 2. Hero Section - ENHANCED */}
@@ -680,6 +686,7 @@ const LandingPage = ({ user }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { db } from '../firebase';
 import { 
   collection, query, where, orderBy, limit, 
@@ -157,7 +158,11 @@ const ActivityLog = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-bg-soft font-nino">
+    <>
+      <Helmet>
+        <title>აქტივობები — DentalHub</title>
+      </Helmet>
+      <div className="flex min-h-screen bg-bg-soft font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <main className="flex-1 transition-all duration-300 min-w-0">
@@ -303,6 +308,7 @@ const ActivityLog = () => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 

@@ -49,7 +49,10 @@ const PrivateRoute = ({ children, title, allowedRoles = [] }) => {
 
   return (
     <>
-      <Helmet><title>{title || 'კლინიკის მართვა'} — DentalHub</title></Helmet>
+      <Helmet>
+        <title>{title || 'კლინიკის მართვა'} — DentalHub</title>
+        <meta name="description" content={`DentalHub — ${title || 'კლინიკის მართვის სისტემა'}. მართეთ თქვენი კლინიკა ეფექტურად.`} />
+      </Helmet>
       {children}
     </>
   );
@@ -64,10 +67,10 @@ function AppContent() {
   return (
     <div className="app-route-enter">
       <Routes>
-        <Route path="/" element={<><Helmet><title>მთავარი — DentalHub</title></Helmet><LandingPage user={currentUser} /></>} />
+        <Route path="/" element={<LandingPage user={currentUser} />} />
         
         <Route path="/auth" element={
-          currentUser && activeStaff ? <Navigate to="/dashboard" replace /> : <><Helmet><title>ავტორიზაცია — DentalHub</title></Helmet><AuthPage /></>
+          currentUser && activeStaff ? <Navigate to="/dashboard" replace /> : <AuthPage />
         } />
 
         {/* დაცული როუტები როლების მიხედვით */}
@@ -158,7 +161,7 @@ function AppContent() {
         } />
 
         <Route path="/suspended" element={currentUser ? <SuspendedPage /> : <Navigate to="/auth" replace />} />
-        <Route path="/catalog" element={<><Helmet><title>კლინიკების კატალოგი — DentalHub</title></Helmet><ClinicCatalog /></>} />
+        <Route path="/catalog" element={<><Helmet><title>კლინიკების კატალოგი — DentalHub</title><meta name="description" content="დაათვალიერეთ საქართველოში მოქმედი წამყვანი სტომატოლოგიური კლინიკები, მათი სერვისები და შეთავაზებები." /></Helmet><ClinicCatalog /></>} />
         <Route path="/catalog/:id" element={<ClinicPublicProfile />} />
         <Route
           path="/documentation"

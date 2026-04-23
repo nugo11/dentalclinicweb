@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "../../context/AuthContext";
 import { db, auth } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore";
@@ -276,7 +277,11 @@ const ClinicPortfolio = () => {
 
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+    <>
+      <Helmet>
+        <title>პორტფოლიო და პარამეტრები — DentalHub</title>
+      </Helmet>
+      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -510,6 +515,7 @@ const ClinicPortfolio = () => {
         </main>
       </div>
     </div>
+    </>
   );
 };
 

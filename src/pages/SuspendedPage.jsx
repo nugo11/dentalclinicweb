@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "../context/AuthContext";
 import { AlertOctagon, Phone, Mail, LogOut, ArrowLeft } from "lucide-react";
 import { auth } from "../firebase";
@@ -12,7 +13,11 @@ const SuspendedPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] font-nino flex items-center justify-center p-4">
+    <>
+      <Helmet>
+        <title>წვდომა შეჩერებულია — DentalHub</title>
+      </Helmet>
+      <div className="min-h-screen w-full bg-[#F8FAFC] font-nino flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white rounded-[48px] p-8 md:p-16 shadow-[0_40px_100px_rgba(0,0,0,0.04)] border border-slate-100 text-center relative overflow-hidden">
         {/* Background Accents */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-red-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50"></div>
@@ -68,6 +73,7 @@ const SuspendedPage = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

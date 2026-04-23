@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -154,7 +155,11 @@ const CalendarPage = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino">
+    <>
+      <Helmet>
+        <title>განრიგი — DentalHub</title>
+      </Helmet>
+      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
@@ -368,6 +373,7 @@ const CalendarPage = () => {
         }
       `}</style>
     </div>
+    </>
   );
 };
 

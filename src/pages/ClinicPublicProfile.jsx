@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -80,7 +81,11 @@ const ClinicPublicProfile = () => {
   const features = PLANS[pKey]?.portfolioFeatures || PLANS.free.portfolioFeatures;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-nino selection:bg-brand-purple/10 pb-20">
+    <>
+      <Helmet>
+        <title>{clinic?.clinicName || "კლინიკა"} — DentalHub</title>
+      </Helmet>
+      <div className="min-h-screen bg-slate-50 font-nino selection:bg-brand-purple/10 pb-20">
       <MainHeader user={currentUser} />
 
       <main className="pt-12 px-6">
@@ -249,6 +254,7 @@ const ClinicPublicProfile = () => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 

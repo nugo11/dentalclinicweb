@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "../../context/AuthContext";
 import { PLANS } from "../../config/plans";
 import Sidebar from "../../components/Dashboard/Sidebar";
 import TopNav from "../../components/Dashboard/TopNav";
-import { useState } from "react";
 import {
   Crown, Sparkles, ShieldCheck, CreditCard,
   Mail, Phone, CheckCircle2, ArrowRight, Info, X
@@ -60,7 +60,11 @@ const Billing = () => {
   const currentPlanId = currentPlanIdRaw === "solo" ? "basic" : currentPlanIdRaw;
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino">
+    <>
+      <Helmet>
+        <title>ანგარიშსწორება და პაკეტები — DentalHub</title>
+      </Helmet>
+      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -253,6 +257,7 @@ const Billing = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import {
@@ -282,7 +283,11 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen w-full bg-[#F8FAFC] font-nino flex overflow-hidden">
+    <>
+      <Helmet>
+        <title>{isLogin ? "ავტორიზაცია" : "რეგისტრაცია"} — DentalHub</title>
+      </Helmet>
+      <div className="min-h-screen lg:h-screen w-full bg-[#F8FAFC] font-nino flex overflow-hidden">
       
       {/* --- მარცხენა პანელი: Modern & Sharp --- */}
       <div className={`hidden lg:flex relative w-[45%] h-screen p-20 flex-col justify-between text-white transition-all duration-1000 ease-in-out ${!isLogin ? "bg-brand-purple" : "bg-brand-deep"}`}>
@@ -410,8 +415,17 @@ const AuthPage = () => {
                    </div>
                 )}
 
-                <button className="w-full bg-brand-deep text-white py-5 sm:py-7 rounded-[20px] sm:rounded-[28px] font-black text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-brand-purple transition-all shadow-2xl hover:shadow-brand-purple/20 flex items-center justify-center gap-3 group mt-8 sm:mt-10 active:scale-[0.98]">
-                  გაგრძელება <ArrowRight size={22} className="group-hover:translate-x-2 transition-transform" />
+                <button 
+                  disabled={isLoading}
+                  className="w-full bg-brand-deep text-white py-5 sm:py-7 rounded-[20px] sm:rounded-[28px] font-black text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-brand-purple transition-all shadow-2xl hover:shadow-brand-purple/20 flex items-center justify-center gap-3 group mt-8 sm:mt-10 active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" size={22} />
+                  ) : (
+                    <>
+                      {isLogin ? "ავტორიზაცია" : "რეგისტრაცია"} <ArrowRight size={22} className="group-hover:translate-x-2 transition-transform" />
+                    </>
+                  )}
                 </button>
               </form>
 
@@ -529,6 +543,7 @@ const AuthPage = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

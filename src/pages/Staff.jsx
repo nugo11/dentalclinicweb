@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { db } from "../firebase";
 import { 
   collection, query, where, onSnapshot, 
@@ -189,7 +190,11 @@ const Staff = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+    <>
+      <Helmet>
+        <title>თანამშრომლები — DentalHub</title>
+      </Helmet>
+      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -456,6 +461,7 @@ const Staff = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

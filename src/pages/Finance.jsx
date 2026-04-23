@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -79,7 +80,11 @@ const Finance = () => {
   }, [userData]);
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+    <>
+      <Helmet>
+        <title>ფინანსები — DentalHub</title>
+      </Helmet>
+      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -209,6 +214,7 @@ const Finance = () => {
         </main>
       </div>
     </div>
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
@@ -193,7 +194,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+    <>
+      <Helmet>
+        <title>სამართავი პანელი — DentalHub</title>
+      </Helmet>
+      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
@@ -364,6 +369,7 @@ const Dashboard = () => {
         </main>
       </div>
     </div>
+    </>
   );
 };
 

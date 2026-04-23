@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { 
@@ -53,7 +54,11 @@ const ClinicCatalog = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 font-nino">
+    <>
+      <Helmet>
+        <title>კლინიკების კატალოგი — DentalHub</title>
+      </Helmet>
+      <div className="min-h-screen bg-slate-50 font-nino">
       <MainHeader user={currentUser} />
 
       {/* Hero Search */}
@@ -109,6 +114,7 @@ const ClinicCatalog = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 
@@ -145,7 +151,7 @@ const ClinicCard = ({ clinic }) => {
             </h3>
             <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-6">
                 <MapPin size={12} className="text-brand-purple" />
-                {clinic.city || "თბილისი"}${clinic.address ? `, ${clinic.address}` : ''}
+                {clinic.city || "თბილისი"}{clinic.address ? `, ${clinic.address}` : ''}
             </div>
             <p className="text-gray-500 text-sm font-medium leading-relaxed italic line-clamp-4">
             {clinic.description || "ამ კლინიკას ჯერ არ დაუმატებია აღწერა."}
