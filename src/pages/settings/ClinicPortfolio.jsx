@@ -289,7 +289,7 @@ const ClinicPortfolio = () => {
         body: JSON.stringify({
           brandID: 2,
           numbers: [finalPhone],
-          text: `AiDent kodi: ${otp}`,
+          text: `AiDent code: ${otp}`,
           otp: true
         })
       });
