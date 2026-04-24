@@ -6,6 +6,8 @@ const PWAInstallBanner = () => {
   const [showBanner, setShowBanner] = useState(false);
   const [showAndroidModal, setShowAndroidModal] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
+  const [showIOSModal, setShowIOSModal] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     // Detect OS
