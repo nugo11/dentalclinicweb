@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/ubill/:path*",
+      "destination": "https://api.ubill.dev/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

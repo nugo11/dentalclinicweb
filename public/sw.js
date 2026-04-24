@@ -1,5 +1,7 @@
 const CACHE_NAME = 'dentalhub-v2';
 const STATIC_ASSETS = [
+  '/',
+  '/index.html',
   '/manifest.json',
   '/favicon.png',
   '/icon-192.png',
@@ -46,7 +48,17 @@ self.addEventListener('fetch', event => {
   // For navigation requests (HTML pages), use network-first
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('/index.html'))
+      fetch(request).catch(async () => {
+        const cachedResponse = await caches.match('/index.html') || await caches.match('/');
+        if (cachedResponse) return cachedResponse;
+        
+        // If neither cache nor network is available, return a basic offline response
+        return new Response('Internet connection is required to load this app.', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: new Headers({ 'Content-Type': 'text/plain' })
+        });
+      })
     );
     return;
   }
