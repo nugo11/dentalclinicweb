@@ -33,7 +33,7 @@ const rows = [
   { label: "ფინანსური ანალიტიკა",   free: true,   basic: true,   pro: true },
   { label: "EHR სინქრონიზაცია",     free: false,  basic: true,   pro: true },
   { label: "SMS შეხსენებები",       free: false,  basic: false,  pro: true },
-  { label: "WhatsApp ინტეგრაცია",   free: false,  basic: false,  pro: true },
+  { label: "ტერმინალის დაკავშირება",   free: false,  basic: false,  pro: true },
   { label: "სადაზღვეო სინქ.",       free: false,  basic: false,  pro: true },
   { label: "კლინიკის კატალოგი",     free: "Basic",basic: "VIP",  pro: "VIP" },
   { label: "ტექ. მხარდაჭერა",       free: false,  basic: true,   pro: true },

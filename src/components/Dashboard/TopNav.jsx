@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
-import { Search, Bell, User, Menu, Settings, LogOut, X, Book } from 'lucide-react';
+import { Search, Bell, User, Menu, Settings, LogOut, X, Book, Loader2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../../firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useEffect, useRef } from 'react';
 
 const TopNav = ({ onMenuClick }) => {
   const { activeStaff, userData, staffLogout, role } = useAuth();
   const navigate = useNavigate();
   
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef(null);
+  
   const [showNotifications, setShowNotifications] = useState(false);
   const initialNotifications = [
     { id: 1, text: "ახალი ჯავშანი: ლევან კაპანაძე", time: "5 წუთის წინ", type: "appointment" },
@@ -42,6 +51,57 @@ const TopNav = ({ onMenuClick }) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  // Live Search Logic
+  useEffect(() => {
+    const searchPatients = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSearchResults([]);
+        setTotalCount(0);
+        setShowResults(false);
+        return;
+      }
+
+      setIsSearching(true);
+      setShowResults(true);
+
+      try {
+        const q = query(
+          collection(db, "patients"),
+          where("clinicId", "==", userData.clinicId)
+        );
+        const snapshot = await getDocs(q);
+        const allPatients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        const filtered = allPatients.filter(p => 
+          (p.fullName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.personalId || "").includes(searchQuery) ||
+          (p.phone || "").includes(searchQuery)
+        );
+
+        setTotalCount(filtered.length);
+        setSearchResults(filtered.slice(0, 5));
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(searchPatients, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery, userData?.clinicId]);
+
+  // Click outside to close search results
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div className="px-4 md:px-8 pt-4 md:pt-6 shrink-0 z-30 font-nino">
       <header className="h-20 md:h-22 px-6 md:px-10 flex items-center justify-between bg-white/80 backdrop-blur-xl border border-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
@@ -53,20 +113,86 @@ const TopNav = ({ onMenuClick }) => {
             <Menu size={20} />
           </button>
           
-          <div className="relative w-full max-w-md group hidden sm:block">
+          <div className="relative w-full max-w-md group hidden sm:block" ref={searchRef}>
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-purple transition-colors" size={18} />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}
-              placeholder="მოძებნე პაციენტი, ისტორია, ანალიზი..." 
-              className="w-full pl-12 pr-4 py-3.5 bg-slate-50/50 rounded-[22px] outline-none font-bold text-[13px] text-brand-deep focus:bg-white focus:ring-4 focus:ring-brand-purple/5 border border-transparent focus:border-brand-purple/20 transition-all"
+              onFocus={() => searchQuery.trim().length >= 2 && setShowResults(true)}
+              placeholder="მოძებნე პაციენტი (სახელი, ID, ტელეფონი)..." 
+              className="w-full pl-12 pr-10 py-3.5 bg-slate-50/50 rounded-[22px] outline-none font-bold text-[13px] text-brand-deep focus:bg-white focus:ring-4 focus:ring-brand-purple/5 border border-transparent focus:border-brand-purple/20 transition-all"
             />
+            {isSearching && (
+              <div className="absolute right-12 top-1/2 -translate-y-1/2">
+                <Loader2 size={14} className="animate-spin text-brand-purple" />
+              </div>
+            )}
             {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
+                <button onClick={() => { setSearchQuery(""); setShowResults(false); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500">
                     <X size={14} />
                 </button>
+            )}
+
+            {/* Search Results Dropdown */}
+            {showResults && searchQuery.trim().length >= 2 && (
+              <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-[28px] shadow-2xl border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">პაციენტები</span>
+                  <span className="text-[9px] font-bold text-brand-purple bg-brand-purple/10 px-2 py-0.5 rounded-full">სულ {totalCount}</span>
+                </div>
+                
+                <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+                  {isSearching ? (
+                    <div className="p-10 text-center">
+                      <Loader2 className="animate-spin text-brand-purple mx-auto mb-2" size={20} />
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">ვეძებ...</p>
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <>
+                      {searchResults.map(patient => (
+                        <div 
+                          key={patient.id} 
+                          onClick={() => {
+                            navigate(`/patients/${patient.id}`);
+                            setShowResults(false);
+                            setSearchQuery("");
+                          }}
+                          className="px-6 py-4 hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group/item"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-brand-purple/5 text-brand-purple flex items-center justify-center font-black group-hover/item:bg-brand-purple group-hover/item:text-white transition-all">
+                              {(patient.fullName || "?")[0]}
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-brand-deep leading-tight group-hover/item:text-brand-purple transition-colors">{patient.fullName}</p>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">ID: {patient.personalId || "N/A"}</p>
+                            </div>
+                          </div>
+                          <ArrowRight size={14} className="text-slate-200 group-hover/item:text-brand-purple group-hover/item:translate-x-1 transition-all" />
+                        </div>
+                      ))}
+                      
+                      {totalCount > 5 && (
+                        <button 
+                          onClick={() => {
+                            navigate(`/patients?search=${encodeURIComponent(searchQuery)}`);
+                            setShowResults(false);
+                          }}
+                          className="w-full py-4 bg-slate-50/50 hover:bg-brand-purple hover:text-white text-brand-purple text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 border-t border-slate-50"
+                        >
+                          მეტის ნახვა ({totalCount - 5}+) <ArrowRight size={12} />
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-10 text-center">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">შედეგი ვერ მოიძებნა</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         </div>

@@ -389,8 +389,8 @@ const LandingPage = ({ user }) => {
           />
           <FeatureCard
             icon={Zap}
-            title="ავტო-ჯავშნები"
-            desc="ონლაინ რეგისტრაცია პაციენტებისთვის 24/7, ავტომატური SMS/WhatsApp შეხსენებები და კალენდრის სინქრონიზაცია."
+            title="ტერმინალის დაკავშირება"
+            desc="აპლიკაციიდან პირადპირ ტერმინალზე აისახება გადახდის დეტალები."
           />
           <FeatureCard
             icon={BarChart3}
@@ -809,7 +809,7 @@ const PricingTable = ({ onSelectPlan }) => {
     { label: "ფინანსური ანალიტიკა", free: true, basic: true,  pro: true },
     { label: "EHR სინქრონიზაცია",free: false,  basic: true,   pro: true },
     { label: "SMS შეხსენებები",  free: false,  basic: false,  pro: true },
-    { label: "WhatsApp ინტეგრაცია", free: false, basic: false, pro: true },
+    { label: "ტერმინალის დაკავშირება", free: false, basic: false, pro: true },
     { label: "სადაზღვეო სინქ.",  free: false,  basic: false,  pro: true },
     { label: "კლინიკის კატალოგი", free: "Basic", basic: "Brand", pro: "VIP" },
     { label: "ტექ. მხარდაჭერა",  free: false,  basic: true,   pro: true },
