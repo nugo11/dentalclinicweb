@@ -25,6 +25,7 @@ import ClinicPortfolio from "./pages/settings/ClinicPortfolio";
 import ClinicPublicProfile from "./pages/ClinicPublicProfile";
 import SalaryArchive from "./pages/SalaryArchive";
 import ActivityLog from "./pages/ActivityLog";
+import PWAInstallBanner from "./components/PWAInstallBanner";
 
 // დამხმარე კომპონენტი დაცული როუტებისთვის (RBAC)
 const PrivateRoute = ({ children, title, allowedRoles = [] }) => {
@@ -66,6 +67,7 @@ function AppContent() {
 
   return (
     <div className="app-route-enter">
+      <PWAInstallBanner />
       <Routes>
         <Route path="/" element={<LandingPage user={currentUser} />} />
         
