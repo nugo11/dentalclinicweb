@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, Smartphone, Globe, AlertTriangle, Loader2 } from 'lucide-react';
+import { X, Download, Smartphone, Globe, AlertTriangle } from 'lucide-react';
 
 const PWAInstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -95,7 +95,7 @@ const PWAInstallBanner = () => {
   return (
     <>
       {/* Mobile Banner - Sticky Bottom */}
-      <div className="fixed bottom-6 left-4 right-4 z-[60] md:hidden animate-in slide-in-from-bottom-10 duration-500 flex flex-col gap-2">
+      <div className="fixed bottom-6 left-4 right-4 z-[60] md:hidden animate-in slide-in-from-bottom-10 duration-500">
         <div className="bg-brand-deep/95 backdrop-blur-xl border border-white/10 rounded-[28px] p-4 shadow-2xl shadow-brand-deep/40 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
@@ -122,20 +122,6 @@ const PWAInstallBanner = () => {
             </button>
           </div>
         </div>
-
-        {isAndroid && (
-           <div className="bg-brand-deep/90 backdrop-blur-md rounded-[16px] p-3 text-center shadow-lg border border-white/10 flex items-center justify-center">
-              {deferredPrompt ? (
-                 <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                    ✅ ავტომატური ინსტალაციის უფლება მოპოვებულია
-                 </span>
-              ) : (
-                 <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-                    <Loader2 size={12} className="animate-spin" /> მოპოვება მიმდინარეობს...
-                 </span>
-              )}
-           </div>
-        )}
       </div>
 
       {/* iOS Instruction Modal */}
@@ -198,7 +184,7 @@ const PWAInstallBanner = () => {
                 </div>
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">2</div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase">აირჩიეთ <span className="text-brand-purple">"მთავარ ეკრანზე დამატება"</span></p>
+                  <p className="text-[12px] font-bold text-brand-deep uppercase">აირჩიეთ <span className="text-brand-purple">"მთავარ ეკრანზე დამატება"</span> ან <span className="text-brand-purple text-sm">"Add to Home screen"</span></p>
                 </div>
               </div>
               <button onClick={() => setShowAndroidModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
