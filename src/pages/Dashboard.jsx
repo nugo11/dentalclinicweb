@@ -15,7 +15,7 @@ import PWAInstallBanner from '../components/PWAInstallBanner';
 import { 
   AlertTriangle, PackageSearch, ChevronRight, Crown, Loader2, Clock, 
   Activity, CalendarDays, Zap, ArrowUpRight, DollarSign, 
-  TrendingUp, Wallet, FileText, Users, Tag
+  TrendingUp, Wallet, FileText, Users, Tag, Phone
 } from 'lucide-react';
 
 const Dashboard = () => {
