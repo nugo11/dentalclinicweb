@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Activity, User, ChevronDown, LogOut, Menu, X } from "lucide-react";
+import { Activity, User, ChevronDown, LogOut, Menu, X, Smartphone } from "lucide-react";
 import { auth } from "../../firebase";
 
 const MainHeader = ({ user }) => {
@@ -8,6 +8,14 @@ const MainHeader = ({ user }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isLanding = location.pathname === "/";
+
+  const handleHomeClick = (e) => {
+    if (location.pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -30,7 +38,7 @@ const MainHeader = ({ user }) => {
           </button>
 
           <div className="hidden lg:flex items-center space-x-10 text-[11px] font-black text-gray-500 tracking-widest uppercase">
-            <Link to="/" className={`${location.pathname === "/" ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
+            <Link to="/" onClick={handleHomeClick} className={`${location.pathname === "/" ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
               მთავარი
             </Link>
             {isLanding && (
@@ -43,6 +51,9 @@ const MainHeader = ({ user }) => {
             )}
             <Link to="/catalog" className={`${location.pathname.startsWith("/catalog") ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
               კატალოგი
+            </Link>
+            <Link to="/apps" className={`${location.pathname === "/apps" ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors font-black`}>
+              აპლიკაციები
             </Link>
 
             <div className="flex items-center gap-4 relative">
@@ -119,7 +130,7 @@ const MainHeader = ({ user }) => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-white">
-               <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-gray-50/50 hover:bg-brand-purple/5 text-brand-deep font-black uppercase tracking-widest text-[11px] transition-all group">
+               <Link to="/" onClick={handleHomeClick} className="flex items-center justify-between p-5 rounded-[24px] bg-gray-50/50 hover:bg-brand-purple/5 text-brand-deep font-black uppercase tracking-widest text-[11px] transition-all group">
                   მთავარი <ChevronDown size={14} className="-rotate-90 text-gray-300 group-hover:text-brand-purple" />
                </Link>
                
@@ -140,6 +151,13 @@ const MainHeader = ({ user }) => {
                <Link to="/catalog" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-gray-50/50 hover:bg-brand-purple/5 text-brand-deep font-black uppercase tracking-widest text-[11px] transition-all group">
                   კატალოგი <ChevronDown size={14} className="-rotate-90 text-gray-300 group-hover:text-brand-purple" />
                </Link>
+
+               <Link to="/apps" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-brand-purple/5 border border-brand-purple/10 text-brand-purple font-black uppercase tracking-widest text-[11px] transition-all group">
+                  <div className="flex items-center gap-3">
+                    <Smartphone size={16} /> აპლიკაციები
+                  </div>
+                  <ChevronDown size={14} className="-rotate-90 text-brand-purple" />
+                </Link>
             </div>
 
             <div className="p-8 border-t border-gray-100 bg-white">

@@ -25,14 +25,17 @@ import ClinicPortfolio from "./pages/settings/ClinicPortfolio";
 import ClinicPublicProfile from "./pages/ClinicPublicProfile";
 import SalaryArchive from "./pages/SalaryArchive";
 import ActivityLog from "./pages/ActivityLog";
+import Apps from "./pages/Apps";
 import PWAInstallBanner from "./components/PWAInstallBanner";
+import ScrollToTop from "./components/Common/ScrollToTop";
+import GlobalLoader from "./components/Common/GlobalLoader";
 
 // დამხმარე კომპონენტი დაცული როუტებისთვის (RBAC)
 const PrivateRoute = ({ children, title, allowedRoles = [] }) => {
   const { currentUser, activeStaff, clinicData, loading, role } = useAuth();
   const { pathname } = useLocation();
 
-  if (loading) return null; 
+  if (loading) return <GlobalLoader />; 
 
   if (!currentUser || !activeStaff) {
     return <Navigate to="/auth" replace />;
@@ -63,10 +66,11 @@ function AppContent() {
   const { currentUser, activeStaff, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return null;
+  if (loading) return <GlobalLoader />;
 
   return (
     <div className="app-route-enter">
+      <ScrollToTop />
       <PWAInstallBanner />
       <Routes>
         <Route path="/" element={<LandingPage user={currentUser} />} />
@@ -165,6 +169,7 @@ function AppContent() {
         <Route path="/suspended" element={currentUser ? <SuspendedPage /> : <Navigate to="/auth" replace />} />
         <Route path="/catalog" element={<><Helmet><title>კლინიკების კატალოგი — DentalHub</title><meta name="description" content="დაათვალიერეთ საქართველოში მოქმედი წამყვანი სტომატოლოგიური კლინიკები, მათი სერვისები და შეთავაზებები." /></Helmet><ClinicCatalog /></>} />
         <Route path="/catalog/:id" element={<ClinicPublicProfile />} />
+        <Route path="/apps" element={<Apps />} />
         <Route
           path="/documentation"
           element={

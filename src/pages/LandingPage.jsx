@@ -29,6 +29,8 @@ import {
   MapPin,
   Stethoscope,
   ChevronLeft,
+  Monitor,
+  Smartphone,
 } from "lucide-react";
 import { auth, db } from "../firebase";
 import { collection, query, getDocs, limit, where } from "firebase/firestore";
@@ -257,6 +259,61 @@ const LandingPage = ({ user }) => {
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-relaxed">{step.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- Multiplatform Section - NEW --- */}
+      <section className="py-24 px-6 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-brand-deep rounded-[56px] p-8 md:p-20 relative overflow-hidden flex flex-col lg:flex-row items-center gap-16">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple/10 blur-[100px] rounded-full -mr-20 -mt-20"></div>
+            
+            <div className="lg:w-1/2 relative z-10 text-center lg:text-left">
+              <SectionTag dark>ხელმისაწვდომობა</SectionTag>
+              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-8 italic leading-[1.1]">
+                ერთი სისტემა <br />
+                <span className="text-brand-purple">ყველა მოწყობილობაზე.</span>
+              </h2>
+              <p className="text-white/60 text-lg font-medium mb-10 italic">
+                გამოიყენეთ DentalHub როგორც თქვენს კომპიუტერზე, ასევე მობილურ ტელეფონებზე. ჩვენი აპლიკაციები ოპტიმიზირებულია Windows, Android და iOS პლატფორმებისთვის.
+              </p>
+              <Link 
+                to="/apps" 
+                className="inline-flex items-center gap-3 bg-white text-brand-deep px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-brand-purple hover:text-white transition-all shadow-2xl"
+              >
+                გადმოწერე აპლიკაცია <ArrowRight size={20} />
+              </Link>
+            </div>
+
+            <div className="lg:w-1/2 relative z-10 flex justify-center items-center">
+              <div className="relative w-full max-w-md">
+                 <div className="bg-white/5 backdrop-blur-3xl rounded-[40px] p-8 border border-white/10 shadow-2xl">
+                    <div className="space-y-6">
+                       {[
+                         { icon: Monitor, name: "Windows", status: "Active" },
+                         { icon: Smartphone, name: "Android", status: "Active" },
+                         { icon: Smartphone, name: "iOS / iPhone", status: "Active" }
+                       ].map((item, i) => (
+                         <div key={i} className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <div className="flex items-center gap-4">
+                               <div className="w-12 h-12 bg-brand-purple rounded-xl flex items-center justify-center text-white">
+                                  <item.icon size={24} />
+                               </div>
+                               <span className="text-white font-black italic">{item.name}</span>
+                            </div>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-400/10 px-3 py-1 rounded-full">
+                               {item.status}
+                            </span>
+                         </div>
+                       ))}
+                    </div>
+                 </div>
+                 {/* Decorative floaters */}
+                 <div className="absolute -top-10 -right-10 w-24 h-24 bg-brand-purple rounded-3xl rotate-12 -z-10 shadow-2xl animate-pulse"></div>
+                 <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500 rounded-full -z-10 blur-2xl opacity-50"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
