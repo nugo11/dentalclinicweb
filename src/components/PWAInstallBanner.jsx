@@ -190,7 +190,7 @@ const PWAInstallBanner = () => {
                 </div>
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">2</div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase">აირჩიეთ <span className="text-brand-purple">"Install app"</span> ან <span className="text-brand-purple">"Add to Home screen"</span></p>
+                  <p className="text-[12px] font-bold text-brand-deep uppercase">აირჩიეთ <span className="text-brand-purple">"მთავარ ეკრანზე დამატება"</span></p>
                 </div>
               </div>
               <button onClick={() => setShowAndroidModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
@@ -222,7 +222,7 @@ const PWAInstallBanner = () => {
                 <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100">
                   <div className="flex items-start gap-4">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                      <Chrome size={22} className="text-blue-500" />
+                      <Globe size={22} className="text-blue-500" />
                     </div>
                     <div>
                       <p className="text-[12px] font-black text-brand-deep uppercase mb-1">ნაბიჯი 1</p>
@@ -239,7 +239,7 @@ const PWAInstallBanner = () => {
                     </div>
                     <div>
                       <p className="text-[12px] font-black text-brand-deep uppercase mb-1">ნაბიჯი 2</p>
-                      <p className="text-[11px] font-bold text-slate-600">Chrome-ში დააჭირეთ <span className="text-brand-purple font-black">⋮ მენიუს</span> და აირჩიეთ <span className="text-brand-purple font-black">"Install app"</span></p>
+                      <p className="text-[11px] font-bold text-slate-600">Chrome-ში დააჭირეთ <span className="text-brand-purple font-black">⋮ მენიუს</span> და აირჩიეთ <span className="text-brand-purple font-black">"მთავარ ეკრანზე დამატება"</span></p>
                     </div>
                   </div>
                 </div>
