@@ -19,6 +19,7 @@ const TopNav = ({ onMenuClick }) => {
   const searchRef = useRef(null);
   
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const initialNotifications = [
     { id: 1, text: "ახალი ჯავშანი: ლევან კაპანაძე", time: "5 წუთის წინ", type: "appointment" },
     { id: 2, text: "მარაგი იწურება: სტომატოლოგიური ბჟენი", time: "1 საათის წინ", type: "inventory" }
@@ -97,6 +98,9 @@ const TopNav = ({ onMenuClick }) => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowResults(false);
+      }
+      if (showUserMenu && !event.target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -199,7 +203,7 @@ const TopNav = ({ onMenuClick }) => {
         </div>
 
         <div className="flex items-center gap-3 md:gap-6">
-          <ThemeToggle className="hidden sm:flex" />
+          <ThemeToggle className="flex" />
           
           {/* Notifications & Help & Settings */}
           <div className="flex items-center gap-2">
@@ -290,25 +294,30 @@ const TopNav = ({ onMenuClick }) => {
               </p>
             </div>
             
-            <div className="relative group">
-              <div className="w-12 h-12 md:w-14 md:h-14 rounded-[22px] bg-brand-deep flex items-center justify-center text-white shadow-xl shadow-brand-deep/20 cursor-pointer group-hover:scale-105 transition-all">
+            <div className="relative user-menu-container">
+              <div 
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className={`w-12 h-12 md:w-14 md:h-14 rounded-[22px] flex items-center justify-center text-white shadow-xl cursor-pointer transition-all active:scale-95 ${showUserMenu ? 'bg-brand-purple' : 'bg-brand-deep shadow-brand-deep/20'}`}
+              >
                 <User size={22} />
               </div>
               
-              <div className="absolute right-0 top-full mt-3 w-56 bg-surface rounded-[28px] shadow-2xl border border-border-main opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all py-3 z-50 overflow-hidden translate-y-2 group-hover:translate-y-0">
-                  <div className="px-6 py-4 border-b border-border-main mb-2">
-                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">სესია</p>
-                    <p className="text-xs font-black text-text-main truncate">{displayName}</p>
-                  </div>
-                  {role === 'admin' && (
-                    <button onClick={() => navigate('/settings')} className="w-full px-6 py-3 text-left text-[11px] font-bold text-text-muted hover:bg-surface-soft flex items-center gap-3 transition-colors">
-                        <Settings size={14} className="text-text-muted" /> პარამეტრები
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-3 w-56 bg-surface rounded-[28px] shadow-2xl border border-border-main py-3 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-6 py-4 border-b border-border-main mb-2">
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">სესია</p>
+                      <p className="text-xs font-black text-text-main truncate">{displayName}</p>
+                    </div>
+                    {role === 'admin' && (
+                      <button onClick={() => { navigate('/settings'); setShowUserMenu(false); }} className="w-full px-6 py-3 text-left text-[11px] font-bold text-text-muted hover:bg-surface-soft flex items-center gap-3 transition-colors">
+                          <Settings size={14} className="text-text-muted" /> პარამეტრები
+                      </button>
+                    )}
+                    <button onClick={staffLogout} className="w-full px-6 py-3 text-left text-[11px] font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors">
+                        <LogOut size={14} /> სისტემიდან გამოსვლა
                     </button>
-                  )}
-                  <button onClick={staffLogout} className="w-full px-6 py-3 text-left text-[11px] font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors">
-                      <LogOut size={14} /> სისტემიდან გამოსვლა
-                  </button>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

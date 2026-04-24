@@ -312,7 +312,7 @@ const Dashboard = () => {
                           <p className="text-[10px] font-black text-text-muted uppercase mb-1">რეპორტი</p>
                           <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest">დეტალები</p>
                         </div>
-                        <button onClick={() => navigate('/finance')} className="w-10 h-10 bg-surface rounded-xl shadow-sm flex items-center justify-center text-text-main hover:bg-brand-deep hover:text-white transition-all">
+                        <button onClick={() => navigate('/finance')} className="w-10 h-10 bg-surface rounded-xl shadow-sm flex items-center justify-center text-text-main hover:bg-brand-purple hover:text-white transition-all">
                           <ChevronRight size={18} />
                         </button>
                       </div>

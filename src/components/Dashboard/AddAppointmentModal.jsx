@@ -228,14 +228,6 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end md:items-center justify-center p-0 md:p-4">
-      <style>{`
-        .autofill-fix:-webkit-autofill {
-          -webkit-box-shadow: 0 0 0px 1000px #F9FAFB inset !important;
-          -webkit-text-fill-color: #0F172A !important;
-        }
-        input, select { color: #0F172A !important; }
-        input::placeholder { color: #94A3B8 !important; }
-      `}</style>
 
       <div className="app-overlay fixed inset-0 bg-brand-deep/50 backdrop-blur-sm" onClick={onClose} />
 
@@ -394,7 +386,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
             />
           </div>
 
-          <button type="submit" disabled={loading || (!isExternal && !selectedPatient) || (canSelectDoctor && !formData.doctorId)} className={`w-full py-5 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl transition-all flex justify-center items-center gap-3 active:scale-[0.98] ${isExternal ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20" : "bg-brand-purple hover:bg-brand-deep shadow-brand-purple/20"}`}>
+          <button type="submit" disabled={loading || (!isExternal && !selectedPatient) || (canSelectDoctor && !formData.doctorId)} className={`w-full py-5 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl transition-all flex justify-center items-center gap-3 active:scale-[0.98] ${isExternal ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20" : "bg-brand-purple hover:brightness-110 shadow-brand-purple/20"}`}>
             {loading ? <Loader2 className="animate-spin" size={20} /> : "ჯავშნის დადასტურება"}
           </button>
         </form>

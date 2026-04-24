@@ -16,13 +16,13 @@ import {
 
 const DocContentSection = ({ id, title, icon: Icon, children }) => (
   <section id={id} className="scroll-mt-24 space-y-12 py-24 border-b border-border-main last:border-0">
-    <div className="flex items-center gap-8">
-      <div className="w-24 h-24 bg-brand-purple/10 text-brand-purple rounded-[40px] flex items-center justify-center shadow-sm">
-        <Icon size={44} />
+    <div className="flex flex-col md:flex-row items-center md:items-center gap-6 md:gap-8 text-center md:text-left">
+      <div className="w-20 h-20 md:w-24 md:h-24 bg-brand-purple/10 text-brand-purple rounded-[32px] md:rounded-[40px] flex items-center justify-center shadow-sm shrink-0">
+        <Icon size={32} className="md:w-11 md:h-11" />
       </div>
       <div>
-        <h2 className="text-6xl font-black text-text-main italic uppercase tracking-tighter leading-none">{title}</h2>
-        <p className="text-sm text-brand-purple font-black uppercase tracking-[0.5em] mt-4 italic">Advanced Logic & Business Rules</p>
+        <h2 className="text-3xl md:text-6xl font-black text-text-main italic uppercase tracking-tighter leading-none">{title}</h2>
+        <p className="text-[10px] md:text-sm text-brand-purple font-black uppercase tracking-[0.3em] md:tracking-[0.5em] mt-3 md:mt-4 italic">Advanced Logic & Business Rules</p>
       </div>
     </div>
     <div className="space-y-16">
@@ -32,7 +32,7 @@ const DocContentSection = ({ id, title, icon: Icon, children }) => (
 );
 
 const FeatureCard = ({ title, desc, buttons = [], fields = [], roles = [], logic = [] }) => (
-  <div className="bg-surface p-12 rounded-[60px] border border-border-main shadow-sm hover:border-brand-purple/20 transition-all space-y-10">
+  <div className="bg-surface p-6 md:p-12 rounded-[40px] md:rounded-[60px] border border-border-main shadow-sm hover:border-brand-purple/20 transition-all space-y-8 md:space-y-10">
     <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 border-b border-border-main pb-10">
       <div className="space-y-5">
         <h4 className="font-black text-text-main uppercase text-xl flex items-center gap-4 italic">
@@ -54,9 +54,9 @@ const FeatureCard = ({ title, desc, buttons = [], fields = [], roles = [], logic
     </div>
 
     {logic.length > 0 && (
-      <div className="bg-brand-purple/5 p-10 rounded-[40px] space-y-6">
-        <p className="text-[12px] font-black text-brand-purple uppercase tracking-[0.2em] flex items-center gap-3">
-          <Zap size={18} /> სისტემური ლოგიკა & წესები:
+      <div className="bg-brand-purple/5 p-6 md:p-10 rounded-[32px] md:rounded-[40px] space-y-6">
+        <p className="text-[10px] md:text-[12px] font-black text-brand-purple uppercase tracking-[0.2em] flex items-center gap-3">
+          <Zap size={16} className="md:w-5 md:h-5" /> სისტემური ლოგიკა & წესები:
         </p>
         <div className="grid grid-cols-1 gap-4">
           {logic.map((l, i) => (
@@ -72,9 +72,9 @@ const FeatureCard = ({ title, desc, buttons = [], fields = [], roles = [], logic
     )}
 
     {fields.length > 0 && (
-      <div className="bg-surface-soft p-10 rounded-[40px] space-y-8">
-        <p className="text-[11px] font-black text-text-main uppercase tracking-widest flex items-center gap-3">
-          <Info size={16} className="text-brand-purple" /> ველების დეტალური აღწერა:
+      <div className="bg-surface-soft p-6 md:p-10 rounded-[32px] md:rounded-[40px] space-y-8">
+        <p className="text-[10px] md:text-[11px] font-black text-text-main uppercase tracking-widest flex items-center gap-3">
+          <Info size={14} className="text-brand-purple md:w-4 md:h-4" /> ველების დეტალური აღწერა:
         </p>
         <div className="grid grid-cols-1 gap-4">
           {fields.map((f, i) => (
@@ -149,7 +149,7 @@ const Documentation = () => {
         <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
         <main className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth">
-          <div className="max-w-7xl mx-auto flex gap-12 p-8 lg:p-16">
+          <div className="max-w-7xl mx-auto flex gap-12 p-6 md:p-16">
             
             <aside className="hidden xl:block w-80 shrink-0">
                <div className="sticky top-8 space-y-6">
@@ -177,7 +177,7 @@ const Documentation = () => {
 
             <div className="flex-1 space-y-6">
               <div className="pb-20 border-b border-border-main">
-                <h1 className="text-9xl font-black text-text-main italic tracking-tighter leading-[0.85] mb-10">
+                <h1 className="text-5xl md:text-9xl font-black text-text-main italic tracking-tighter leading-[0.85] mb-8 md:mb-10">
                   სრული <br /><span className="text-brand-purple">ლოგიკა</span>
                 </h1>
                 <p className="text-text-muted font-bold text-lg max-w-3xl leading-relaxed uppercase tracking-[0.2em]">
@@ -298,13 +298,13 @@ const Documentation = () => {
                 />
               </DocContentSection>
 
-              <div className="bg-brand-deep p-20 rounded-[80px] text-white text-center space-y-12 relative overflow-hidden">
-                 <div className="absolute top-0 left-0 p-16 opacity-5 scale-150">
-                    <AlertTriangle size={300} />
+              <div className="bg-brand-deep p-10 md:p-20 rounded-[40px] md:rounded-[80px] text-white text-center space-y-8 md:space-y-12 relative overflow-hidden">
+                 <div className="absolute top-0 left-0 p-8 md:p-16 opacity-5 scale-150">
+                    <AlertTriangle size={150} className="md:w-[300px] md:h-[300px]" />
                  </div>
-                 <div className="relative z-10 max-w-4xl mx-auto space-y-10">
-                    <h3 className="text-5xl font-black italic tracking-tighter leading-tight">ლოგიკა უპირველეს ყოვლისა</h3>
-                    <p className="text-white/40 font-bold text-base uppercase tracking-[0.4em] leading-relaxed">
+                 <div className="relative z-10 max-w-4xl mx-auto space-y-6 md:space-y-10">
+                    <h3 className="text-3xl md:text-5xl font-black italic tracking-tighter leading-tight">ლოგიკა უპირველეს ყოვლისა</h3>
+                    <p className="text-white/40 font-bold text-xs md:text-base uppercase tracking-[0.2em] md:tracking-[0.4em] leading-relaxed">
                        Dental Hub შექმნილია იმისთვის, რომ მინიმუმამდე დაიყვანოს ადამიანური შეცდომები და კონფლიქტები კლინიკის მართვისას.
                     </p>
                  </div>

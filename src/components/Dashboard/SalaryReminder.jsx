@@ -179,7 +179,7 @@ const SalaryReminder = ({ staff = [], paidStaffIds = [] }) => {
                    <button 
                       onClick={handleConfirmPayment}
                       disabled={isProcessing}
-                      className="py-5 bg-brand-deep text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-deep/20 hover:bg-black transition-all flex items-center justify-center"
+                      className="py-5 bg-brand-purple text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all flex items-center justify-center"
                    >
                       {isProcessing ? <Loader2 className="animate-spin" size={18} /> : "დადასტურება"}
                    </button>

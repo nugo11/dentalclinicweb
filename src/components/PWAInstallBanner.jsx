@@ -159,7 +159,7 @@ const PWAInstallBanner = () => {
                   </div>
                 ))}
               </div>
-              <button onClick={() => setShowIOSModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
+              <button onClick={() => setShowIOSModal(false)} className="w-full mt-8 py-4 bg-brand-purple text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all">გასაგებია</button>
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@ const PWAInstallBanner = () => {
                   <p className="text-[12px] font-bold text-text-main uppercase">აირჩიეთ <span className="text-brand-purple">"მთავარ ეკრანზე დამატება"</span> ან <span className="text-brand-purple text-sm">"Add to Home Screen"</span></p>
                 </div>
               </div>
-              <button onClick={() => setShowAndroidModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
+              <button onClick={() => setShowAndroidModal(false)} className="w-full mt-8 py-4 bg-brand-purple text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all">გასაგებია</button>
             </div>
           </div>
         </div>

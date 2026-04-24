@@ -263,8 +263,8 @@ const LandingPage = ({ user }) => {
         </div>
       </section>
 
-      {/* --- Multiplatform Section - NEW --- */}
-      <section className="py-24 px-6 bg-surface overflow-hidden">
+      {/* --- Multiplatform Section - ENHANCED BACKGROUND --- */}
+      <section className="py-24 px-6 bg-gradient-to-b from-surface-soft/50 to-surface border-b border-border-main overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="bg-brand-deep rounded-[56px] p-8 md:p-20 relative overflow-hidden flex flex-col lg:flex-row items-center gap-16">
             <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple/10 blur-[100px] rounded-full -mr-20 -mt-20"></div>
@@ -318,8 +318,9 @@ const LandingPage = ({ user }) => {
         </div>
       </section>
 
-      {/* 2.5 Clinic Catalog Carousel - NEW POSITION */}
-      <section id="clinic-catalog" className="py-24 md:py-32 px-4 md:px-6 bg-surface overflow-hidden">
+      {/* 2.5 Clinic Catalog Carousel - ENHANCED SEPARATION */}
+      <section id="clinic-catalog" className="py-24 md:py-32 px-4 md:px-6 bg-surface-soft/30 border-b border-border-main overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border-main to-transparent"></div>
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -430,8 +431,8 @@ const LandingPage = ({ user }) => {
         </div>
       </section>
 
-      {/* 4. Features Section - ENHANCED */}
-      <section id="features" className="py-32 px-6 bg-surface relative overflow-hidden">
+      {/* 4. Features Section - ENHANCED SEPARATION */}
+      <section id="features" className="py-32 px-6 bg-gradient-to-b from-surface-soft/50 to-surface border-y border-border-main relative overflow-hidden">
         <div className="max-w-7xl mx-auto text-center mb-20">
           <SectionTag>შესაძლებლობები</SectionTag>
           <h2 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter mb-6 italic leading-none">ყველაფერი ერთ <br /><span className="text-brand-purple">ციფრულ სივრცეში</span></h2>
@@ -560,7 +561,8 @@ const LandingPage = ({ user }) => {
       </section>
 
       {/* --- 6. FAQ - FULL WIDTH CONTENT (White BG) --- */}
-      <section id="faq" className="py-32 px-6 bg-surface">
+      <section id="faq" className="py-32 px-6 bg-surface border-b border-border-main relative">
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-border-main to-transparent"></div>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <SectionTag>FAQ</SectionTag>
@@ -589,8 +591,8 @@ const LandingPage = ({ user }) => {
         </div>
       </section>
 
-      {/* 7. Middle CTA - DEEP DARK BG */}
-      <section className="px-6 py-20 bg-surface">
+      {/* 7. Middle CTA - ENHANCED SEPARATION */}
+      <section className="px-6 py-24 bg-surface-soft/50 border-y border-border-main">
         <div className="max-w-7xl mx-auto bg-brand-deep rounded-[48px] p-16 md:p-24 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple/20 blur-[100px] rounded-full -mr-20 -mt-20"></div>
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12 text-center md:text-left">
@@ -646,7 +648,7 @@ const LandingPage = ({ user }) => {
       </section>
 
       {/* 9. Contact - WHITE BG */}
-      <section id="contact" className="py-32 px-6 bg-surface">
+      <section id="contact" className="py-32 px-6 bg-surface border-t border-border-main">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-24 items-center">
           <div>
             <SectionTag>კონტაქტი</SectionTag>
@@ -688,7 +690,8 @@ const LandingPage = ({ user }) => {
       </section>
 
       {/* 10. Footer */}
-      <footer className="bg-brand-deep py-20 px-6 text-white text-center">
+      <footer className="bg-brand-deep py-20 px-6 text-white text-center border-t border-white/10 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-brand-purple/50 to-transparent"></div>
         <div className="flex items-center justify-center space-x-3 mb-12">
           <Activity className="text-brand-purple" size={32} />
           <span className="text-2xl font-black tracking-tighter italic">
@@ -1019,14 +1022,14 @@ const PricingTable = ({ onSelectPlan }) => {
 
 const CHECK = () => (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{display:'inline-block',flexShrink:0}}>
-      <circle cx="8" cy="8" r="8" fill="#7C3AED" fillOpacity="0.12"/>
+      <circle cx="8" cy="8" r="7.5" fill="#7C3AED" fillOpacity="0.12" stroke="#7C3AED" strokeWidth="1"/>
       <path d="M5 8l2 2 4-4" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
     </svg>
   );
   const DASH = () => (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{display:'inline-block',flexShrink:0}}>
-      <circle cx="8" cy="8" r="8" fill="#E2E8F0"/>
-      <path d="M5.5 8h5" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="8" cy="8" r="7.5" fill="var(--bg-surface-soft)" stroke="var(--border-main)" strokeWidth="1"/>
+      <path d="M5.5 8h5" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
   );
 

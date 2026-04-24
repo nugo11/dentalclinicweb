@@ -315,7 +315,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
 
                       <button 
                         onClick={() => navigate(`/patients/${patient.id}`)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-brand-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-deep transition-all shadow-lg shadow-brand-purple/20 active:scale-95 cursor-pointer"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-brand-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-brand-purple/20 active:scale-95 cursor-pointer"
                       >
                         ბარათის გახსნა <ArrowRight size={14} />
                       </button>

@@ -236,7 +236,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
           <button 
             onClick={handleSubmit} 
             disabled={loading || (clinicData?.plan === "free" && currentCount >= 50)} 
-            className="py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white bg-brand-deep hover:bg-brand-purple shadow-xl shadow-brand-purple/20 transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+            className="py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white bg-brand-purple shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all flex justify-center items-center gap-2 disabled:opacity-50"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : "ბარათის შექმნა"}
           </button>

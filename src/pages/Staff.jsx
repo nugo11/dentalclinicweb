@@ -313,9 +313,9 @@ const Staff = () => {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" onClick={() => setShowAddModal(false)} />
-          <div className="bg-surface rounded-[40px] w-full max-w-md p-10 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
+          <div className="bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-md p-8 md:p-10 relative z-10 shadow-2xl animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
             {doctorLimitReached ? (
               <div className="text-center py-4">
                 <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6">
@@ -327,7 +327,7 @@ const Staff = () => {
                 </p>
                 <button 
                   onClick={() => navigate('/settings/billing')}
-                  className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:bg-brand-deep transition-all flex items-center justify-center gap-3 active:scale-95">
+                  className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all flex items-center justify-center gap-3 active:scale-95">
                   <Zap size={18} className="fill-current" /> Upgrade
                 </button>
               </div>
@@ -385,7 +385,7 @@ const Staff = () => {
                     <input type="number" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.salaryAmount} onChange={e => setNewDoctor({...newDoctor, salaryAmount: e.target.value})} placeholder="0" />
                   </div>
                 )}
-                <button disabled={isProcessing} className="w-full py-5 bg-brand-deep text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all mt-6">
+                <button disabled={isProcessing} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all mt-6">
                   {isProcessing ? <Loader2 className="animate-spin mx-auto" size={20} /> : "შენახვა"}
                 </button>
               </form>
@@ -396,9 +396,9 @@ const Staff = () => {
 
       {/* Edit Modal */}
       {editTarget && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
           <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" onClick={() => setEditTarget(null)} />
-          <div className="bg-surface rounded-[40px] w-full max-w-md p-10 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
+          <div className="bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-md p-8 md:p-10 relative z-10 shadow-2xl animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
             <form onSubmit={handleUpdateStaff} className="space-y-4">
               <div className="flex justify-between items-center mb-6">
                   <h3 className="text-2xl font-black text-text-main italic">მონაცემების შეცვლა</h3>
@@ -453,7 +453,7 @@ const Staff = () => {
                   <input type="number" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.salaryAmount} onChange={e => setEditFormData({...editFormData, salaryAmount: e.target.value})} />
                 </div>
               )}
-              <button disabled={isProcessing} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl hover:bg-brand-deep transition-all mt-6">
+              <button disabled={isProcessing} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all mt-6">
                 {isProcessing ? <Loader2 className="animate-spin mx-auto" size={20} /> : "ცვლილებების შენახვა"}
               </button>
             </form>

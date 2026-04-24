@@ -484,7 +484,7 @@ const AuthPage = () => {
                   <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 sm:py-6 text-center text-5xl sm:text-6xl tracking-[0.35em] sm:tracking-[0.5em] pl-[0.35em] sm:pl-[0.5em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] sm:rounded-[36px] outline-none transition-all" placeholder="••••" />
                 </div>
                 {formErrors.pin && <p className="text-center text-[10px] text-red-500 font-black uppercase tracking-widest">{formErrors.pin}</p>}
-                <button disabled={isLoading} className="w-full bg-brand-purple text-white py-7 rounded-[28px] font-black text-xs uppercase tracking-[0.3em] hover:bg-brand-deep transition-all shadow-xl active:scale-[0.98] disabled:opacity-50">
+                <button disabled={isLoading} className="w-full bg-brand-purple text-white py-7 rounded-[28px] font-black text-xs uppercase tracking-[0.3em] hover:brightness-110 transition-all shadow-xl active:scale-[0.98] disabled:opacity-50">
                   {isLoading ? <Loader2 className="animate-spin mx-auto" size={24} /> : "სისტემაში შესვლა"}
                 </button>
               </form>
@@ -515,7 +515,7 @@ const AuthPage = () => {
                   </div>
                 </div>
                 {formErrors.pin && <p className="text-center text-[10px] text-red-500 font-black uppercase tracking-widest">{formErrors.pin}</p>}
-                <button disabled={isLoading} className="w-full bg-brand-purple text-white py-7 rounded-[28px] font-black text-xs uppercase tracking-[0.3em] hover:bg-brand-deep transition-all shadow-xl active:scale-[0.98] disabled:opacity-50">
+                <button disabled={isLoading} className="w-full bg-brand-purple text-white py-7 rounded-[28px] font-black text-xs uppercase tracking-[0.3em] hover:brightness-110 transition-all shadow-xl active:scale-[0.98] disabled:opacity-50">
                   {isLoading ? <Loader2 className="animate-spin mx-auto" size={24} /> : "რეგისტრაციის დასრულება"}
                 </button>
               </form>

@@ -243,24 +243,23 @@ const Services = () => {
 
           {/* New/Edit Service Modal */}
           {isModalOpen && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-              <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" onClick={closeModal} />
-              <div className="bg-surface rounded-[48px] w-full max-w-2xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="p-10 overflow-y-auto custom-scrollbar">
-                  <h3 className="text-2xl font-black text-text-main italic mb-8">
-                    {editingId ? "სერვისის რედაქტირება" : "ახალი მომსახურების დამატება"}
-                  </h3>
-                  <form onSubmit={handleSaveService} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">სერვისის დასახელება</label>
-                        <input required type="text" value={newService.name} onChange={e => setNewService({...newService, name: e.target.value})} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">ფასი (₾)</label>
-                        <input required type="number" value={newService.price} onChange={e => setNewService({...newService, price: e.target.value})} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all" />
-                      </div>
+            <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
+              <div className="fixed inset-0 bg-brand-deep/40 backdrop-blur-sm" onClick={closeModal} />
+              <div className="bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-lg p-8 md:p-10 shadow-2xl relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
+                <h3 className="text-2xl font-black text-text-main italic mb-8">
+                  {editingId ? "სერვისის რედაქტირება" : "ახალი მომსახურების დამატება"}
+                </h3>
+                <form onSubmit={handleSaveService} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">სერვისის დასახელება</label>
+                      <input required type="text" value={newService.name} onChange={e => setNewService({...newService, name: e.target.value})} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all" />
                     </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">ფასი (₾)</label>
+                      <input required type="number" value={newService.price} onChange={e => setNewService({...newService, price: e.target.value})} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all" />
+                    </div>
+                  </div>
 
                     <div className="space-y-4">
                        <label className="text-[10px] font-black text-brand-purple uppercase tracking-widest ml-2 italic flex items-center gap-2">
@@ -307,15 +306,14 @@ const Services = () => {
                     </div>
 
                     <div className="flex gap-4 pt-4">
-                       <button type="button" onClick={closeModal} className="flex-1 py-5 bg-surface-soft text-text-muted rounded-[24px] font-black text-[11px] uppercase tracking-widest cursor-pointer">გაუქმება</button>
-                       <button type="submit" className="flex-1 py-5 bg-brand-deep text-white rounded-[24px] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-brand-deep/20 cursor-pointer">
+                       <button type="button" onClick={closeModal} className="flex-1 py-5 bg-surface-soft text-text-muted border border-border-main rounded-[24px] font-black text-[11px] uppercase tracking-widest transition-all hover:bg-surface hover:text-text-main">გაუქმება</button>
+                       <button type="submit" className="flex-1 py-5 bg-brand-purple text-white rounded-[24px] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all">
                          {editingId ? "განახლება" : "შენახვა"}
                        </button>
                     </div>
                   </form>
                 </div>
               </div>
-            </div>
           )}
         </main>
       </div>

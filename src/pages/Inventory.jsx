@@ -308,9 +308,9 @@ const Inventory = () => {
 
           {/* Modal */}
           {isModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
               <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-              <div className="bg-surface rounded-[40px] w-full max-w-lg p-10 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200">
+              <div className="bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-lg p-8 md:p-10 shadow-2xl relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
                 <div className="mb-8 text-center">
                   <h3 className="text-2xl font-black text-text-main italic tracking-tighter">{editingItem ? "მასალის რედაქტირება" : "ახალი მასალა"}</h3>
                   {formErrors.general && <p className="text-[11px] text-red-500 font-black uppercase mt-2">{formErrors.general}</p>}
@@ -345,8 +345,8 @@ const Inventory = () => {
                     </div>
                   </div>
                   <div className="flex gap-4 pt-6">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-5 bg-surface-soft text-text-muted rounded-[24px] font-black text-[11px] uppercase tracking-widest">გაუქმება</button>
-                    <button type="submit" className="flex-1 py-5 bg-brand-deep text-white rounded-[24px] font-black text-[11px] uppercase tracking-widest shadow-xl">შენახვა</button>
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-5 bg-surface-soft text-text-muted border border-border-main rounded-[24px] font-black text-[11px] uppercase tracking-widest transition-all hover:bg-surface hover:text-text-main">გაუქმება</button>
+                    <button type="submit" className="flex-1 py-5 bg-brand-purple text-white rounded-[24px] font-black text-[11px] uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all">შენახვა</button>
                   </div>
                 </form>
               </div>
