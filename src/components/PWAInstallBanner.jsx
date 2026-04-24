@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, Smartphone, Globe, AlertTriangle } from 'lucide-react';
+import { X, Download, Smartphone, Globe, AlertTriangle, Loader2 } from 'lucide-react';
 
 const PWAInstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -55,18 +55,9 @@ const PWAInstallBanner = () => {
       setShowBanner(true);
     }
 
-    // Show banner for Android
+    // Show banner for Android immediately
     if (isAndroidDevice && !isStandalone) {
-      // Non-Chrome browsers don't support beforeinstallprompt natively in the same way,
-      // so we show the banner after 3 seconds to give them manual instructions.
-      // For Chrome, we only want to show the banner when beforeinstallprompt is fired
-      // to guarantee a 100% automatic native install experience.
-      if (!isChromeDetected) {
-        const timer = setTimeout(() => {
-          setShowBanner(true);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
+      setShowBanner(true);
     }
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -104,7 +95,7 @@ const PWAInstallBanner = () => {
   return (
     <>
       {/* Mobile Banner - Sticky Bottom */}
-      <div className="fixed bottom-6 left-4 right-4 z-[60] md:hidden animate-in slide-in-from-bottom-10 duration-500">
+      <div className="fixed bottom-6 left-4 right-4 z-[60] md:hidden animate-in slide-in-from-bottom-10 duration-500 flex flex-col gap-2">
         <div className="bg-brand-deep/95 backdrop-blur-xl border border-white/10 rounded-[28px] p-4 shadow-2xl shadow-brand-deep/40 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
@@ -131,6 +122,20 @@ const PWAInstallBanner = () => {
             </button>
           </div>
         </div>
+
+        {isAndroid && (
+           <div className="bg-brand-deep/90 backdrop-blur-md rounded-[16px] p-3 text-center shadow-lg border border-white/10 flex items-center justify-center">
+              {deferredPrompt ? (
+                 <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                    ✅ ავტომატური ინსტალაციის უფლება მოპოვებულია
+                 </span>
+              ) : (
+                 <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
+                    <Loader2 size={12} className="animate-spin" /> მოპოვება მიმდინარეობს...
+                 </span>
+              )}
+           </div>
+        )}
       </div>
 
       {/* iOS Instruction Modal */}
