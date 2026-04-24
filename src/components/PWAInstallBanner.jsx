@@ -4,13 +4,16 @@ import { X, Share, PlusSquare, Download, Smartphone, Info } from 'lucide-react';
 const PWAInstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
-  const [showIOSModal, setShowIOSModal] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  const [showAndroidModal, setShowAndroidModal] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
-    // Detect iOS
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // Detect OS
+    const ua = navigator.userAgent;
+    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isAndroidDevice = /Android/.test(ua);
     setIsIOS(isIOSDevice);
+    setIsAndroid(isAndroidDevice);
 
     // Check if already installed
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -18,16 +21,28 @@ const PWAInstallBanner = () => {
     if (isStandalone) return;
 
     // Android / Chrome "Add to Home Screen" listener
-    window.addEventListener('beforeinstallprompt', (e) => {
+    const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowBanner(true);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
 
     // Show banner for iOS if not standalone
     if (isIOSDevice && !isStandalone) {
       setShowBanner(true);
     }
+
+    // Force show banner for Android if not standalone after 3 seconds (as fallback)
+    if (isAndroidDevice && !isStandalone) {
+      const timer = setTimeout(() => {
+        setShowBanner(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstallClick = async () => {
@@ -36,15 +51,16 @@ const PWAInstallBanner = () => {
       return;
     }
 
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-      setDeferredPrompt(null);
-      setShowBanner(false);
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setShowBanner(false);
+      }
+    } else if (isAndroid) {
+      // Fallback for Android if beforeinstallprompt didn't fire
+      setShowAndroidModal(true);
     }
   };
 
@@ -85,74 +101,65 @@ const PWAInstallBanner = () => {
       {/* iOS Instruction Modal */}
       {showIOSModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" 
-            onClick={() => setShowIOSModal(false)}
-          />
-          
-          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+          <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowIOSModal(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full duration-300 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center"><Smartphone size={24} /></div>
+                <button onClick={() => setShowIOSModal(false)} className="p-2 bg-slate-50 text-slate-400 rounded-full"><X size={20} /></button>
+              </div>
+
+              <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-2 italic">ინსტალაცია iPhone-ზე</h3>
+              <p className="text-slate-500 text-sm font-medium mb-6">მიჰყევით ამ ნაბიჯებს DentalHub-ის დასამატებლად:</p>
+
+              <div className="space-y-8">
+                {[
+                  { step: "1", text: "დააჭირეთ '...' (სამ წერტილს)", img: "/ios_app/step1.jpg" },
+                  { step: "2", text: "აირჩიეთ 'Share' ღილაკი", img: "/ios_app/step2.jpg" },
+                  { step: "3", text: "ჩამოსქროლეთ და აირჩიეთ 'View More'", img: "/ios_app/step3.jpg" },
+                  { step: "4", text: "დააჭირეთ 'Add to Home Screen'-ს", img: "/ios_app/step4.jpg" }
+                ].map((item, idx) => (
+                  <div key={idx} className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center">{item.step}</span>
+                      <p className="text-[12px] font-black text-brand-deep uppercase tracking-tight">{item.text}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                      <img src={item.img} alt={`Step ${item.step}`} className="w-full h-auto" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={() => setShowIOSModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Android Manual Instruction Modal */}
+      {showAndroidModal && (
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
+          <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowAndroidModal(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full duration-300">
             <div className="p-8">
-              <div className="flex justify-between items-center mb-8">
-                <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center">
-                  <Smartphone size={24} />
-                </div>
-                <button 
-                  onClick={() => setShowIOSModal(false)}
-                  className="p-2 bg-slate-50 text-slate-400 rounded-full"
-                >
-                  <X size={20} />
-                </button>
+              <div className="flex justify-between items-center mb-6">
+                <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center"><Smartphone size={24} /></div>
+                <button onClick={() => setShowAndroidModal(false)} className="p-2 bg-slate-50 text-slate-400 rounded-full"><X size={20} /></button>
               </div>
-
-              <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-4 italic">ინსტალაცია iPhone-ზე</h3>
-              <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
-                DentalHub-ის აპლიკაციად დასამატებლად მიჰყევით ამ მარტივ ნაბიჯებს:
-              </p>
-
-              <div className="space-y-5">
-                <div className="flex items-center gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all shrink-0 font-black">
-                    ...
-                  </div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase tracking-tight">
-                    1. დააჭირეთ <span className="text-brand-purple">"..."</span> (სამ წერტილს)
-                  </p>
+              <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-2 italic">ინსტალაცია Android-ზე</h3>
+              <p className="text-slate-500 text-sm font-medium mb-6">თუ ინსტალაციის ფანჯარა არ გამოჩნდა ავტომატურად:</p>
+              <div className="space-y-4">
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">1</div>
+                  <p className="text-[12px] font-bold text-brand-deep uppercase">დააჭირეთ Chrome-ის მენიუს <span className="text-brand-purple">(სამ წერტილს ზედა მარჯვენა კუთხეში)</span></p>
                 </div>
-
-                <div className="flex items-center gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all shrink-0">
-                    <Share size={18} />
-                  </div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase tracking-tight">
-                    2. აირჩიეთ <span className="text-brand-purple">"Share"</span> ღილაკი
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all shrink-0">
-                    <Smartphone size={18} />
-                  </div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase tracking-tight">
-                    3. ჩამოსქროლეთ და აირჩიეთ <span className="text-brand-purple">"View More"</span>
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all shrink-0">
-                    <PlusSquare size={18} />
-                  </div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase tracking-tight">
-                    4. დააჭირეთ <span className="text-brand-purple">"Add to Home Screen"</span>
-                  </p>
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">2</div>
+                  <p className="text-[12px] font-bold text-brand-deep uppercase">აირჩიეთ <span className="text-brand-purple">"Install app"</span> ან <span className="text-brand-purple">"Add to Home screen"</span></p>
                 </div>
               </div>
-
-              <button 
-                onClick={() => setShowIOSModal(false)}
-                className="w-full mt-10 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-brand-purple transition-all active:scale-95 shadow-xl shadow-brand-deep/20"
-              >
-                გასაგებია
-              </button>
+              <button onClick={() => setShowAndroidModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
             </div>
           </div>
         </div>
