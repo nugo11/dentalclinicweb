@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /about
+Allow: /contact
+Allow: /catalog
+Allow: /apps
+
+# SaaS Dashboard and Internal pages - No need to index
+Disallow: /dashboard
+Disallow: /patients
+Disallow: /calendar
+Disallow: /finance
+Disallow: /inventory
+Disallow: /staff
+Disallow: /settings
+Disallow: /archive
+
+Sitemap: https://dentalhub.ge/sitemap.xml

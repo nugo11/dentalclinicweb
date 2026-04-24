@@ -29,6 +29,7 @@ import ActivityLog from "./pages/ActivityLog";
 import Apps from "./pages/Apps";
 import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
+import Pricing from "./pages/Pricing";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import ScrollToTop from "./components/Common/ScrollToTop";
 import GlobalLoader from "./components/Common/GlobalLoader";
@@ -175,6 +176,7 @@ function AppContent() {
         <Route path="/apps" element={<Apps />} />
         <Route path="/contact" element={<ContactPage user={currentUser} />} />
         <Route path="/about" element={<AboutPage user={currentUser} />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route
           path="/documentation"
           element={

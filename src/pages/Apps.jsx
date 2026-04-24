@@ -22,6 +22,19 @@ const Apps = () => {
       }
     },
     {
+      id: 'web',
+      name: 'Web ინტერფეისი',
+      icon: <Globe className="text-brand-purple" size={32} />,
+      description: 'იმუშავეთ პირდაპირ ბრაუზერიდან გადმოწერის გარეშე. ხელმისაწვდომია ნებისმიერი მოწყობილობიდან.',
+      badge: 'ყველაზე მარტივი',
+      features: ['არ საჭიროებს ინსტალაციას', 'მუდმივად განახლებული', 'ავტომატური სინქრონიზაცია'],
+      action: {
+        text: 'გახსენით ბრაუზერში',
+        link: '/',
+        type: 'link'
+      }
+    },
+    {
       id: 'android',
       name: 'Android App',
       icon: <Smartphone className="text-emerald-500" size={32} />,
@@ -54,6 +67,7 @@ const Apps = () => {
       <Helmet>
         <title>გადმოწერეთ აპლიკაცია — DentalHub</title>
         <meta name="description" content="DentalHub ხელმისაწვდომია ყველა პლატფორმაზე: Windows, Android და iOS. მართეთ თქვენი კლინიკა ნებისმიერი მოწყობილობიდან." />
+        <link rel="canonical" href="https://dentalhub.ge/apps" />
       </Helmet>
 
       <MainHeader user={currentUser} />
@@ -70,7 +84,7 @@ const Apps = () => {
         </div>
 
         {/* Platform Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {platforms.map((p) => (
             <div key={p.id} className="bg-surface rounded-[32px] border border-border-dark shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all p-8 flex flex-col">
               <div className="flex justify-between items-start mb-6">
@@ -99,10 +113,10 @@ const Apps = () => {
               {p.action ? (
                 <a 
                   href={p.action.link} 
-                  download={p.action.type === 'download'}
+                  download={p.action.type === 'download' ? true : undefined}
                   className="w-full py-4 bg-brand-deep text-white rounded-2xl flex items-center justify-center gap-3 group transition-all hover:bg-brand-purple shadow-lg shadow-brand-deep/10"
                 >
-                  <Download size={20} />
+                  {p.action.type === 'download' ? <Download size={20} /> : <Globe size={20} />}
                   <span className="text-xs font-black uppercase tracking-widest">{p.action.text}</span>
                 </a>
               ) : (

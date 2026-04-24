@@ -31,6 +31,8 @@ import {
   ChevronLeft,
   Monitor,
   Smartphone,
+  Globe,
+  Rocket,
 } from "lucide-react";
 import { auth, db } from "../firebase";
 import { collection, query, getDocs, limit, where } from "firebase/firestore";
@@ -128,6 +130,8 @@ const LandingPage = ({ user }) => {
     fetchClinics();
   }, []);
 
+  const [showDemoModal, setShowDemoModal] = useState(false);
+
   const nextSlide = () => setCarouselIndex((prev) => (prev + 1) % Math.max(1, clinics.length));
   const prevSlide = () => setCarouselIndex((prev) => (prev - 1 + clinics.length) % Math.max(1, clinics.length));
 
@@ -136,6 +140,7 @@ const LandingPage = ({ user }) => {
       <Helmet>
         <title>DentalHub — კლინიკის მართვის ინოვაციური პლატფორმა</title>
         <meta name="description" content="მართე შენი სტომატოლოგიური კლინიკა ციფრულად. პაციენტების აღრიცხვა, ფინანსური ანალიტიკა და ავტომატური ჯავშნები ერთ სივრცეში." />
+        <link rel="canonical" href="https://dentalhub.ge/" />
       </Helmet>
       <div className="min-h-screen bg-surface font-nino selection:bg-brand-purple/10 overflow-x-hidden">
       <MainHeader user={user} />
@@ -175,13 +180,16 @@ const LandingPage = ({ user }) => {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/auth"
-                className="bg-brand-purple text-white px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-brand-purple/30 hover:bg-brand-deep hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group"
+                className="bg-brand-purple text-white px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-brand-purple/20 hover:brightness-110 hover:shadow-brand-purple/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group"
               >
                 დაიწყე უფასოდ <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
               </Link>
-              <a href="#features" className="px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest text-text-main border-2 border-border-main hover:bg-surface-soft transition-all flex items-center justify-center gap-3">
+              <button 
+                onClick={() => setShowDemoModal(true)}
+                className="px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest text-text-main border-2 border-border-main hover:bg-surface-soft transition-all flex items-center justify-center gap-3"
+              >
                 <Play size={18} fill="currentColor" /> დემო ვერსია
-              </a>
+              </button>
             </div>
 
             <div className="mt-12 grid grid-cols-3 gap-8 border-t border-border-main pt-10">
@@ -276,11 +284,11 @@ const LandingPage = ({ user }) => {
                 <span className="text-brand-purple">ყველა მოწყობილობაზე.</span>
               </h2>
               <p className="text-white/60 text-lg font-medium mb-10 italic">
-                გამოიყენეთ DentalHub როგორც თქვენს კომპიუტერზე, ასევე მობილურ ტელეფონებზე. ჩვენი აპლიკაციები ოპტიმიზირებულია Windows, Android და iOS პლატფორმებისთვის.
+                გამოიყენეთ DentalHub ნებისმიერ მოწყობილობაზე. სისტემა ხელმისაწვდომია Web-ბრაუზერით და ასევე ოპტიმიზირებულია Windows, Android და iOS პლატფორმებისთვის.
               </p>
               <Link 
                 to="/apps" 
-                className="inline-flex items-center gap-3 bg-surface text-text-main px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-brand-purple hover:text-white transition-all shadow-2xl"
+                className="inline-flex items-center gap-3 bg-surface text-text-main px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-brand-purple hover:text-white hover:shadow-brand-purple/20 transition-all shadow-2xl"
               >
                 გადმოწერე აპლიკაცია <ArrowRight size={20} />
               </Link>
@@ -291,6 +299,7 @@ const LandingPage = ({ user }) => {
                  <div className="bg-surface/5 backdrop-blur-3xl rounded-[40px] p-8 border border-white/10 shadow-2xl">
                     <div className="space-y-6">
                        {[
+                         { icon: Globe, name: "Web / ბრაუზერი", status: "Active" },
                          { icon: Monitor, name: "Windows", status: "Active" },
                          { icon: Smartphone, name: "Android", status: "Active" },
                          { icon: Smartphone, name: "iOS / iPhone", status: "Active" }
@@ -615,7 +624,7 @@ const LandingPage = ({ user }) => {
       </section>
 
       {/* 8. Pricing Table */}
-      <section id="pricing" className="py-32 px-6 bg-surface-soft border-y border-border-dark">
+      <section id="pricing-section" className="py-32 px-6 bg-surface-soft border-y border-border-dark">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <SectionTag>ფასები</SectionTag>
@@ -727,6 +736,67 @@ const LandingPage = ({ user }) => {
                <p className="text-[10px] font-black text-text-muted uppercase tracking-widest italic">DentalHub Subscription Management © 2026</p>
             </div>
           </div>
+        </div>
+      )}
+      {/* --- Demo Info Modal --- */}
+      {showDemoModal && (
+        <div className="fixed inset-0 bg-surface-deep/80 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-300">
+           <div className="bg-surface w-full max-w-xl rounded-t-[32px] sm:rounded-[40px] p-8 sm:p-12 shadow-2xl border-t sm:border border-border-main animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-500 relative max-h-[90vh] overflow-y-auto custom-scrollbar">
+              <button 
+                onClick={() => setShowDemoModal(false)}
+                className="absolute right-8 top-8 text-text-muted hover:text-brand-purple transition-colors outline-none"
+              >
+                <X size={24} />
+              </button>
+
+              <div className="text-center mb-10">
+                <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
+                   <Rocket size={40} />
+                </div>
+                <h3 className="text-3xl sm:text-4xl font-black italic tracking-tighter text-text-main mb-4 leading-tight">
+                   გამოცადე სისტემა <br /> <span className="text-brand-purple">სრულყოფილად.</span>
+                </h3>
+                <p className="text-text-muted text-sm font-medium leading-relaxed italic max-w-md mx-auto">
+                   სისტემის გასატესტად გაიარეთ უფასო რეგისტრაცია და ნახეთ საიტის სრული შესაძლებლობები.
+                </p>
+              </div>
+
+              <div className="bg-surface-soft rounded-[32px] p-6 mb-10 border border-border-main">
+                <p className="text-[10px] font-black uppercase tracking-widest text-brand-purple mb-6 text-center">უფასო პაკეტში ვერ გამოცდით:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                   {[
+                     "EHR სინქრონიზაცია (ჯანდაცვის ბაზა)",
+                     "ულიმიტო პაციენტების ბაზა",
+                     "ულიმიტო საწყობი და ინვენტარი",
+                     "რენტგენის სურათების შენახვა",
+                     "SMS შეხსენებები პაციენტებისთვის",
+                     "სადაზღვეოებთან სინქრონიზაცია",
+                     "კლინიკის VIP პორტფოლიო",
+                     "ტექნიკური მხარდაჭერა 24/7"
+                   ].map((feature, i) => (
+                     <div key={i} className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 bg-brand-purple rounded-full shrink-0" />
+                        <span className="text-[11px] font-black text-text-muted uppercase tracking-tight">{feature}</span>
+                     </div>
+                   ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <Link
+                  to="/auth"
+                  className="w-full bg-brand-purple text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all flex items-center justify-center gap-3"
+                >
+                  უფასო რეგისტრაცია <ArrowRight size={20} />
+                </Link>
+                <button 
+                  onClick={() => setShowDemoModal(false)}
+                  className="w-full py-4 text-text-muted font-black text-[10px] uppercase tracking-widest hover:text-brand-purple transition-colors"
+                >
+                  მოგვიანებით
+                </button>
+              </div>
+           </div>
         </div>
       )}
     </div>

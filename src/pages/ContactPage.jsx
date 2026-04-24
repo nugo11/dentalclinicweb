@@ -20,23 +20,24 @@ const ContactPage = ({ user }) => {
       <Helmet>
         <title>კონტაქტი — DentalHub</title>
         <meta name="description" content="დაგვიკავშირდით DentalHub-ის გუნდს ნებისმიერ დროს." />
+        <link rel="canonical" href="https://dentalhub.ge/contact" />
       </Helmet>
       
       <div className="min-h-screen bg-surface font-nino selection:bg-brand-purple/10 overflow-x-hidden">
         <MainHeader user={user} />
 
         {/* Hero Section */}
-        <section className="pt-32 pb-20 px-6 bg-gradient-to-b from-brand-deep to-surface relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple/10 blur-[100px] rounded-full -mr-20 -mt-20 animate-pulse"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 blur-[80px] rounded-full -ml-20 -mb-20"></div>
+        <section className="pt-32 pb-20 px-6 bg-gradient-to-b from-[#8500ff1c] to-surface dark:from-brand-deep dark:to-surface relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#8500ff10] dark:bg-brand-purple/10 blur-[100px] rounded-full -mr-20 -mt-20 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/[0.03] dark:bg-blue-500/5 blur-[80px] rounded-full -ml-20 -mb-20"></div>
           
           <div className="max-w-7xl mx-auto relative z-10 text-center">
-            <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-purple/10 text-brand-purple border border-brand-purple/20 text-[10px] font-black uppercase tracking-widest mb-8 animate-bounce-slow">
+            <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-brand-purple/10 dark:bg-brand-purple/20 text-brand-purple border border-brand-purple/20 text-[10px] font-black uppercase tracking-widest mb-8 animate-bounce-slow shadow-sm">
               <MessageSquare size={12} className="mr-2" /> Support & Sales
             </span>
-            <h1 className="text-5xl md:text-8xl font-black text-text-main italic tracking-tighter leading-[0.9] mb-8">
+            <h1 className="text-5xl md:text-8xl font-black text-text-main italic tracking-tighter leading-[0.9] mb-8 pr-4">
               დაგვიკავშირდით <br />
-              <span className="bg-gradient-to-r from-brand-purple to-blue-600 bg-clip-text text-transparent italic">ნებისმიერ დროს</span>
+              <span className="bg-gradient-to-r from-brand-purple to-blue-600 bg-clip-text text-transparent italic pr-4">ნებისმიერ დროს</span>
             </h1>
             <p className="text-lg md:text-xl text-text-muted max-w-2xl mx-auto font-medium italic leading-relaxed">
               ჩვენი გუნდი მზად არის გიპასუხოთ ნებისმიერ კითხვაზე DentalHub-ის დანერგვასა და გამოყენებასთან დაკავშირებით.

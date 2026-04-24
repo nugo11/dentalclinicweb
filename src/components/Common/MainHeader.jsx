@@ -42,11 +42,9 @@ const MainHeader = ({ user }) => {
             <Link to="/" onClick={handleHomeClick} className={`${location.pathname === "/" ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
               მთავარი
             </Link>
-            {isLanding && (
-              <>
-                <a href="#pricing" className="hover:text-brand-purple transition-colors">ფასები</a>
-              </>
-            )}
+            <Link to="/pricing" className={`${location.pathname === "/pricing" ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
+              ფასები
+            </Link>
             <Link to="/about" className={`${location.pathname === "/about" ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
               ჩვენს შესახებ
             </Link>
@@ -137,13 +135,9 @@ const MainHeader = ({ user }) => {
                   მთავარი <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
                </Link>
                
-               {isLanding && (
-                 <>
-                   <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
-                      ფასები <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
-                   </a>
-                 </>
-               )}
+               <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
+                  ფასები <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
+               </Link>
 
                 <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
                    ჩვენს შესახებ <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />

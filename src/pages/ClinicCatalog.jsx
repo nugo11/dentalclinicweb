@@ -57,6 +57,7 @@ const ClinicCatalog = () => {
     <>
       <Helmet>
         <title>კლინიკების კატალოგი — DentalHub</title>
+        <link rel="canonical" href="https://dentalhub.ge/catalog" />
       </Helmet>
       <div className="min-h-screen bg-surface-soft font-nino transition-colors duration-300">
       <MainHeader user={currentUser} />

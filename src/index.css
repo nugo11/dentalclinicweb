@@ -1,5 +1,6 @@
 @import "bpg-nino-mtavruli/css/bpg-nino-mtavruli.min.css";
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
 @theme {
   --color-brand-purple: #7c3aed;
@@ -85,7 +86,7 @@ body {
 /* Smooth Scroll */
 html {
   scroll-behavior: smooth;
-  color-scheme: dark;
+  color-scheme: light dark;
   height: 100%;
 }
 

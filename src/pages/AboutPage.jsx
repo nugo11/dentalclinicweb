@@ -12,6 +12,7 @@ const AboutPage = ({ user }) => {
       <Helmet>
         <title>ჩვენს შესახებ — DentalHub</title>
         <meta name="description" content="გაიცანით DentalHub-ის გუნდი და ჩვენი მისია სტომატოლოგიის ციფრულ ეპოქაში." />
+        <link rel="canonical" href="https://dentalhub.ge/about" />
       </Helmet>
       
       <div className="min-h-screen bg-surface font-nino selection:bg-brand-purple/10 overflow-x-hidden">
