@@ -9,6 +9,10 @@
   --color-brand-text: #1e293b;
   /* დარწმუნდი, რომ სახელი ზუსტად ემთხვევა პაკეტის CSS-ში არსებულს */
   --font-nino: "BPG Nino Mtavruli", sans-serif;
+  
+  /* PWA Safe Area Support */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Tip Card-ის სპეციალური ეფექტი */

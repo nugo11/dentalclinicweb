@@ -109,31 +109,40 @@ const PWAInstallBanner = () => {
                 DentalHub-ის აპლიკაციად დასამატებლად მიჰყევით ამ მარტივ ნაბიჯებს:
               </p>
 
-              <div className="space-y-6">
+              <div className="space-y-5">
                 <div className="flex items-center gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all">
-                    <Share size={20} />
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all shrink-0 font-black">
+                    ...
                   </div>
-                  <p className="text-[13px] font-bold text-brand-deep uppercase tracking-tight">
-                    1. დააჭირეთ <span className="text-brand-purple">"Share"</span> ღილაკს ბრაუზერში
+                  <p className="text-[12px] font-bold text-brand-deep uppercase tracking-tight">
+                    1. დააჭირეთ <span className="text-brand-purple">"..."</span> (სამ წერტილს)
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all">
-                    <PlusSquare size={20} />
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all shrink-0">
+                    <Share size={18} />
                   </div>
-                  <p className="text-[13px] font-bold text-brand-deep uppercase tracking-tight">
-                    2. აირჩიეთ <span className="text-brand-purple">"Add to Home Screen"</span>
+                  <p className="text-[12px] font-bold text-brand-deep uppercase tracking-tight">
+                    2. აირჩიეთ <span className="text-brand-purple">"Share"</span> ღილაკი
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all">
-                    <Info size={20} />
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all shrink-0">
+                    <Smartphone size={18} />
                   </div>
-                  <p className="text-[13px] font-bold text-brand-deep uppercase tracking-tight">
-                    3. დააჭირეთ <span className="text-brand-purple">"Add"</span> ზედა კუთხეში
+                  <p className="text-[12px] font-bold text-brand-deep uppercase tracking-tight">
+                    3. ჩამოსქროლეთ და აირჩიეთ <span className="text-brand-purple">"View More"</span>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4 group">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center group-hover:bg-brand-purple/10 group-hover:text-brand-purple transition-all shrink-0">
+                    <PlusSquare size={18} />
+                  </div>
+                  <p className="text-[12px] font-bold text-brand-deep uppercase tracking-tight">
+                    4. დააჭირეთ <span className="text-brand-purple">"Add to Home Screen"</span>
                   </p>
                 </div>
               </div>

@@ -11,7 +11,7 @@ const MainHeader = ({ user }) => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <nav className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100" style={{ paddingTop: 'var(--safe-top)' }}>
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2.5 group cursor-pointer">
             <div className="w-9 h-9 md:w-10 md:h-10 bg-brand-deep rounded-xl flex items-center justify-center text-white shadow-lg">
@@ -163,7 +163,7 @@ const MainHeader = ({ user }) => {
         </div>
       </div>
       {/* Spacer to prevent content from going under the fixed navbar */}
-      <div className="h-16 md:h-20 w-full" />
+      <div className="w-full" style={{ height: 'calc(4rem + var(--safe-top))' }} />
     </>
   );
 };

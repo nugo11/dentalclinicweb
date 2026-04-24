@@ -103,7 +103,7 @@ const TopNav = ({ onMenuClick }) => {
   }, []);
 
   return (
-    <div className="px-4 md:px-8 pt-4 md:pt-6 shrink-0 z-30 font-nino">
+    <div className="px-4 md:px-8 shrink-0 z-30 font-nino" style={{ paddingTop: 'calc(1rem + var(--safe-top))' }}>
       <header className="h-20 md:h-22 px-6 md:px-10 flex items-center justify-between bg-white/80 backdrop-blur-xl border border-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
         <div className="flex items-center gap-4 flex-1">
           <button
