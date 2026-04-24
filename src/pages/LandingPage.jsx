@@ -33,6 +33,7 @@ import {
 import { auth, db } from "../firebase";
 import { collection, query, getDocs, limit, where } from "firebase/firestore";
 import MainHeader from "../components/Common/MainHeader";
+import PWAInstallBanner from "../components/PWAInstallBanner";
 
 // --- დამხმარე კომპონენტები ---
 const SectionTag = ({ children, dark }) => (
@@ -137,6 +138,7 @@ const LandingPage = ({ user }) => {
       </Helmet>
       <div className="min-h-screen bg-white font-nino selection:bg-brand-purple/10 overflow-x-hidden">
       <MainHeader user={user} />
+      <PWAInstallBanner />
 
       {/* 2. Hero Section - ENHANCED */}
       <section className="min-h-screen flex items-center px-4 md:px-6 bg-white relative overflow-hidden">

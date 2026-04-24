@@ -11,6 +11,7 @@ import AppointmentsList from '../components/Dashboard/AppointmentsList';
 import QuickActions from '../components/Dashboard/QuickActions';
 import RecentTreatments from '../components/Dashboard/RecentTreatments';
 import SalaryReminder from '../components/Dashboard/SalaryReminder';
+import PWAInstallBanner from '../components/PWAInstallBanner';
 import { 
   AlertTriangle, PackageSearch, ChevronRight, Crown, Loader2, Clock, 
   Activity, CalendarDays, Zap, ArrowUpRight, DollarSign, 
@@ -203,6 +204,7 @@ const Dashboard = () => {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <PWAInstallBanner />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
           <div className="max-w-7xl mx-auto space-y-8">
