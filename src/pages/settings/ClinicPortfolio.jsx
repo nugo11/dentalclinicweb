@@ -433,10 +433,17 @@ const ClinicPortfolio = () => {
                               )}
                               {uploading && <div className="absolute inset-0 bg-brand-deep/50 flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div>}
                            </div>
-                           <label className="absolute bottom-[-10px] right-[-10px] w-10 h-10 bg-brand-purple text-white rounded-2xl flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-all active:scale-95">
+                           <label className={`absolute bottom-[-10px] right-[-10px] w-10 h-10 bg-brand-purple text-white rounded-2xl flex items-center justify-center shadow-lg transition-all active:scale-95 ${planKey === 'free' ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}`}>
                               <Camera size={18} />
-                              <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                              <input 
+                                 type="file" 
+                                 className="hidden" 
+                                 accept="image/*" 
+                                 onChange={handleLogoUpload} 
+                                 disabled={planKey === 'free'} 
+                              />
                            </label>
+                           {planKey === 'free' && <UpgradeOverlay title="Pro / Clinic Plus Required" />}
                         </div>
                         <div>
                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/5 text-brand-purple rounded-full text-[9px] font-black uppercase tracking-widest mb-3">
@@ -545,75 +552,78 @@ const ClinicPortfolio = () => {
                         <h3 className="text-sm font-black uppercase tracking-widest text-text-main italic">იურიდიული მონაცემები (ინვოისისთვის)</h3>
                      </div>
 
-                     <div className="space-y-6">
-                        <FormInput label="კომპანიის იურიდიული დასახელება" value={formData.legalName} onChange={val => setFormData({...formData, legalName: val})} />
-                        <FormInput label="საიდენტიფიკაციო კოდი" value={formData.idCode} onChange={val => setFormData({...formData, idCode: val})} />
-                        
-                        <div className="space-y-4 pt-4 border-t border-border-main">
-                           <div className="flex justify-between items-center">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">საბანკო რეკვიზიტები</p>
-                              <button 
-                                 type="button" 
-                                 onClick={() => setFormData(prev => ({ ...prev, bankAccounts: [...prev.bankAccounts, { bankName: "", iban: "" }] }))}
-                                 className="text-[10px] font-black text-brand-purple hover:text-text-main flex items-center gap-1"
-                              >
-                                 <Plus size={14} /> ბანკის დამატება
-                              </button>
+                     <div className="relative group">
+                        <div className={`space-y-6 ${planKey === 'free' ? 'opacity-30 pointer-events-none' : ''}`}>
+                           <FormInput label="კომპანიის იურიდიული დასახელება" value={formData.legalName} onChange={val => setFormData({...formData, legalName: val})} />
+                           <FormInput label="საიდენტიფიკაციო კოდი" value={formData.idCode} onChange={val => setFormData({...formData, idCode: val})} />
+                           
+                           <div className="space-y-4 pt-4 border-t border-border-main">
+                              <div className="flex justify-between items-center">
+                                 <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">საბანკო რეკვიზიტები</p>
+                                 <button 
+                                    type="button" 
+                                    onClick={() => setFormData(prev => ({ ...prev, bankAccounts: [...prev.bankAccounts, { bankName: "", iban: "" }] }))}
+                                    className="text-[10px] font-black text-brand-purple hover:text-text-main flex items-center gap-1"
+                                 >
+                                    <Plus size={14} /> ბანკის დამატება
+                                 </button>
+                              </div>
+                              
+                              {formData.bankAccounts.map((acc, index) => (
+                                 <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-surface-soft rounded-2xl relative group/bank">
+                                    <FormInput 
+                                       label="მიმღები ბანკი" 
+                                       value={acc.bankName} 
+                                       onChange={val => {
+                                          const newBanks = [...formData.bankAccounts];
+                                          newBanks[index].bankName = val;
+                                          setFormData({...formData, bankAccounts: newBanks});
+                                       }} 
+                                    />
+                                    <FormInput 
+                                       label="საბანკო ანგარიში (IBAN)" 
+                                       value={acc.iban} 
+                                       onChange={val => {
+                                          const newBanks = [...formData.bankAccounts];
+                                          newBanks[index].iban = val;
+                                          setFormData({...formData, bankAccounts: newBanks});
+                                       }} 
+                                    />
+                                    {formData.bankAccounts.length > 1 && (
+                                       <button 
+                                          type="button" 
+                                          onClick={() => {
+                                             const newBanks = formData.bankAccounts.filter((_, i) => i !== index);
+                                             setFormData({...formData, bankAccounts: newBanks});
+                                          }}
+                                          className="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/bank:opacity-100 transition-all shadow-lg"
+                                       >
+                                          <X size={12} />
+                                       </button>
+                                    )}
+                                 </div>
+                              ))}
                            </div>
                            
-                           {formData.bankAccounts.map((acc, index) => (
-                              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-surface-soft rounded-2xl relative group/bank">
-                                 <FormInput 
-                                    label="მიმღები ბანკი" 
-                                    value={acc.bankName} 
-                                    onChange={val => {
-                                       const newBanks = [...formData.bankAccounts];
-                                       newBanks[index].bankName = val;
-                                       setFormData({...formData, bankAccounts: newBanks});
-                                    }} 
-                                 />
-                                 <FormInput 
-                                    label="საბანკო ანგარიში (IBAN)" 
-                                    value={acc.iban} 
-                                    onChange={val => {
-                                       const newBanks = [...formData.bankAccounts];
-                                       newBanks[index].iban = val;
-                                       setFormData({...formData, bankAccounts: newBanks});
-                                    }} 
-                                 />
-                                 {formData.bankAccounts.length > 1 && (
-                                    <button 
-                                       type="button" 
-                                       onClick={() => {
-                                          const newBanks = formData.bankAccounts.filter((_, i) => i !== index);
-                                          setFormData({...formData, bankAccounts: newBanks});
-                                       }}
-                                       className="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/bank:opacity-100 transition-all shadow-lg"
-                                    >
-                                       <X size={12} />
-                                    </button>
-                                 )}
+                           <div className="pt-4 border-t border-border-main">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-4">კლინიკის შტამპი / ბეჭედი</p>
+                              <div className="flex items-center gap-6">
+                                 <div className="w-24 h-24 bg-surface-soft rounded-2xl border-2 border-dashed border-border-dark flex items-center justify-center overflow-hidden relative group/stamp">
+                                    {formData.stampUrl ? (
+                                      <img src={formData.stampUrl} className="w-full h-full object-contain" alt="Stamp" />
+                                    ) : (
+                                      <Camera className="text-text-muted" size={24} />
+                                    )}
+                                    <label className={`absolute inset-0 bg-brand-purple/80 text-white flex items-center justify-center transition-all ${planKey === 'free' ? 'hidden' : 'opacity-0 group-hover/stamp:opacity-100 cursor-pointer'}`}>
+                                       <Camera size={20} />
+                                       <input type="file" className="hidden" accept="image/*" onChange={handleStampUpload} />
+                                    </label>
+                                 </div>
+                                 <p className="text-[9px] text-text-muted font-bold max-w-[200px]">ატვირთეთ PNG ან JPG ფორმატის ბეჭედი (სასურველია გამჭვირვალე ფონით)</p>
                               </div>
-                           ))}
-                        </div>
-                        
-                        <div className="pt-4 border-t border-border-main">
-                           <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-4">კლინიკის შტამპი / ბეჭედი</p>
-                           <div className="flex items-center gap-6">
-                              <div className="w-24 h-24 bg-surface-soft rounded-2xl border-2 border-dashed border-border-dark flex items-center justify-center overflow-hidden relative group/stamp">
-                                 {formData.stampUrl ? (
-                                   <img src={formData.stampUrl} className="w-full h-full object-contain" alt="Stamp" />
-                                 ) : (
-                                   <Camera className="text-text-muted" size={24} />
-                                 )}
-                                 <label className="absolute inset-0 bg-brand-purple/80 text-white flex items-center justify-center opacity-0 group-hover/stamp:opacity-100 transition-all cursor-pointer">
-                                    <Camera size={20} />
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleStampUpload} />
-                                 </label>
-                              </div>
-                              <p className="text-[9px] text-text-muted font-bold max-w-[200px]">ატვირთეთ PNG ან JPG ფორმატის ბეჭედი (სასურველია გამჭვირვალე ფონით)</p>
                            </div>
                         </div>
+                        {planKey === 'free' && <UpgradeOverlay title="Pro / Clinic Plus Required" />}
                      </div>
                   </div>
 

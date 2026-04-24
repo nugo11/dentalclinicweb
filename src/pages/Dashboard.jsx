@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { userData, loading, role, activeStaff } = useAuth(); 
+  const { userData, loading, role, activeStaff, clinicData } = useAuth(); 
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [greeting, setGreeting] = useState('');
@@ -205,6 +205,29 @@ const Dashboard = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
         <PWAInstallBanner />
+
+        {/* --- Missing Phone Number Warning --- */}
+        {role === 'admin' && clinicData?.plan !== 'free' && !clinicData?.phone && (
+          <div className="mx-4 sm:mx-8 mt-4 animate-in slide-in-from-top-4 duration-500">
+            <div className="bg-red-500/10 border-2 border-red-500/20 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl shadow-red-500/5">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/30">
+                   <Phone size={28} />
+                </div>
+                <div>
+                   <h4 className="text-lg font-black text-red-600 italic tracking-tighter">საკონტაქტო ნომერი არ არის დამატებული!</h4>
+                   <p className="text-[10px] font-bold text-red-500/70 uppercase tracking-widest mt-1">SMS შეტყობინებების გასაგზავნად აუცილებელია კლინიკის ნომრის მითითება</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/settings/portfolio')}
+                className="w-full sm:w-auto px-8 py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2"
+              >
+                პორტფოლიოში გადასვლა <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
           <div className="max-w-7xl mx-auto space-y-8">
