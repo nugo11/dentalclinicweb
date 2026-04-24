@@ -1,58 +1,88 @@
 import React, { useState, useEffect } from 'react';
-import { X, Share, PlusSquare, Download, Smartphone, Info } from 'lucide-react';
+import { X, Download, Smartphone, Chrome, AlertTriangle } from 'lucide-react';
 
 const PWAInstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showAndroidModal, setShowAndroidModal] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
+  const [showChromeRequiredModal, setShowChromeRequiredModal] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isChrome, setIsChrome] = useState(false);
+  const [browserName, setBrowserName] = useState('');
 
   useEffect(() => {
-    // Detect OS
     const ua = navigator.userAgent;
+
+    // --- OS Detection ---
     const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
     const isAndroidDevice = /Android/.test(ua);
     setIsIOS(isIOSDevice);
     setIsAndroid(isAndroidDevice);
 
-    // Check if already installed
+    // --- Browser Detection ---
+    const isSamsungBrowser = /SamsungBrowser/i.test(ua);
+    const isFirefox = /Firefox/i.test(ua) && !/Seamonkey/i.test(ua);
+    const isOpera = /OPR|Opera/i.test(ua);
+    const isEdge = /Edg/i.test(ua);
+    const isBrave = navigator.brave && typeof navigator.brave.isBrave === 'function';
+    const isChromeDetected = /Chrome/i.test(ua) && !/SamsungBrowser|OPR|Opera|Edg/i.test(ua);
+
+    setIsChrome(isChromeDetected || isBrave);
+
+    if (isSamsungBrowser) setBrowserName('Samsung Internet');
+    else if (isFirefox) setBrowserName('Firefox');
+    else if (isOpera) setBrowserName('Opera');
+    else if (isEdge) setBrowserName('Edge');
+    else if (isChromeDetected) setBrowserName('Chrome');
+    else setBrowserName('');
+
+    // --- Check if already installed ---
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    
     if (isStandalone) return;
 
-    // Android / Chrome "Add to Home Screen" listener
+    // --- beforeinstallprompt (Chrome/Edge/Samsung) ---
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowBanner(true);
     };
-
     window.addEventListener('beforeinstallprompt', handler);
 
-    // Show banner for iOS if not standalone
+    // Show banner for iOS
     if (isIOSDevice && !isStandalone) {
       setShowBanner(true);
     }
 
-    // Force show banner for Android if not standalone after 3 seconds (as fallback)
+    // Show banner for Android after 3s as fallback
     if (isAndroidDevice && !isStandalone) {
       const timer = setTimeout(() => {
         setShowBanner(true);
       }, 3000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeinstallprompt', handler);
+      };
     }
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstallClick = async () => {
+    // iOS — show iOS instructions
     if (isIOS) {
       setShowIOSModal(true);
       return;
     }
 
+    // Android — non-Chrome browsers: show "use Chrome" modal
+    if (isAndroid && !isChrome && !deferredPrompt) {
+      setShowChromeRequiredModal(true);
+      return;
+    }
+
+    // Chrome with native prompt available
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -61,7 +91,7 @@ const PWAInstallBanner = () => {
         setShowBanner(false);
       }
     } else if (isAndroid) {
-      // Fallback for Android if beforeinstallprompt didn't fire
+      // Chrome fallback if beforeinstallprompt didn't fire
       setShowAndroidModal(true);
     }
   };
@@ -72,29 +102,29 @@ const PWAInstallBanner = () => {
     <>
       {/* Mobile Banner - Sticky Bottom */}
       <div className="fixed bottom-6 left-4 right-4 z-[60] md:hidden animate-in slide-in-from-bottom-10 duration-500">
-        <div className="bg-brand-deep/95 backdrop-blur-xl border border-white/10 rounded-[28px] p-4 shadow-2xl shadow-brand-deep/40 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="bg-brand-deep/95 backdrop-blur-xl border border-white/10 rounded-[28px] p-4 shadow-2xl shadow-brand-deep/40 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
               <Download className="text-white" size={24} />
             </div>
-            <div>
-              <h4 className="text-white text-sm font-black tracking-tight leading-tight">დააინსტალირე DentalHub</h4>
+            <div className="min-w-0">
+              <h4 className="text-white text-sm font-black tracking-tight leading-tight truncate">დააინსტალირე DentalHub</h4>
               <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-0.5">სწრაფი წვდომისთვის</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button 
               onClick={handleInstallClick}
-              className="px-5 py-2.5 bg-brand-purple text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-white hover:text-brand-deep transition-all active:scale-95 shadow-lg shadow-brand-purple/20"
+              className="px-4 py-2.5 bg-brand-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-brand-deep transition-all active:scale-95 shadow-lg shadow-brand-purple/20 whitespace-nowrap"
             >
               ინსტალაცია
             </button>
             <button 
               onClick={() => setShowBanner(false)}
-              className="p-2 text-white/40 hover:text-white transition-colors"
+              className="p-2 text-white/40 hover:text-white transition-colors shrink-0"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
@@ -104,16 +134,19 @@ const PWAInstallBanner = () => {
       {showIOSModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowIOSModal(false)} />
-          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full duration-300 max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Header with close button inside */}
+            <div className="p-6 pb-0 shrink-0">
               <div className="flex justify-between items-center mb-6">
                 <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center"><Smartphone size={24} /></div>
-                <button onClick={() => setShowIOSModal(false)} className="p-2 bg-slate-50 text-slate-400 rounded-full"><X size={20} /></button>
+                <button onClick={() => setShowIOSModal(false)} className="w-10 h-10 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
               </div>
-
               <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-2 italic">ინსტალაცია iPhone-ზე</h3>
               <p className="text-slate-500 text-sm font-medium mb-6">მიჰყევით ამ ნაბიჯებს DentalHub-ის დასამატებლად:</p>
+            </div>
 
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
               <div className="space-y-8">
                 {[
                   { step: "1", text: "დააჭირეთ '...' (სამ წერტილს)", img: "/ios_app/step1.jpg" },
@@ -123,7 +156,7 @@ const PWAInstallBanner = () => {
                 ].map((item, idx) => (
                   <div key={idx} className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center">{item.step}</span>
+                      <span className="w-6 h-6 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">{item.step}</span>
                       <p className="text-[12px] font-black text-brand-deep uppercase tracking-tight">{item.text}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
@@ -132,29 +165,28 @@ const PWAInstallBanner = () => {
                   </div>
                 ))}
               </div>
-
               <button onClick={() => setShowIOSModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Android Manual Instruction Modal */}
+      {/* Android Chrome Manual Instruction Modal */}
       {showAndroidModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowAndroidModal(false)} />
-          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-full duration-300">
+          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
             <div className="p-8">
               <div className="flex justify-between items-center mb-6">
                 <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center"><Smartphone size={24} /></div>
-                <button onClick={() => setShowAndroidModal(false)} className="p-2 bg-slate-50 text-slate-400 rounded-full"><X size={20} /></button>
+                <button onClick={() => setShowAndroidModal(false)} className="w-10 h-10 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
               </div>
               <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-2 italic">ინსტალაცია Android-ზე</h3>
               <p className="text-slate-500 text-sm font-medium mb-6">თუ ინსტალაციის ფანჯარა არ გამოჩნდა ავტომატურად:</p>
               <div className="space-y-4">
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">1</div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase">დააჭირეთ Chrome-ის მენიუს <span className="text-brand-purple">(სამ წერტილს ზედა მარჯვენა კუთხეში)</span></p>
+                  <p className="text-[12px] font-bold text-brand-deep uppercase">დააჭირეთ Chrome-ის მენიუს <span className="text-brand-purple">(⋮ სამ წერტილს ზედა მარჯვენა კუთხეში)</span></p>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">2</div>
@@ -162,6 +194,62 @@ const PWAInstallBanner = () => {
                 </div>
               </div>
               <button onClick={() => setShowAndroidModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chrome Required Modal (for Samsung Internet / Firefox / Other browsers) */}
+      {showChromeRequiredModal && (
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
+          <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowChromeRequiredModal(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center">
+                  <AlertTriangle size={24} />
+                </div>
+                <button onClick={() => setShowChromeRequiredModal(false)} className="w-10 h-10 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
+              </div>
+              
+              <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-2 italic">საჭიროა Google Chrome</h3>
+              <p className="text-slate-500 text-sm font-medium mb-6">
+                აპის დაინსტალირებისთვის საჭიროა <strong className="text-brand-deep">Google Chrome</strong> ბრაუზერის გამოყენება.
+                {browserName && <span className="text-amber-600"> ({browserName} ბრაუზერი ამ ფუნქციას არ უჭერს მხარს)</span>}
+              </p>
+
+              <div className="space-y-4 mb-8">
+                <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                      <Chrome size={22} className="text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="text-[12px] font-black text-brand-deep uppercase mb-1">ნაბიჯი 1</p>
+                      <p className="text-[11px] font-bold text-slate-600">გახსენით ეს ბმული Google Chrome-ში:</p>
+                      <p className="text-[11px] font-black text-brand-purple mt-2 bg-white px-3 py-2 rounded-xl border border-blue-100 break-all select-all">dentalclinicweb.vercel.app</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                      <Download size={22} className="text-brand-purple" />
+                    </div>
+                    <div>
+                      <p className="text-[12px] font-black text-brand-deep uppercase mb-1">ნაბიჯი 2</p>
+                      <p className="text-[11px] font-bold text-slate-600">Chrome-ში დააჭირეთ <span className="text-brand-purple font-black">⋮ მენიუს</span> და აირჩიეთ <span className="text-brand-purple font-black">"Install app"</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setShowChromeRequiredModal(false)} className="flex-1 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">
+                  გასაგებია
+                </button>
+              </div>
             </div>
           </div>
         </div>
