@@ -86,6 +86,43 @@ const ClinicPortfolio = () => {
     stampUrl: ""
   });
 
+  const [showSmsModal, setShowSmsModal] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [userOtp, setUserOtp] = useState("");
+  const [smsStatus, setSmsStatus] = useState("idle"); // idle, loading, sent, verified
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    // შემოწმება localStorage-დან
+    const lastSent = localStorage.getItem(`sms_cooldown_${formData.phone}`);
+    const savedOtp = localStorage.getItem(`sms_otp_${formData.phone}`);
+    
+    if (savedOtp) setGeneratedOtp(savedOtp);
+
+    if (lastSent) {
+      const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+      if (remaining > 0) setResendTimer(remaining);
+      else {
+          localStorage.removeItem(`sms_cooldown_${formData.phone}`);
+          localStorage.removeItem(`sms_otp_${formData.phone}`);
+      }
+    }
+
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer, formData.phone]);
+
   useEffect(() => {
     if (clinicData) {
       setFormData({
@@ -223,9 +260,78 @@ const ClinicPortfolio = () => {
     }
   };
 
+  const handleSendSms = async (targetPhone) => {
+    // სპამის პრევენცია - შემოწმება გაგზავნამდე
+    const lastSent = localStorage.getItem(`sms_cooldown_${targetPhone}`);
+    if (lastSent) {
+        const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+        if (remaining > 0) {
+            setResendTimer(remaining);
+            setSmsStatus("sent");
+            return;
+        }
+    }
+    
+    if (resendTimer > 0) return;
+    
+    const finalPhone = "995" + targetPhone;
+    setSmsStatus("loading");
+    
+    // ვქმნით 6 ნიშნა კოდს
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(otp);
+    
+    try {
+      const apiKey = import.meta.env.VITE_UBILL_API_KEY;
+      await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandID: 2,
+          numbers: [finalPhone],
+          text: `AiDent kodi: ${otp}`,
+          otp: true
+        })
+      });
+      setSmsStatus("sent");
+      setResendTimer(120); // 2 წუთიანი ტაიმერი
+      localStorage.setItem(`sms_cooldown_${targetPhone}`, Date.now().toString());
+      localStorage.setItem(`sms_otp_${targetPhone}`, otp);
+    } catch (err) {
+      console.error("SMS Error:", err);
+      setToast({ type: "error", text: "SMS-ის გაგზავნა ვერ მოხერხდა" });
+      setSmsStatus("idle");
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     if (!isAdmin || !clinicData?.id) return;
+
+    // ტელეფონის ვალიდაცია
+    const cleanPhone = formData.phone.replace(/\D/g, "");
+    if (cleanPhone && (cleanPhone.length !== 9 || !cleanPhone.startsWith("5"))) {
+      setToast({ type: "error", text: "ტელეფონის ნომერი უნდა იყოს 9 ნიშნა და იწყებოდეს 5-ით" });
+      return;
+    }
+
+    // თუ ნომერი შეიცვალა და ჯერ არ არის ვერიფიცირებული
+    if (cleanPhone && cleanPhone !== clinicData.phone && smsStatus !== "verified") {
+      setShowSmsModal(true);
+      
+      const lastSent = localStorage.getItem(`sms_cooldown_${cleanPhone}`);
+      if (lastSent) {
+          const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+          if (remaining > 0) {
+              setSmsStatus("sent");
+              return;
+          }
+      }
+
+      handleSendSms(cleanPhone);
+      return;
+    }
+
     setLoading(true);
     try {
       const clinicRef = doc(db, "clinics", clinicData.id);
@@ -237,6 +343,7 @@ const ClinicPortfolio = () => {
 
       await updateDoc(clinicRef, {
         ...formData,
+        phone: cleanPhone,
         mapUrl: mapUrlValue,
         updatedAt: new Date().toISOString()
       });
@@ -245,6 +352,7 @@ const ClinicPortfolio = () => {
       await logActivity(clinicData.id, { uid: auth.currentUser.uid, fullName: clinicData.clinicName, role: 'admin' }, 'settings_update', 'განახლდა კლინიკის პარამეტრები და პორტფოლიო', { clinicId: clinicData.id });
 
       setToast({ type: "success", text: "მონაცემები შენახულია!" });
+      setSmsStatus("idle"); // Reset status after save
     } catch (error) {
       console.error(error);
       setToast({ type: "error", text: "შენახვა ვერ მოხერხდა" });
@@ -279,7 +387,7 @@ const ClinicPortfolio = () => {
   return (
     <>
       <Helmet>
-        <title>პორტფოლიო და პარამეტრები — DentalHub</title>
+        <title>პორტფოლიო და პარამეტრები — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
@@ -403,7 +511,18 @@ const ClinicPortfolio = () => {
                      </h3>
                      <div className="space-y-6">
                         <div className="relative group">
-                           <FormInput label="ტელეფონის ნომერი" icon={Phone} value={formData.phone} onChange={val => setFormData({...formData, phone: val})} className={!features.canShowPhone ? "opacity-30 pointer-events-none" : ""} />
+                           <FormInput 
+                            label="ტელეფონის ნომერი" 
+                            icon={Phone} 
+                            placeholder="5XXXXXXXX"
+                            maxLength={9}
+                            value={formData.phone} 
+                            onChange={val => {
+                              const cleaned = val.replace(/\D/g, "").slice(0, 9);
+                              setFormData({...formData, phone: cleaned});
+                            }} 
+                            className={!features.canShowPhone ? "opacity-30 pointer-events-none" : ""} 
+                           />
                            {!features.canShowPhone && <UpgradeOverlay title="Solo / Pro Required" />}
                         </div>
                         <div className="relative group">
@@ -515,6 +634,78 @@ const ClinicPortfolio = () => {
         </main>
       </div>
     </div>
+
+    {/* SMS Verification Modal */}
+    {showSmsModal && (
+      <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" />
+        <div className="bg-surface rounded-[40px] w-full max-w-sm p-10 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+          <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <Phone size={40} />
+          </div>
+          <h3 className="text-2xl font-black text-text-main italic tracking-tighter">ნომრის დადასტურება</h3>
+          <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-2 mb-8">
+            კოდი გაიგზავნა ნომერზე: <span className="text-brand-purple">5{formData.phone.slice(1)}</span>
+          </p>
+
+          <div className="space-y-6">
+            <input 
+              type="text" 
+              maxLength={6}
+              placeholder="0 0 0 0 0 0"
+              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-5 outline-none font-black text-2xl text-center tracking-[0.5em] text-text-main transition-all"
+              value={userOtp}
+              onChange={(e) => setUserOtp(e.target.value.replace(/\D/g, ""))}
+              autoComplete="one-time-code"
+              inputMode="numeric"
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => {
+                  setShowSmsModal(false);
+                  setUserOtp("");
+                  setSmsStatus("idle");
+                }}
+                className="py-5 bg-surface-soft text-text-muted rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-border-main transition-all"
+              >
+                გაუქმება
+              </button>
+              <button 
+                onClick={() => {
+                  if (userOtp === generatedOtp) {
+                    setSmsStatus("verified");
+                    setShowSmsModal(false);
+                    setUserOtp("");
+                    setResendTimer(0);
+                    // Trigger save again with verified status
+                    setTimeout(() => {
+                      document.querySelector('button[type="submit"]').click();
+                    }, 100);
+                  } else {
+                    setToast({ type: "error", text: "კოდი არასწორია" });
+                  }
+                }}
+                className="py-5 bg-brand-purple text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:bg-brand-deep transition-all active:scale-95"
+              >
+                დადასტურება
+              </button>
+            </div>
+            
+            <button 
+              type="button"
+              disabled={resendTimer > 0 || smsStatus === "loading"}
+              onClick={() => handleSendSms(formData.phone)}
+              className="text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-brand-purple transition-colors disabled:opacity-50"
+            >
+              {resendTimer > 0 
+                ? `ხელახლა გაგზავნა (${Math.floor(resendTimer / 60)}:${(resendTimer % 60).toString().padStart(2, '0')})` 
+                : smsStatus === "loading" ? "იგზავნება..." : "კოდის ხელახლა გაგზავნა"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 };

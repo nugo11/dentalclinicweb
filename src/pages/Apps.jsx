@@ -65,9 +65,9 @@ const Apps = () => {
   return (
     <div className="min-h-screen bg-surface-soft font-nino">
       <Helmet>
-        <title>გადმოწერეთ აპლიკაცია — DentalHub</title>
-        <meta name="description" content="DentalHub ხელმისაწვდომია ყველა პლატფორმაზე: Windows, Android და iOS. მართეთ თქვენი კლინიკა ნებისმიერი მოწყობილობიდან." />
-        <link rel="canonical" href="https://dentalhub.ge/apps" />
+        <title>გადმოწერეთ აპლიკაცია — AiDent</title>
+        <meta name="description" content="AiDent ხელმისაწვდომია ყველა პლატფორმაზე: Windows, Android და iOS. მართეთ თქვენი კლინიკა ნებისმიერი მოწყობილობიდან." />
+        <link rel="canonical" href="https://AiDent.ge/apps" />
       </Helmet>
 
       <MainHeader user={currentUser} />
@@ -164,7 +164,7 @@ const Apps = () => {
 
       <footer className="py-12 border-t border-border-dark bg-surface">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-text-muted text-xs font-bold uppercase tracking-widest">© 2024 DentalHub — ყველა უფლება დაცულია</p>
+          <p className="text-text-muted text-xs font-bold uppercase tracking-widest">© 2024 AiDent — ყველა უფლება დაცულია</p>
         </div>
       </footer>
     </div>

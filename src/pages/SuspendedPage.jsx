@@ -15,7 +15,7 @@ const SuspendedPage = () => {
   return (
     <>
       <Helmet>
-        <title>წვდომა შეჩერებულია — DentalHub</title>
+        <title>წვდომა შეჩერებულია — AiDent</title>
       </Helmet>
       <div className="min-h-screen w-full bg-surface-soft font-nino flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-surface rounded-[48px] p-8 md:p-16 shadow-[0_40px_100px_rgba(0,0,0,0.04)] border border-border-main text-center relative overflow-hidden">
@@ -51,7 +51,7 @@ const SuspendedPage = () => {
               </div>
               <div className="text-left">
                 <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">მოგვწერეთ</p>
-                <p className="text-sm font-black text-text-main tracking-tight">support@dentalhub.ge</p>
+                <p className="text-sm font-black text-text-main tracking-tight">support@AiDent.ge</p>
               </div>
             </div>
           </div>

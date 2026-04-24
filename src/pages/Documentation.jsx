@@ -140,7 +140,7 @@ const Documentation = () => {
   return (
     <>
       <Helmet>
-        <title>დოკუმენტაცია — DentalHub</title>
+        <title>დოკუმენტაცია — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

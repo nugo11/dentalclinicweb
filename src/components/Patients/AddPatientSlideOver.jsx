@@ -35,11 +35,15 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
     // ვალიდაცია
     const errors = {};
     if (!formData.fullName) errors.fullName = true;
-    if (!formData.phone) errors.phone = true;
+    
+    const cleanPhone = formData.phone.replace(/\D/g, "");
+    if (!cleanPhone || cleanPhone.length !== 9 || !cleanPhone.startsWith("5")) {
+      errors.phone = true;
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      setTimeout(() => setFormErrors({}), 1000);
+      setTimeout(() => setFormErrors({}), 2000);
       return;
     }
 

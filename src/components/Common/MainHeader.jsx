@@ -26,8 +26,8 @@ const MainHeader = ({ user }) => {
             <div className="w-9 h-9 md:w-10 md:h-10 bg-brand-deep rounded-xl flex items-center justify-center text-white shadow-lg">
               <Activity size={20} />
             </div>
-            <span className="text-xl md:text-2xl font-black text-text-main tracking-tighter italic">
-              DentalHub
+            <span className="text-xl md:text-2xl font-black text-text-main tracking-wider italic">
+              AiDent
             </span>
           </Link>
 
@@ -123,7 +123,7 @@ const MainHeader = ({ user }) => {
                   <div className="w-10 h-10 bg-brand-deep rounded-xl flex items-center justify-center text-white shadow-lg">
                     <Activity size={20} />
                   </div>
-                  <span className="text-xl font-black text-text-main italic tracking-tighter">DentalHub</span>
+                  <span className="text-xl font-black text-text-main italic tracking-wider">AiDent</span>
                </div>
                <button onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-2xl bg-surface-soft text-text-muted hover:text-brand-purple transition-all">
                   <X size={24} />

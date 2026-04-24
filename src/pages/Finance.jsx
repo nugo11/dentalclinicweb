@@ -34,7 +34,7 @@ const Finance = () => {
 
   // კლინიკის მონაცემები ინვოისისთვის
   const clinicInfo = {
-    name: dbClinicData?.clinicName || "DentalHub Clinic",
+    name: dbClinicData?.clinicName || "AiDent Clinic",
     address: dbClinicData?.address || "თბილისი, საქართველო",
     phone: dbClinicData?.phone || userData?.phone || "+995 555 00 00 00",
     tin: dbClinicData?.tin || "123456789",
@@ -82,7 +82,7 @@ const Finance = () => {
   return (
     <>
       <Helmet>
-        <title>ფინანსები — DentalHub</title>
+        <title>ფინანსები — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

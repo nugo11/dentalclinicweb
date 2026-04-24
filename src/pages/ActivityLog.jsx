@@ -176,7 +176,7 @@ const ActivityLog = () => {
   return (
     <>
       <Helmet>
-        <title>აქტივობები — DentalHub</title>
+        <title>აქტივობები — AiDent</title>
       </Helmet>
       <div className="flex min-h-screen bg-surface-soft font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

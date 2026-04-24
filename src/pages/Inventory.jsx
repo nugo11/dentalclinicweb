@@ -171,7 +171,7 @@ const Inventory = () => {
   return (
     <>
       <Helmet>
-        <title>საწყობი — DentalHub</title>
+        <title>საწყობი — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

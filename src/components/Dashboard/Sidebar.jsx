@@ -159,7 +159,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </div>
           {isOpen && (
             <span className="text-2xl font-black text-white whitespace-nowrap animate-in fade-in duration-500">
-              DentalHub
+              AiDent
             </span>
           )}
         </div>

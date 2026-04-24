@@ -53,7 +53,7 @@ const Patients = () => {
   return (
     <>
       <Helmet>
-        <title>პაციენტები — DentalHub</title>
+        <title>პაციენტები — AiDent</title>
       </Helmet>
 
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">

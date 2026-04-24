@@ -112,7 +112,7 @@ const Settings = () => {
   return (
     <>
       <Helmet>
-        <title>პარამეტრები — DentalHub</title>
+        <title>პარამეტრები — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

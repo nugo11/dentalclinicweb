@@ -162,7 +162,7 @@ const Services = () => {
   return (
     <>
       <Helmet>
-        <title>სერვისები — DentalHub</title>
+        <title>სერვისები — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

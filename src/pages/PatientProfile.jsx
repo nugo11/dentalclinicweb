@@ -148,7 +148,7 @@ const PatientProfile = () => {
   return (
     <>
       <Helmet>
-        <title>{patientData?.fullName || "პაციენტი"} — DentalHub</title>
+        <title>{patientData?.fullName || "პაციენტი"} — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

@@ -1,6 +1,6 @@
 {
-  "name": "DentalHub — კლინიკის მართვა",
-  "short_name": "DentalHub",
+  "name": "AiDent — კლინიკის მართვა",
+  "short_name": "AiDent",
   "description": "კლინიკის მართვის ინოვაციური პლატფორმა",
   "start_url": "/auth",
   "scope": "/",

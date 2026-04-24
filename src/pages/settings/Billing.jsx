@@ -62,7 +62,7 @@ const Billing = () => {
   return (
     <>
       <Helmet>
-        <title>ანგარიშსწორება და პაკეტები — DentalHub</title>
+        <title>ანგარიშსწორება და პაკეტები — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
@@ -181,7 +181,7 @@ const Billing = () => {
                         <span style={{fontSize:10,fontWeight:900,textTransform:'uppercase',
                           letterSpacing:'0.12em',color:'#94A3B8'}}>—</span>
                       ) : (
-                        <a href="mailto:upgrade@dentalhub.ge"
+                        <a href="mailto:upgrade@AiDent.ge"
                           style={{display:'block',width:'100%',textAlign:'center',
                           padding:'10px 0',background:'#7C3AED',color:'white',borderRadius:14,
                           fontSize:10,fontWeight:900,textTransform:'uppercase',
@@ -208,9 +208,9 @@ const Billing = () => {
                   className="flex items-center gap-3 bg-surface/10 hover:bg-surface/20 border border-white/20 px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all text-white no-underline">
                   <Phone size={16} /> +995 555 10 20 30
                 </a>
-                <a href="mailto:upgrade@dentalhub.ge"
+                <a href="mailto:upgrade@AiDent.ge"
                   className="flex items-center gap-3 bg-brand-purple hover:bg-purple-600 px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all text-white no-underline">
-                  <Mail size={16} /> upgrade@dentalhub.ge
+                  <Mail size={16} /> upgrade@AiDent.ge
                 </a>
               </div>
             </div>

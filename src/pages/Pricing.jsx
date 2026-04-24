@@ -74,9 +74,9 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-surface font-nino selection:bg-brand-purple/10">
       <Helmet>
-        <title>ფასები და პაკეტები — DentalHub</title>
-        <meta name="description" content="DentalHub-ის ფასები და პაკეტები სტომატოლოგიური კლინიკებისთვის. დაიწყე უფასოდ და მოარგე სისტემა შენს საჭიროებებს." />
-        <link rel="canonical" href="https://dentalhub.ge/pricing" />
+        <title>ფასები და პაკეტები — AiDent</title>
+        <meta name="description" content="AiDent-ის ფასები და პაკეტები სტომატოლოგიური კლინიკებისთვის. დაიწყე უფასოდ და მოარგე სისტემა შენს საჭიროებებს." />
+        <link rel="canonical" href="https://AiDent.ge/pricing" />
       </Helmet>
 
       <MainHeader user={currentUser} />
@@ -159,7 +159,7 @@ const Pricing = () => {
                     {c.key === 'free' ? (
                       <Link to="/auth" className="w-full text-center py-4 rounded-2xl bg-brand-deep text-white text-[11px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-xl">დაიწყე</Link>
                     ) : (
-                      <a href="mailto:upgrade@dentalhub.ge" className={`w-full text-center py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl ${c.highlight ? "bg-brand-purple text-white" : "bg-surface border border-border-main text-text-main hover:bg-surface-soft"}`}>კონტაქტი</a>
+                      <a href="mailto:upgrade@AiDent.ge" className={`w-full text-center py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl ${c.highlight ? "bg-brand-purple text-white" : "bg-surface border border-border-main text-text-main hover:bg-surface-soft"}`}>კონტაქტი</a>
                     )}
                     <button 
                       onClick={() => setSelectedPlanForDetails(c.key)}
@@ -179,7 +179,7 @@ const Pricing = () => {
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-12 relative z-10">
            <div className="md:col-span-1">
               <SectionTag dark>პრივილეგიები</SectionTag>
-              <h2 className="text-4xl font-black italic tracking-tighter uppercase mb-6 leading-none">რატომ <br />DentalHub?</h2>
+              <h2 className="text-4xl font-black italic tracking-tighter uppercase mb-6 leading-none">რატომ <br />AiDent?</h2>
               <p className="text-white/50 font-medium italic">ჩვენთან ინვესტიცია ნიშნავს თქვენი კლინიკის ზრდას და დროის დაზოგვას.</p>
            </div>
            {[
@@ -224,7 +224,7 @@ const Pricing = () => {
       <footer className="bg-brand-deep py-20 px-6 text-white text-center border-t border-white/10">
         <div className="flex items-center justify-center space-x-3 mb-8">
           <Activity className="text-brand-purple" size={32} />
-          <span className="text-2xl font-black tracking-tighter italic">DentalHub</span>
+          <span className="text-2xl font-black tracking-tighter italic">AiDent</span>
         </div>
         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/30">© 2026 Crafted for modern dentistry</p>
       </footer>

@@ -157,7 +157,7 @@ const CalendarPage = () => {
   return (
     <>
       <Helmet>
-        <title>განრიგი — DentalHub</title>
+        <title>განრიგი — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

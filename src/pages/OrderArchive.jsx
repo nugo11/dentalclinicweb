@@ -114,7 +114,7 @@ const OrderArchive = () => {
   return (
     <>
       <Helmet>
-        <title>შეკვეთების არქივი — DentalHub</title>
+        <title>შეკვეთების არქივი — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
@@ -141,77 +141,85 @@ const OrderArchive = () => {
             </div>
 
             {/* Filters Section */}
-            <div className="bg-surface p-6 rounded-[32px] border border-border-main shadow-sm flex flex-col md:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="ძებნა პაციენტის სახელით..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-surface-soft pl-12 pr-4 py-3 rounded-xl outline-none font-bold text-sm focus:ring-2 ring-brand-purple/20 transition-all border border-transparent focus:border-brand-purple"
-                />
-              </div>
-
-              {/* Advanced Filters */}
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <select 
-                  value={filterMethod}
-                  onChange={(e) => setFilterMethod(e.target.value)}
-                  className="bg-surface-soft px-4 py-3 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest border border-transparent focus:border-brand-purple text-text-muted cursor-pointer"
-                >
-                  <option value="all">ყველა მეთოდი</option>
-                  <option value="cash">💵 ნაღდი</option>
-                  <option value="card">💳 ბარათი</option>
-                  <option value="transfer">🏦 გადმორიცხვა</option>
-                </select>
-
-                <select 
-                  value={filterPayerType}
-                  onChange={(e) => setFilterPayerType(e.target.value)}
-                  className="bg-surface-soft px-4 py-3 rounded-xl outline-none text-[10px] font-black uppercase tracking-widest border border-transparent focus:border-brand-purple text-text-muted cursor-pointer"
-                >
-                  <option value="all">ყველა ტიპი</option>
-                  <option value="personal">პერსონალური</option>
-                  <option value="insurance">სადაზღვევო</option>
-                  <option value="corporate">კორპორატიული</option>
-                </select>
-              </div>
-              
-              {/* Date Filters */}
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <div className="relative w-full sm:w-auto">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+            <div className="bg-surface p-4 sm:p-6 rounded-[32px] border border-border-main shadow-sm space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                {/* Search */}
+                <div className="lg:col-span-5 relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                   <input 
-                    type="date" 
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-full bg-surface-soft pl-10 pr-4 py-3 rounded-xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-muted"
-                  />
-                </div>
-                <span className="text-text-muted hidden sm:block">-</span>
-                <div className="relative w-full sm:w-auto">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
-                  <input 
-                    type="date" 
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    className="w-full bg-surface-soft pl-10 pr-4 py-3 rounded-xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-muted"
+                    type="text" 
+                    placeholder="ძებნა პაციენტის სახელით..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-surface-soft pl-12 pr-4 py-3.5 rounded-2xl outline-none font-bold text-sm focus:ring-4 ring-brand-purple/5 transition-all border border-transparent focus:border-brand-purple"
                   />
                 </div>
 
-                <button 
-                  disabled={isExporting}
-                  onClick={async () => {
-                    setIsExporting(true);
-                    await generateFinancialReport(filteredData, dateFrom, dateTo, clinicData);
-                    setIsExporting(false);
-                  }}
-                  className="w-full sm:w-auto px-6 py-3 bg-brand-deep text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-purple transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isExporting ? <Loader2 className="animate-spin" size={16} /> : <Printer size={16} />} ექსპორტი (PDF)
-                </button>
+                {/* Selects */}
+                <div className="lg:col-span-7 grid grid-cols-2 gap-3">
+                  <select 
+                    value={filterMethod}
+                    onChange={(e) => setFilterMethod(e.target.value)}
+                    className="bg-surface-soft px-4 py-3.5 rounded-2xl outline-none text-[10px] font-black uppercase tracking-widest border border-transparent focus:border-brand-purple text-text-muted cursor-pointer"
+                  >
+                    <option value="all">ყველა მეთოდი</option>
+                    <option value="cash">💵 ნაღდი</option>
+                    <option value="card">💳 ბარათი</option>
+                    <option value="transfer">🏦 გადმორიცხვა</option>
+                  </select>
+
+                  <select 
+                    value={filterPayerType}
+                    onChange={(e) => setFilterPayerType(e.target.value)}
+                    className="bg-surface-soft px-4 py-3.5 rounded-2xl outline-none text-[10px] font-black uppercase tracking-widest border border-transparent focus:border-brand-purple text-text-muted cursor-pointer"
+                  >
+                    <option value="all">ყველა ტიპი</option>
+                    <option value="personal">პერსონალური</option>
+                    <option value="insurance">სადაზღვევო</option>
+                    <option value="corporate">კორპორატიული</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-4 border-t border-border-main/50">
+                {/* Date Filters */}
+                <div className="lg:col-span-8 flex flex-col sm:flex-row items-center gap-3">
+                  <div className="relative w-full">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                    <input 
+                      type="date" 
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="w-full bg-surface-soft pl-12 pr-4 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-muted"
+                    />
+                  </div>
+                  <span className="text-text-muted hidden sm:block font-black opacity-30">—</span>
+                  <div className="relative w-full">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                    <input 
+                      type="date" 
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="w-full bg-surface-soft pl-12 pr-4 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-muted"
+                    />
+                  </div>
+                </div>
+
+                {/* Export Button */}
+                <div className="lg:col-span-4">
+                  <button 
+                    disabled={isExporting}
+                    onClick={async () => {
+                      setIsExporting(true);
+                      await generateFinancialReport(filteredData, dateFrom, dateTo, clinicData);
+                      setIsExporting(false);
+                    }}
+                    className="w-full px-6 py-4 bg-brand-purple text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-brand-deep transition-all flex items-center justify-center gap-3 shadow-xl shadow-brand-purple/20 disabled:opacity-50 active:scale-95"
+                  >
+                    {isExporting ? <Loader2 className="animate-spin" size={18} /> : <FileDown size={18} />} 
+                    ექსპორტი (PDF)
+                  </button>
+                </div>
               </div>
             </div>
 

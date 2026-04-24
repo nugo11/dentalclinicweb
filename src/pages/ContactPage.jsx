@@ -18,9 +18,9 @@ const ContactPage = ({ user }) => {
   return (
     <>
       <Helmet>
-        <title>კონტაქტი — DentalHub</title>
-        <meta name="description" content="დაგვიკავშირდით DentalHub-ის გუნდს ნებისმიერ დროს." />
-        <link rel="canonical" href="https://dentalhub.ge/contact" />
+        <title>კონტაქტი — AiDent</title>
+        <meta name="description" content="დაგვიკავშირდით AiDent-ის გუნდს ნებისმიერ დროს." />
+        <link rel="canonical" href="https://AiDent.ge/contact" />
       </Helmet>
       
       <div className="min-h-screen bg-surface font-nino selection:bg-brand-purple/10 overflow-x-hidden">
@@ -40,7 +40,7 @@ const ContactPage = ({ user }) => {
               <span className="bg-gradient-to-r from-brand-purple to-blue-600 bg-clip-text text-transparent italic pr-4">ნებისმიერ დროს</span>
             </h1>
             <p className="text-lg md:text-xl text-text-muted max-w-2xl mx-auto font-medium italic leading-relaxed">
-              ჩვენი გუნდი მზად არის გიპასუხოთ ნებისმიერ კითხვაზე DentalHub-ის დანერგვასა და გამოყენებასთან დაკავშირებით.
+              ჩვენი გუნდი მზად არის გიპასუხოთ ნებისმიერ კითხვაზე AiDent-ის დანერგვასა და გამოყენებასთან დაკავშირებით.
             </p>
           </div>
         </section>
@@ -57,7 +57,7 @@ const ContactPage = ({ user }) => {
                       <Mail size={24} />
                     </div>
                     <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">ელ-ფოსტა</h4>
-                    <p className="text-xl font-black text-text-main italic">hello@dentalhub.ge</p>
+                    <p className="text-xl font-black text-text-main italic">hello@AiDent.ge</p>
                   </div>
 
                   <div className="bg-surface p-8 rounded-[40px] border border-border-main shadow-sm hover:shadow-xl transition-all group">
@@ -122,7 +122,7 @@ const ContactPage = ({ user }) => {
                     <div>
                       <h3 className="text-3xl font-black italic tracking-tighter text-text-main mb-4 uppercase">შეტყობინება გაგზავნილია!</h3>
                       <p className="text-text-muted font-bold italic leading-relaxed max-w-sm">
-                        გმადლობთ დაინტერესებისთვის. DentalHub-ის მენეჯერი 1 საათის განმავლობაში დაგიკავშირდებათ.
+                        გმადლობთ დაინტერესებისთვის. AiDent-ის მენეჯერი 1 საათის განმავლობაში დაგიკავშირდებათ.
                       </p>
                     </div>
                     <button 

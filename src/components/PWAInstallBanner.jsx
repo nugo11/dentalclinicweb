@@ -102,7 +102,7 @@ const PWAInstallBanner = () => {
               <Download className="text-white" size={24} />
             </div>
             <div className="min-w-0">
-              <h4 className="text-white text-sm font-black tracking-tight leading-tight truncate">დააინსტალირე DentalHub</h4>
+              <h4 className="text-white text-sm font-black tracking-tight leading-tight truncate">დააინსტალირე AiDent</h4>
               <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-0.5">სწრაფი წვდომისთვის</p>
             </div>
           </div>
@@ -136,7 +136,7 @@ const PWAInstallBanner = () => {
                 <button onClick={() => setShowIOSModal(false)} className="w-10 h-10 bg-surface-soft text-text-muted hover:text-text-muted rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
               </div>
               <h3 className="text-2xl font-black text-text-main tracking-tighter mb-2 italic">ინსტალაცია iPhone-ზე</h3>
-              <p className="text-text-muted text-sm font-medium mb-6">მიჰყევით ამ ნაბიჯებს DentalHub-ის დასამატებლად:</p>
+              <p className="text-text-muted text-sm font-medium mb-6">მიჰყევით ამ ნაბიჯებს AiDent-ის დასამატებლად:</p>
             </div>
 
             {/* Scrollable content */}

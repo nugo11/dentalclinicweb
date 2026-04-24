@@ -43,7 +43,7 @@ const SalaryArchive = () => {
           <div class="card">
             <div class="header">
               <div class="clinic-branding">
-                ${clinicData?.logoUrl ? `<img src="${clinicData.logoUrl}" class="logo-img" />` : `<div style="font-weight:900; font-size:20px; color:#6366f1;">${clinicData?.clinicName || 'DentalHub'}</div>`}
+                ${clinicData?.logoUrl ? `<img src="${clinicData.logoUrl}" class="logo-img" />` : `<div style="font-weight:900; font-size:20px; color:#6366f1;">${clinicData?.clinicName || 'AiDent'}</div>`}
                 <div class="clinic-legal">
                   ${clinicData?.legalName ? `<div>${clinicData.legalName}</div>` : ''}
                   ${clinicData?.idCode ? `<div>ს/კ: ${clinicData.idCode}</div>` : ''}
@@ -159,13 +159,15 @@ const SalaryArchive = () => {
 
   const filteredHistory = history.filter(h => 
     h.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    h.staffId?.toLowerCase().includes(searchTerm.toLowerCase())
+    h.staffId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    h.paidMonth?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    new Date(h.date).toLocaleDateString('ka-GE', { month: 'long' }).toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <>
       <Helmet>
-        <title>ხელფასების არქივი — DentalHub</title>
+        <title>ხელფასების არქივი — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
@@ -176,8 +178,8 @@ const SalaryArchive = () => {
         <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
           <div className="max-w-6xl mx-auto space-y-8">
             
-            <div className="flex justify-between items-end">
-              <div>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div className="flex-1">
                 <button 
                   onClick={() => navigate(-1)}
                   className="flex items-center gap-2 text-[10px] font-black text-text-muted uppercase tracking-widest mb-4 hover:text-brand-purple transition-colors"
@@ -190,14 +192,14 @@ const SalaryArchive = () => {
                 </p>
               </div>
 
-              <div className="relative group">
+              <div className="relative group w-full md:w-80">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors" size={18} />
                 <input 
                   type="text"
-                  placeholder="ძებნა (სახელი)..."
+                  placeholder="ძებნა (სახელი ან თვე)..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-14 pr-6 py-4 bg-surface border border-border-main rounded-2xl outline-none font-bold text-sm w-72 shadow-sm focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/5 transition-all"
+                  className="w-full pl-14 pr-6 py-4 bg-surface border border-border-main rounded-2xl outline-none font-bold text-sm shadow-sm focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/5 transition-all"
                 />
               </div>
             </div>

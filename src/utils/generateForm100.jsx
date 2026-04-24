@@ -34,7 +34,7 @@ export const generateForm100 = async (patient, clinicData, doctorNotes = "") => 
 
   // 2. კლინიკის დასახელება და თარიღი
   doc.setFontSize(10);
-  doc.text(`დაწესებულება: ${clinicData?.clinicName || "DentalHub"}`, margin, 35);
+  doc.text(`დაწესებულება: ${clinicData?.clinicName || "AiDent"}`, margin, 35);
   doc.text(`თარიღი: ${new Date().toLocaleDateString("ka-GE")}`, pageWidth - margin, 35, { align: "right" });
   doc.line(margin, 40, pageWidth - margin, 40);
 

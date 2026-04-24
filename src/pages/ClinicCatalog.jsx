@@ -56,8 +56,8 @@ const ClinicCatalog = () => {
   return (
     <>
       <Helmet>
-        <title>კლინიკების კატალოგი — DentalHub</title>
-        <link rel="canonical" href="https://dentalhub.ge/catalog" />
+        <title>კლინიკების კატალოგი — AiDent</title>
+        <link rel="canonical" href="https://AiDent.ge/catalog" />
       </Helmet>
       <div className="min-h-screen bg-surface-soft font-nino transition-colors duration-300">
       <MainHeader user={currentUser} />

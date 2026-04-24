@@ -192,7 +192,7 @@ const Staff = () => {
   return (
     <>
       <Helmet>
-        <title>თანამშრომლები — DentalHub</title>
+        <title>თანამშრომლები — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

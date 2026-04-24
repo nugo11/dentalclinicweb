@@ -55,6 +55,37 @@ const AuthPage = () => {
   const [confirmPin, setConfirmPin] = useState(""); // ახალი: პინის გამეორება
   const [staffList, setStaffList] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState(null);
+  const [resendTimer, setResendTimer] = useState(0);
+  React.useEffect(() => {
+    // შემოწმება localStorage-დან
+    const lastSent = localStorage.getItem(`sms_cooldown_${phone}`);
+    const savedOtp = localStorage.getItem(`sms_otp_${phone}`);
+    
+    if (savedOtp) setGeneratedOtp(savedOtp);
+
+    if (lastSent) {
+      const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+      if (remaining > 0) setResendTimer(remaining);
+      else {
+          localStorage.removeItem(`sms_cooldown_${phone}`);
+          localStorage.removeItem(`sms_otp_${phone}`);
+      }
+    }
+
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(prev => {
+            if (prev <= 1) {
+                clearInterval(interval);
+                return 0;
+            }
+            return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer, phone]);
 
   // გასუფთავება ნაბიჯის შეცვლისას
   React.useEffect(() => {
@@ -75,7 +106,11 @@ const AuthPage = () => {
         if (!emailRegex.test(email)) errors.email = "შეიყვანეთ სწორი ელ-ფოსტა (@ და .)";
         
         const phoneRegex = /^5\d{8}$/;
-        if (!phoneRegex.test(phone)) errors.phone = "უნდა იწყებოდეს 5-ით და შეიცავდეს 9 ციფრს";
+        if (!phone.trim()) {
+            errors.phone = "მიუთითეთ ტელეფონის ნომერი";
+        } else if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
+            errors.phone = "უნდა იწყებოდეს 5-ით და შეიცავდეს 9 ციფრს";
+        }
 
         const latinRegex = /^[a-zA-Z0-9-]+$/;
         if (!loginName) {
@@ -162,7 +197,18 @@ const AuthPage = () => {
           if (smsStatus !== "verified") {
               setIsLoading(false);
               setShowSmsModal(true);
-              handleSendSms(); // ეგრევე ვაგზავნით SMS-ს მოდალის გახსნისას
+              
+              // შემოწმება უკვე ხომ არ არის ტაიმერი აქტიური
+              const lastSent = localStorage.getItem(`sms_cooldown_${phone}`);
+              if (lastSent) {
+                  const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+                  if (remaining > 0) {
+                      setSmsStatus("sent"); // თუ უკვე გაგზავნილია, გადავდივართ კოდის შეყვანაზე
+                      return;
+                  }
+              }
+
+              handleSendSms(); 
               return;
           }
 
@@ -177,6 +223,47 @@ const AuthPage = () => {
       } finally {
           setIsLoading(false);
       }
+    }
+  };
+
+  const checkEmailUniqueness = async (emailToTest) => {
+    if (!emailToTest || !emailToTest.includes("@")) return;
+    const testEmail = emailToTest.toLowerCase();
+    try {
+      const q = query(collection(db, "users"), where("email", "==", testEmail));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        setFormErrors(prev => ({ ...prev, email: "ეს ელ-ფოსტა უკვე დაკავებულია" }));
+      }
+    } catch (err) {
+      console.error("Email check error:", err);
+    }
+  };
+
+  const checkPhoneUniqueness = async (phoneToTest) => {
+    if (!phoneToTest || phoneToTest.length < 9) return;
+    try {
+      const q = query(collection(db, "users"), where("phone", "==", phoneToTest));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        setFormErrors(prev => ({ ...prev, phone: "ეს ტელეფონის ნომერი უკვე რეგისტრირებულია" }));
+      }
+    } catch (err) {
+      console.error("Phone check error:", err);
+    }
+  };
+
+  const checkLoginNameUniqueness = async (loginToTest) => {
+    if (!loginToTest) return;
+    const testLogin = loginToTest.toLowerCase();
+    try {
+      const q = query(collection(db, "clinics"), where("loginName", "==", testLogin));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        setFormErrors(prev => ({ ...prev, loginName: "ეს სახელი უკვე დაკავებულია" }));
+      }
+    } catch (err) {
+      console.error("Login name check error:", err);
     }
   };
 
@@ -227,7 +314,8 @@ const AuthPage = () => {
         }
       } else {
         // რეგისტრაციის ნაწილი
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const lowEmail = email.toLowerCase();
+        const userCredential = await createUserWithEmailAndPassword(auth, lowEmail, password);
         const uid = userCredential.user.uid;
         
         const clinicsCol = collection(db, "clinics");
@@ -240,7 +328,7 @@ const AuthPage = () => {
           plan: "free", 
           subscriptionStatus: "active",
           ownerId: uid,
-          ownerEmail: email, // ვინახავთ მეილს ლოგინისთვის
+          ownerEmail: email.toLowerCase(), // ვინახავთ მეილს ლოგინისთვის
           createdAt: new Date().toISOString(),
         });
 
@@ -251,7 +339,7 @@ const AuthPage = () => {
         const pinHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
         const newUser = {
-          fullName, email, phone, clinicId: generatedClinicId,
+          fullName, email: email.toLowerCase(), phone, clinicId: generatedClinicId,
           role: "admin", adminPinHash: pinHash,
           createdAt: new Date().toISOString(),
         };
@@ -305,6 +393,17 @@ const AuthPage = () => {
   const handleSendSms = async () => {
     let formattedPhone = phone.trim();
     
+    // სპამის პრევენცია - შემოწმება გაგზავნამდე
+    const lastSent = localStorage.getItem(`sms_cooldown_${phone}`);
+    if (lastSent) {
+        const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+        if (remaining > 0) {
+            setResendTimer(remaining);
+            setSmsStatus("sent");
+            return;
+        }
+    }
+    
     // ქართული ნომრის ვალიდაცია
     const phoneRegex = /^(?:\+?995)?(5\d{8})$/;
     const match = formattedPhone.match(phoneRegex);
@@ -330,7 +429,7 @@ const AuthPage = () => {
         body: JSON.stringify({
           brandID: 2,
           numbers: [finalPhone],
-          text: `თქვენი DentalHub სარეგისტრაციო კოდია: ${otp}`,
+          text: `AiDent kodi: ${otp}`,
           otp: true
         })
       });
@@ -346,7 +445,10 @@ const AuthPage = () => {
           throw new Error(`UBill შეცდომა: ${data.message || "უცნობი შეცდომა"}`);
       }
       
+      localStorage.setItem(`sms_cooldown_${phone}`, Date.now().toString());
+      localStorage.setItem(`sms_otp_${phone}`, otp);
       setSmsStatus("sent");
+      setResendTimer(120); // 2 წუთი
     } catch (err) {
       console.error("UBill Error:", err);
       setFormErrors({ general: "სისტემური შეცდომა SMS-ის გაგზავნისას. გადაამოწმეთ API კავშირი." });
@@ -359,7 +461,7 @@ const AuthPage = () => {
   return (
     <>
       <Helmet>
-        <title>{isLogin ? "ავტორიზაცია" : "რეგისტრაცია"} — DentalHub</title>
+        <title>{isLogin ? "ავტორიზაცია" : "რეგისტრაცია"} — AiDent</title>
       </Helmet>
       <div className="min-h-screen lg:h-screen w-full bg-surface-soft font-nino flex overflow-hidden">
       
@@ -375,7 +477,7 @@ const AuthPage = () => {
             <div className="w-14 h-14 bg-surface/10 backdrop-blur-2xl border border-white/20 rounded-[22px] flex items-center justify-center group-hover:bg-surface group-hover:text-text-main transition-all duration-500 shadow-xl">
               <Activity size={32} />
             </div>
-            <span className="text-4xl font-black italic tracking-tighter">DentalHub</span>
+            <span className="text-4xl font-black italic tracking-tighter">AiDent</span>
           </Link>
 
           <div className="mt-32 space-y-8">
@@ -429,16 +531,17 @@ const AuthPage = () => {
                     <InputField icon={Building2} placeholder="კლინიკის დასახელება" value={clinicName} onChange={setClinicName} error={formErrors.clinicName} />
                     <InputField 
                         icon={ShieldCheck} 
-                        placeholder="კლინიკის ID (ლოგინი, მაგ: myclinic)" 
+                        placeholder="კლინიკის ლოგინი (მაგ: myclinic)" 
                         value={loginName} 
                         onChange={(val) => {
-                            setLoginName(val);
+                            setLoginName(val.toLowerCase());
                             if (val && !/^[a-zA-Z0-9-]*$/.test(val)) {
                                 setFormErrors(prev => ({ ...prev, loginName: "გამოიყენეთ მხოლოდ ლათინური ასოები" }));
                             } else {
                                 setFormErrors(prev => ({ ...prev, loginName: null }));
                             }
                         }} 
+                        onBlur={() => checkLoginNameUniqueness(loginName)}
                         error={formErrors.loginName} 
                     />
                     <div className="flex flex-col gap-4">
@@ -464,6 +567,8 @@ const AuthPage = () => {
                             onBlur={() => {
                                 if (phone.length > 0 && phone.length < 9) {
                                     setFormErrors(prev => ({...prev, phone: "ნომერი არასწორია (უნდა შეიცავდეს 9 ციფრს)"}));
+                                } else if (phone.length === 9) {
+                                    checkPhoneUniqueness(phone);
                                 }
                             }}
                             error={formErrors.phone} 
@@ -473,9 +578,20 @@ const AuthPage = () => {
                 )}
                 
                 {isLogin ? (
-                    <InputField icon={ShieldCheck} placeholder="კლინიკის ლოგინი (ID)" value={loginName} onChange={setLoginName} error={formErrors.loginName} />
+                    <InputField icon={ShieldCheck} placeholder="კლინიკის ლოგინი" value={loginName} onChange={setLoginName} error={formErrors.loginName} />
                 ) : (
-                    <InputField icon={Mail} type="email" placeholder="ელ-ფოსტა" value={email} onChange={setEmail} error={formErrors.email} />
+                    <InputField 
+                        icon={Mail} 
+                        type="email" 
+                        placeholder="ელ-ფოსტა" 
+                        value={email} 
+                        onChange={(val) => {
+                            setEmail(val.toLowerCase());
+                            if (formErrors.email) setFormErrors(prev => ({ ...prev, email: undefined }));
+                        }} 
+                        onBlur={() => checkEmailUniqueness(email)}
+                        error={formErrors.email} 
+                    />
                 )}
 
                 <div className="relative">
@@ -618,11 +734,11 @@ const AuthPage = () => {
                 <div className="space-y-8">
                   <div className="flex flex-col items-center gap-4">
                     <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">ახალი PIN</span>
-                    <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 text-center text-4xl tracking-[0.4em] pl-[0.4em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] outline-none transition-all" placeholder="••••" />
+                    <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 text-center text-4xl tracking-[0.4em] pl-[0.4em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] outline-none transition-all" placeholder="••••" autoComplete="new-password" inputMode="numeric" />
                   </div>
                   <div className="flex flex-col items-center gap-4">
                     <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">გაიმეორეთ PIN</span>
-                    <input type="password" maxLength={4} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 text-center text-4xl tracking-[0.4em] pl-[0.4em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] outline-none transition-all" placeholder="••••" />
+                    <input type="password" maxLength={4} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 text-center text-4xl tracking-[0.4em] pl-[0.4em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] outline-none transition-all" placeholder="••••" autoComplete="new-password" inputMode="numeric" />
                   </div>
                 </div>
                 {formErrors.pin && <p className="text-center text-[10px] text-red-500 font-black uppercase tracking-widest">{formErrors.pin}</p>}
@@ -644,7 +760,7 @@ const AuthPage = () => {
               </p>
               <div className="space-y-4 mb-12">
                 <ContactCard icon={Phone} text="+995 5XX XX XX XX" />
-                <ContactCard icon={Mail} text="upgrade@dentalhub.ge" />
+                <ContactCard icon={Mail} text="upgrade@AiDent.ge" />
               </div>
               <button onClick={() => navigate("/dashboard")} className="w-full bg-brand-deep text-white py-7 rounded-[28px] font-black text-xs uppercase tracking-[0.3em] hover:bg-brand-purple transition-all shadow-xl active:scale-[0.98]">
                 დაშბორდზე გადასვლა
@@ -689,12 +805,16 @@ const AuthPage = () => {
                         error={formErrors.otp}
                         maxLength={6}
                         autoFocus
+                        autoComplete="one-time-code"
+                        inputMode="numeric"
                     />
+
                     <button 
                         onClick={() => {
                             if (userOtp === generatedOtp && userOtp.length > 0) {
                                 setSmsStatus("verified");
                                 setFormErrors(prev => ({...prev, otp: undefined}));
+                                setResendTimer(0);
                                 // ვაჩვენებთ დადასტურებულს წამიერად და მერე ვხურავთ მოდალს
                                 setTimeout(() => {
                                     setShowSmsModal(false);
@@ -704,10 +824,24 @@ const AuthPage = () => {
                                 setFormErrors(prev => ({...prev, otp: "კოდი არასწორია"}));
                             }
                         }}
-                        className="w-full bg-brand-purple hover:bg-brand-deep text-white py-5 rounded-[20px] text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.98] cursor-pointer"
+                        className="w-full bg-brand-purple hover:bg-brand-deep text-white py-5 rounded-[20px] text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-brand-purple/20"
                     >
                         დადასტურება
                     </button>
+                    {smsStatus === "sent" && (
+                        <div className="mt-4">
+                            <button 
+                                type="button"
+                                disabled={resendTimer > 0 || isLoading}
+                                onClick={handleSendSms}
+                                className="text-[10px] font-black uppercase tracking-widest text-text-muted hover:text-brand-purple transition-colors disabled:opacity-50"
+                            >
+                                {resendTimer > 0 
+                                    ? `ხელახლა გაგზავნა (${Math.floor(resendTimer / 60)}:${(resendTimer % 60).toString().padStart(2, '0')})` 
+                                    : "კოდის ხელახლა გაგზავნა"}
+                            </button>
+                        </div>
+                    )}
                 </div>
              )}
 
@@ -726,8 +860,8 @@ const AuthPage = () => {
 
              {smsStatus !== "verified" && (
                  <button 
-                    onClick={() => { setShowSmsModal(false); setSmsStatus("idle"); }}
-                    className="mt-6 w-full text-center text-[10px] text-text-muted font-black uppercase hover:text-text-main transition-colors cursor-pointer"
+                     onClick={() => { setShowSmsModal(false); setSmsStatus("idle"); setResendTimer(0); }}
+                     className="mt-6 w-full text-center text-[10px] text-text-muted font-black uppercase hover:text-red-500 transition-colors cursor-pointer"
                  >
                     გაუქმება
                  </button>

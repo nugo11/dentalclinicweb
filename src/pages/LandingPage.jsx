@@ -108,7 +108,7 @@ const LandingPage = ({ user }) => {
           name: doc.data().clinicName || "დასახელების გარეშე",
           city: doc.data().city || "თბილისი",
           category: (doc.data().plan || "Solo").toUpperCase(),
-          promo: doc.data().description || "სტომატოლოგიური კლინიკა DentalHub-ის პარტნიორი.",
+          promo: doc.data().description || "სტომატოლოგიური კლინიკა AiDent-ის პარტნიორი.",
           logoUrl: doc.data().logoUrl || null,
           address: doc.data().address || ""
         }));
@@ -138,9 +138,9 @@ const LandingPage = ({ user }) => {
   return (
     <>
       <Helmet>
-        <title>DentalHub — კლინიკის მართვის ინოვაციური პლატფორმა</title>
+        <title>AiDent — კლინიკის მართვის ინოვაციური პლატფორმა</title>
         <meta name="description" content="მართე შენი სტომატოლოგიური კლინიკა ციფრულად. პაციენტების აღრიცხვა, ფინანსური ანალიტიკა და ავტომატური ჯავშნები ერთ სივრცეში." />
-        <link rel="canonical" href="https://dentalhub.ge/" />
+        <link rel="canonical" href="https://AiDent.ge/" />
       </Helmet>
       <div className="min-h-screen bg-surface font-nino selection:bg-brand-purple/10 overflow-x-hidden">
       <MainHeader user={user} />
@@ -174,7 +174,7 @@ const LandingPage = ({ user }) => {
             </h1>
             
             <p className="text-lg md:text-xl text-text-muted mb-10 max-w-xl leading-relaxed font-medium italic">
-              DentalHub არის ყველაზე მოქნილი პლატფორმა ქართული სტომატოლოგიური კლინიკებისთვის. გაზარდეთ შემოსავალი 40%-ით პირველივე თვეში.
+              AiDent არის ყველაზე მოქნილი პლატფორმა ქართული სტომატოლოგიური კლინიკებისთვის. გაზარდეთ შემოსავალი 40%-ით პირველივე თვეში.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -284,7 +284,7 @@ const LandingPage = ({ user }) => {
                 <span className="text-brand-purple">ყველა მოწყობილობაზე.</span>
               </h2>
               <p className="text-white/60 text-lg font-medium mb-10 italic">
-                გამოიყენეთ DentalHub ნებისმიერ მოწყობილობაზე. სისტემა ხელმისაწვდომია Web-ბრაუზერით და ასევე ოპტიმიზირებულია Windows, Android და iOS პლატფორმებისთვის.
+                გამოიყენეთ AiDent ნებისმიერ მოწყობილობაზე. სისტემა ხელმისაწვდომია Web-ბრაუზერით და ასევე ოპტიმიზირებულია Windows, Android და iOS პლატფორმებისთვის.
               </p>
               <Link 
                 to="/apps" 
@@ -415,7 +415,7 @@ const LandingPage = ({ user }) => {
               ზრუნავს თქვენს პაციენტებზე.
             </h2>
             <p className="text-text-muted font-medium leading-relaxed mb-8 italic">
-              DentalHub არის ექიმებისა და დეველოპერების მიერ შექმნილი
+              AiDent არის ექიმებისა და დეველოპერების მიერ შექმნილი
               ინსტრუმენტი. ჩვენი მიზანია კლინიკების სრული ავტომატიზაცია და
               ექიმების დროის დაზოგვა.
             </p>
@@ -589,7 +589,7 @@ const LandingPage = ({ user }) => {
             />
             <FAQItem
               question="მონაცემები უსაფრთხოდ იქნება?"
-              answer="დიახ, DentalHub იყენებს საბანკო დონის დაშიფვრას და ყოველდღიურ რეზერვს (Backups)."
+              answer="დიახ, AiDent იყენებს საბანკო დონის დაშიფვრას და ყოველდღიურ რეზერვს (Backups)."
             />
             <FAQItem
               question="შესაძლებელია ძველი ბაზის გადმოტანა?"
@@ -650,8 +650,8 @@ const LandingPage = ({ user }) => {
                 <a href="tel:+99555102030" className="flex items-center gap-3 bg-surface/10 hover:bg-surface/20 border border-white/20 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all">
                   <Phone size={18} /> +995 555 10 20 30
                 </a>
-                <a href="mailto:upgrade@dentalhub.ge" className="flex items-center gap-3 bg-brand-purple hover:bg-purple-600 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-brand-purple/30 transition-all">
-                  <Mail size={18} /> upgrade@dentalhub.ge
+                <a href="mailto:upgrade@AiDent.ge" className="flex items-center gap-3 bg-brand-purple hover:bg-purple-600 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-brand-purple/30 transition-all">
+                  <Mail size={18} /> upgrade@AiDent.ge
                 </a>
               </div>
             </div>
@@ -668,7 +668,7 @@ const LandingPage = ({ user }) => {
             გაქვთ <br /> <span className="text-brand-purple">კითხვები?</span>
           </h2>
           <p className="text-xl text-text-muted max-w-2xl mx-auto font-medium italic leading-relaxed mb-16">
-            ჩვენი გუნდი მზად არის დაგეხმაროთ DentalHub-ის დანერგვასა და ეფექტურ გამოყენებაში.
+            ჩვენი გუნდი მზად არის დაგეხმაროთ AiDent-ის დანერგვასა და ეფექტურ გამოყენებაში.
           </p>
           <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
              <Link to="/contact" className="bg-brand-deep text-white px-16 py-7 rounded-[32px] font-black text-sm uppercase tracking-[0.2em] hover:bg-brand-purple transition-all shadow-2xl shadow-brand-deep/20 flex items-center gap-4 group">
@@ -688,7 +688,7 @@ const LandingPage = ({ user }) => {
         <div className="flex items-center justify-center space-x-3 mb-12">
           <Activity className="text-brand-purple" size={32} />
           <span className="text-2xl font-black tracking-tighter italic">
-            DentalHub
+            AiDent
           </span>
         </div>
         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-text-muted">
@@ -733,7 +733,7 @@ const LandingPage = ({ user }) => {
             </div>
 
             <div className="p-8 bg-surface-soft border-t border-border-main flex justify-center">
-               <p className="text-[10px] font-black text-text-muted uppercase tracking-widest italic">DentalHub Subscription Management © 2026</p>
+               <p className="text-[10px] font-black text-text-muted uppercase tracking-widest italic">AiDent Subscription Management © 2026</p>
             </div>
           </div>
         </div>
@@ -975,7 +975,7 @@ const PricingTable = ({ onSelectPlan }) => {
               {c.key === "free" ? (
                 <a href="/auth" className="block text-center py-3 rounded-xl bg-brand-deep text-white text-[10px] font-black uppercase tracking-widest">დაიწყე</a>
               ) : (
-                <a href="mailto:upgrade@dentalhub.ge" className={`block text-center py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${c.highlight ? "bg-brand-purple text-white" : "bg-surface-soft text-text-main"}`}>კონტაქტი</a>
+                <a href="mailto:upgrade@AiDent.ge" className={`block text-center py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${c.highlight ? "bg-brand-purple text-white" : "bg-surface-soft text-text-main"}`}>კონტაქტი</a>
               )}
             </div>
           </div>
@@ -1057,7 +1057,7 @@ const PricingTable = ({ onSelectPlan }) => {
                 დაიწყე
               </a>
             ) : (
-              <a href="mailto:upgrade@dentalhub.ge" style={{display:'block',width:'100%',textAlign:'center',
+              <a href="mailto:upgrade@AiDent.ge" style={{display:'block',width:'100%',textAlign:'center',
                 padding:'10px 0',
                 background: c.highlight ? '#7C3AED' : 'var(--bg-surface-soft)',
                 color: c.highlight ? 'white' : 'var(--text-main)',

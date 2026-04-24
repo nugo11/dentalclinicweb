@@ -58,8 +58,8 @@ const PrivateRoute = ({ children, title, allowedRoles = [] }) => {
   return (
     <>
       <Helmet>
-        <title>{title || 'კლინიკის მართვა'} — DentalHub</title>
-        <meta name="description" content={`DentalHub — ${title || 'კლინიკის მართვის სისტემა'}. მართეთ თქვენი კლინიკა ეფექტურად.`} />
+        <title>{title || 'კლინიკის მართვა'} — AiDent</title>
+        <meta name="description" content={`AiDent — ${title || 'კლინიკის მართვის სისტემა'}. მართეთ თქვენი კლინიკა ეფექტურად.`} />
       </Helmet>
       {children}
     </>
@@ -171,7 +171,7 @@ function AppContent() {
         } />
 
         <Route path="/suspended" element={currentUser ? <SuspendedPage /> : <Navigate to="/auth" replace />} />
-        <Route path="/catalog" element={<><Helmet><title>კლინიკების კატალოგი — DentalHub</title><meta name="description" content="დაათვალიერეთ საქართველოში მოქმედი წამყვანი სტომატოლოგიური კლინიკები, მათი სერვისები და შეთავაზებები." /></Helmet><ClinicCatalog /></>} />
+        <Route path="/catalog" element={<><Helmet><title>კლინიკების კატალოგი — AiDent</title><meta name="description" content="დაათვალიერეთ საქართველოში მოქმედი წამყვანი სტომატოლოგიური კლინიკები, მათი სერვისები და შეთავაზებები." /></Helmet><ClinicCatalog /></>} />
         <Route path="/catalog/:id" element={<ClinicPublicProfile />} />
         <Route path="/apps" element={<Apps />} />
         <Route path="/contact" element={<ContactPage user={currentUser} />} />

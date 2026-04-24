@@ -10,9 +10,9 @@ const AboutPage = ({ user }) => {
   return (
     <>
       <Helmet>
-        <title>ჩვენს შესახებ — DentalHub</title>
-        <meta name="description" content="გაიცანით DentalHub-ის გუნდი და ჩვენი მისია სტომატოლოგიის ციფრულ ეპოქაში." />
-        <link rel="canonical" href="https://dentalhub.ge/about" />
+        <title>ჩვენს შესახებ — AiDent</title>
+        <meta name="description" content="გაიცანით AiDent-ის გუნდი და ჩვენი მისია სტომატოლოგიის ციფრულ ეპოქაში." />
+        <link rel="canonical" href="https://AiDent.ge/about" />
       </Helmet>
       
       <div className="min-h-screen bg-surface font-nino selection:bg-brand-purple/10 overflow-x-hidden">
@@ -31,7 +31,7 @@ const AboutPage = ({ user }) => {
                 <span className="bg-gradient-to-r from-brand-purple to-pink-500 bg-clip-text text-transparent">მომავლის სტომატოლოგიას</span>
               </h1>
               <p className="text-xl text-text-muted max-w-3xl mx-auto font-medium italic leading-relaxed">
-                DentalHub არ არის მხოლოდ პროგრამა — ეს არის ეკოსისტემა, რომელიც აერთიანებს ექიმებს, კლინიკებს და პაციენტებს ერთიან, გამჭვირვალე და ეფექტურ ციფრულ სივრცეში.
+                AiDent არ არის მხოლოდ პროგრამა — ეს არის ეკოსისტემა, რომელიც აერთიანებს ექიმებს, კლინიკებს და პაციენტებს ერთიან, გამჭვირვალე და ეფექტურ ციფრულ სივრცეში.
               </p>
            </div>
         </section>
@@ -77,10 +77,10 @@ const AboutPage = ({ user }) => {
               <div className="space-y-10">
                  <span className="text-brand-purple text-[10px] font-black uppercase tracking-[0.4em] italic">Our Story</span>
                  <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none">
-                    როგორ დაიწყო <br /> <span className="text-brand-purple italic">DentalHub?</span>
+                    როგორ დაიწყო <br /> <span className="text-brand-purple italic">AiDent?</span>
                   </h2>
                   <p className="text-lg text-white/60 font-medium italic leading-relaxed">
-                    DentalHub შეიქმნა იმ საჭიროებიდან გამომდინარე, რაც ქართულ სტომატოლოგიურ ბაზარზე არსებობდა. ჩვენი მიზანი იყო შეგვექმნა პროდუქტი, რომელიც იქნებოდა მარტივი, სწრაფი და სრულად მორგებული ადგილობრივ რეგულაციებზე.
+                    AiDent შეიქმნა იმ საჭიროებიდან გამომდინარე, რაც ქართულ სტომატოლოგიურ ბაზარზე არსებობდა. ჩვენი მიზანი იყო შეგვექმნა პროდუქტი, რომელიც იქნებოდა მარტივი, სწრაფი და სრულად მორგებული ადგილობრივ რეგულაციებზე.
                   </p>
                   <div className="grid grid-cols-2 gap-8 pt-8">
                      <div>
@@ -142,7 +142,7 @@ const AboutPage = ({ user }) => {
         <footer className="bg-brand-deep py-20 px-6 text-white text-center border-t border-white/10 relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-brand-purple/50 to-transparent"></div>
           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-text-muted">
-            © 2026 DentalHub Team — Innovating for you
+            © 2026 AiDent Team — Innovating for you
           </p>
         </footer>
       </div>

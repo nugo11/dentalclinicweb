@@ -83,7 +83,7 @@ const ClinicPublicProfile = () => {
   return (
     <>
       <Helmet>
-        <title>{clinic?.clinicName || "კლინიკა"} — DentalHub</title>
+        <title>{clinic?.clinicName || "კლინიკა"} — AiDent</title>
       </Helmet>
       <div className="min-h-screen bg-surface-soft font-nino selection:bg-brand-purple/10 pb-20">
       <MainHeader user={currentUser} />

@@ -197,7 +197,7 @@ const Dashboard = () => {
   return (
     <>
       <Helmet>
-        <title>სამართავი პანელი — DentalHub</title>
+        <title>სამართავი პანელი — AiDent</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />

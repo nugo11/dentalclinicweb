@@ -19,13 +19,14 @@ import {
   Building2,
   CalendarDays,
   AlertCircle,
+  Phone,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { transliterateToGeorgian } from "../../utils/transliterateKa";
+import { transliterateToGeorgian, transliterateToLatin } from "../../utils/transliterateKa";
 import FormInput from "../Common/FormInput";
 
 const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
-  const { userData, activeStaff, role } = useAuth();
+  const { userData, activeStaff, role, clinicData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -47,6 +48,8 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
     externalClinicName: "",
     externalPatientName: "",
   });
+  const [quickAddPhone, setQuickAddPhone] = useState("");
+  const [isQuickAdding, setIsQuickAdding] = useState(false);
 
   // ექიმების ჩამოტვირთვა
   useEffect(() => {
@@ -113,23 +116,68 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
 
   const handleQuickAdd = async () => {
     if (!searchTerm) return;
+    
+    // ტელეფონის ვალიდაცია
+    const cleanPhone = quickAddPhone.replace(/\D/g, "");
+    if (cleanPhone.length !== 9 || !cleanPhone.startsWith("5")) {
+      setFormErrors({ ...formErrors, quickAddPhone: true });
+      setToast({ show: true, message: "ტელეფონის ნომერი უნდა იყოს 9 ნიშნა და იწყებოდეს 5-ით" });
+      setTimeout(() => setToast({ show: false, message: "" }), 3000);
+      return;
+    }
+
     setLoading(true);
     try {
       const clinicId = userData?.clinicId;
       const docRef = await addDoc(collection(db, "patients"), {
         fullName: searchTerm,
-        phone: "არ არის მითითებული",
+        phone: cleanPhone,
         clinicId,
         createdAt: serverTimestamp(),
         status: "active",
       });
-      setSelectedPatient({ id: docRef.id, fullName: searchTerm });
+      setSelectedPatient({ id: docRef.id, fullName: searchTerm, phone: cleanPhone });
       setSearchTerm(searchTerm);
       setSearchResults([]);
+      setIsQuickAdding(false);
+      setQuickAddPhone("");
     } catch (e) {
       console.error(e);
     }
     setLoading(false);
+  };
+
+  const sendAppointmentSms = async (patientPhone, date, time, service, doctorName) => {
+    if (!patientPhone || patientPhone === "არ არის მითითებული" || clinicData?.plan !== "pro") return;
+    
+    // ნომრის ფორმატირება
+    let formattedPhone = patientPhone.replace(/\D/g, "");
+    if (formattedPhone.length === 9) formattedPhone = "995" + formattedPhone;
+    if (formattedPhone.length !== 12) return;
+
+    // ტრანსლიტერაცია და მონაცემების მომზადება
+    const clinicLatin = transliterateToLatin(clinicData?.clinicName || "Clinic");
+    const serviceLatin = transliterateToLatin(service);
+    const doctorLatin = transliterateToLatin(doctorName || "Doctor");
+    const clinicPhone = clinicData?.phone || "";
+
+    // თქვენი მოთხოვნილი სტრუქტურა
+    const message = `javshani ${clinicLatin}\nProcedura: ${serviceLatin}\nTarigi ${date} - ${time}\n${doctorLatin}\ncvlilebis shemtxvevashi, dagvireket ${clinicPhone}`;
+
+    try {
+      const apiKey = import.meta.env.VITE_UBILL_API_KEY;
+      await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandID: 2, 
+          numbers: [formattedPhone],
+          text: message
+        })
+      });
+    } catch (err) {
+      console.error("SMS Notification Error:", err);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -158,11 +206,15 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
     if (!formData.date) errors.date = true;
     if (!formData.startTime) errors.startTime = true;
     if (!formData.service) errors.service = true;
-    if (canSelectDoctor && !formData.doctorId) errors.doctorId = true;
+    if (canSelectDoctor && !isExternal && !formData.doctorId) errors.doctorId = true;
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      setTimeout(() => setFormErrors({}), 1000);
+      setToast({ show: true, message: "გთხოვთ შეავსოთ ყველა აუცილებელი ველი" });
+      setTimeout(() => {
+        setFormErrors({});
+        setToast({ show: false, message: "" });
+      }, 3000);
       return;
     }
 
@@ -198,6 +250,12 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         color: isExternal ? "#94A3B8" : "#7C3AED",
         createdAt: serverTimestamp(),
       });
+
+      // SMS გაგზავნა მხოლოდ Pro პაკეტისთვის
+      if (!isExternal && selectedPatient?.phone && clinicData?.plan === "pro") {
+        const docName = canSelectDoctor ? formData.doctorName : (activeStaff?.fullName || userData?.fullName);
+        sendAppointmentSms(selectedPatient.phone, formData.date, formData.startTime, formData.service, docName);
+      }
 
       onClose();
       setSearchTerm("");
@@ -296,11 +354,40 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
                       <PlusCircle size={16} className="opacity-0 group-hover:opacity-100 text-brand-purple" />
                     </div>
                   ))}
-                  {searchResults.length === 0 && (
-                    <button type="button" onClick={handleQuickAdd} className="w-full p-4 flex items-center gap-3 text-brand-purple bg-brand-purple/5 rounded-xl hover:bg-brand-purple/10 transition-all group">
+                  {searchResults.length === 0 && !isQuickAdding && (
+                    <button type="button" onClick={() => setIsQuickAdding(true)} className="w-full p-4 flex items-center gap-3 text-brand-purple bg-brand-purple/5 rounded-xl hover:bg-brand-purple/10 transition-all group">
                       <PlusCircle size={18} />
                       <span className="text-[11px] font-black uppercase tracking-widest">დაამატე: "{searchTerm}"</span>
                     </button>
+                  )}
+                  {isQuickAdding && (
+                    <div className="p-4 space-y-3 bg-surface-soft/50 rounded-xl animate-in fade-in zoom-in-95 duration-200">
+                       <p className="text-[9px] font-black uppercase tracking-widest text-text-muted ml-2">შეიყვანეთ ტელეფონი</p>
+                       <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+                            <input 
+                              type="tel" 
+                              maxLength={9}
+                              placeholder="5XXXXXXXX"
+                              value={quickAddPhone}
+                              onChange={(e) => setQuickAddPhone(e.target.value.replace(/\D/g, ""))}
+                              className={`w-full pl-10 pr-4 py-3 bg-surface border-2 rounded-xl outline-none font-bold text-sm transition-all ${formErrors.quickAddPhone ? "border-red-500" : "border-transparent focus:border-brand-purple"}`}
+                            />
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={handleQuickAdd}
+                            disabled={loading}
+                            className="px-6 bg-brand-purple text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-purple/20"
+                          >
+                            {loading ? <Loader2 className="animate-spin" size={16} /> : "შენახვა"}
+                          </button>
+                          <button type="button" onClick={() => setIsQuickAdding(false)} className="p-3 text-text-muted hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all">
+                             <X size={16} />
+                          </button>
+                       </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -329,15 +416,18 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
           {/* ექიმის არჩევა (ადმინისთვის და რეგისტრატორისთვის) */}
           {canSelectDoctor && !isExternal && (
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">აირჩიეთ ექიმი</label>
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+                აირჩიეთ ექიმი <span className="text-red-500">*</span>
+              </label>
               <select
                 required
                 value={formData.doctorId}
                 onChange={(e) => {
                   const doc = doctors.find(d => d.id === e.target.value);
                   setFormData({ ...formData, doctorId: e.target.value, doctorName: doc?.fullName || "" });
+                  if (formErrors.doctorId) setFormErrors({ ...formErrors, doctorId: false });
                 }}
-                className={`${inputClasses} appearance-none cursor-pointer`}
+                className={`${inputClasses} appearance-none cursor-pointer ${formErrors.doctorId ? "border-red-500 bg-red-50" : ""}`}
               >
                 <option value="">აირჩიეთ ექიმი</option>
                 {doctors.map(doc => (
@@ -374,6 +464,11 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
                 <option value="60">1 საათი</option>
                 <option value="90">1.5 საათი</option>
                 <option value="120">2 საათი</option>
+                <option value="180">3 საათი</option>
+                <option value="240">4 საათი</option>
+                <option value="300">5 საათი</option>
+                <option value="360">6 საათი</option>
+                <option value="480">სრული დღე</option>
               </select>
             </div>
             <FormInput 
@@ -386,7 +481,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
             />
           </div>
 
-          <button type="submit" disabled={loading || (!isExternal && !selectedPatient) || (canSelectDoctor && !formData.doctorId)} className={`w-full py-5 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl transition-all flex justify-center items-center gap-3 active:scale-[0.98] ${isExternal ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20" : "bg-brand-purple hover:brightness-110 shadow-brand-purple/20"}`}>
+          <button type="submit" disabled={loading} className={`w-full py-5 text-white rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-xl transition-all flex justify-center items-center gap-3 active:scale-[0.98] ${isExternal ? "bg-slate-500 hover:bg-slate-600 shadow-slate-500/20" : "bg-brand-purple hover:brightness-110 shadow-brand-purple/20"}`}>
             {loading ? <Loader2 className="animate-spin" size={20} /> : "ჯავშნის დადასტურება"}
           </button>
         </form>
