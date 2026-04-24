@@ -44,12 +44,15 @@ const MainHeader = ({ user }) => {
             </Link>
             {isLanding && (
               <>
-                <a href="#about" className="hover:text-brand-purple transition-colors">ჩვენს შესახებ</a>
-                <a href="#features" className="hover:text-brand-purple transition-colors">ფუნქციები</a>
-                <a href="#faq" className="hover:text-brand-purple transition-colors">FAQ</a>
                 <a href="#pricing" className="hover:text-brand-purple transition-colors">ფასები</a>
               </>
             )}
+            <Link to="/about" className={`${location.pathname === "/about" ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
+              ჩვენს შესახებ
+            </Link>
+            <Link to="/contact" className={`${location.pathname === "/contact" ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
+              კონტაქტი
+            </Link>
             <Link to="/catalog" className={`${location.pathname.startsWith("/catalog") ? "text-brand-purple" : "hover:text-brand-purple"} transition-colors`}>
               კატალოგი
             </Link>
@@ -109,15 +112,12 @@ const MainHeader = ({ user }) => {
         </div>
       </nav>
 
-      {/* Mobile Menu Components - MOVED OUTSIDE NAV FOR BETTER Z-INDEX HANDLING */}
       <div className="lg:hidden">
-        {/* Backdrop Overlay */}
         <div 
           className={`fixed inset-0 z-[9998] bg-brand-deep/80 backdrop-blur-md transition-all duration-500 ${isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} 
           onClick={() => setIsMobileMenuOpen(false)} 
         />
         
-        {/* Sliding Panel */}
         <div className={`fixed top-0 right-0 h-screen w-[85%] max-w-sm bg-surface z-[9999] shadow-[-20px_0_80px_-15px_rgba(0,0,0,0.3)] transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
           <div className="flex flex-col h-full overflow-hidden">
             <div className="p-6 border-b border-border-main flex items-center justify-between bg-surface">
@@ -139,17 +139,19 @@ const MainHeader = ({ user }) => {
                
                {isLanding && (
                  <>
-                   <a href="#about" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
-                      ჩვენს შესახებ <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
-                   </a>
-                   <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
-                      ფუნქციები <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
-                   </a>
                    <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
                       ფასები <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
                    </a>
                  </>
                )}
+
+                <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
+                   ჩვენს შესახებ <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
+                </Link>
+
+                <Link to="/contact" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
+                   კონტაქტი <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
+                </Link>
 
                <Link to="/catalog" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
                   კატალოგი <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
@@ -188,7 +190,6 @@ const MainHeader = ({ user }) => {
           </div>
         </div>
       </div>
-      {/* Spacer to prevent content from going under the fixed navbar */}
       <div className="w-full" style={{ height: 'calc(4rem + var(--safe-top))' }} />
     </>
   );

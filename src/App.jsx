@@ -27,6 +27,8 @@ import ClinicPublicProfile from "./pages/ClinicPublicProfile";
 import SalaryArchive from "./pages/SalaryArchive";
 import ActivityLog from "./pages/ActivityLog";
 import Apps from "./pages/Apps";
+import ContactPage from "./pages/ContactPage";
+import AboutPage from "./pages/AboutPage";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import ScrollToTop from "./components/Common/ScrollToTop";
 import GlobalLoader from "./components/Common/GlobalLoader";
@@ -171,6 +173,8 @@ function AppContent() {
         <Route path="/catalog" element={<><Helmet><title>კლინიკების კატალოგი — DentalHub</title><meta name="description" content="დაათვალიერეთ საქართველოში მოქმედი წამყვანი სტომატოლოგიური კლინიკები, მათი სერვისები და შეთავაზებები." /></Helmet><ClinicCatalog /></>} />
         <Route path="/catalog/:id" element={<ClinicPublicProfile />} />
         <Route path="/apps" element={<Apps />} />
+        <Route path="/contact" element={<ContactPage user={currentUser} />} />
+        <Route path="/about" element={<AboutPage user={currentUser} />} />
         <Route
           path="/documentation"
           element={

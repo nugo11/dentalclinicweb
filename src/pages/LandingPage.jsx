@@ -210,27 +210,27 @@ const LandingPage = ({ user }) => {
             </div>
             
             {/* Floating Stats Card */}
-            <div className="absolute -left-12 top-1/4 bg-surface/80 backdrop-blur-xl p-6 rounded-[32px] shadow-2xl border border-white/50 animate-bounce-slow hidden md:block z-20">
+            <div className="absolute -left-12 top-1/4 bg-surface/80 backdrop-blur-xl p-6 rounded-[32px] shadow-2xl border border-white/50 ring-4 ring-brand-purple/5 animate-bounce-slow hidden md:block z-20">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <div className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/20">
                   <Activity size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">Live Analytics</p>
-                  <p className="text-lg font-black text-text-main italic">+24% Growth</p>
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1 italic">ცოცხალი ანალიტიკა</p>
+                  <p className="text-lg font-black text-text-main italic">+24% ზრდა</p>
                 </div>
               </div>
             </div>
 
-            {/* Floating User Card */}
-            <div className="absolute -right-8 bottom-1/4 bg-brand-deep text-white p-6 rounded-[32px] shadow-2xl animate-bounce-slow delay-500 hidden md:block z-20">
+            {/* Floating Automation Card */}
+            <div className="absolute -right-8 bottom-1/4 bg-brand-deep/80 backdrop-blur-xl text-white p-6 rounded-[32px] shadow-2xl ring-4 ring-brand-purple/10 animate-bounce-slow delay-500 hidden md:block z-20">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-brand-purple rounded-2xl flex items-center justify-center">
-                  <Users size={24} />
+                <div className="w-12 h-12 bg-brand-purple rounded-2xl flex items-center justify-center ring-2 ring-white/10">
+                  <Zap size={24} className="fill-current" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">New Appointment</p>
-                  <p className="text-lg font-black italic">John Doe</p>
+                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1 italic">სისტემის ძალა</p>
+                  <p className="text-lg font-black italic tracking-tighter">პროცესების ავტომატიზაცია</p>
                 </div>
               </div>
             </div>
@@ -427,6 +427,9 @@ const LandingPage = ({ user }) => {
                 </div>
               ))}
             </div>
+            <Link to="/about" className="inline-flex items-center gap-3 mt-12 bg-brand-deep text-white px-10 py-5 rounded-[24px] font-black text-[11px] uppercase tracking-widest hover:bg-brand-purple transition-all shadow-xl group">
+              მეტის წაკითხვა <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+            </Link>
           </div>
         </div>
       </section>
@@ -604,9 +607,9 @@ const LandingPage = ({ user }) => {
                 "გახადეთ კლინიკის მართვა უფრო სასიამოვნო."
               </p>
             </div>
-            <button className="bg-brand-purple text-white px-12 py-6 rounded-[24px] font-black text-sm uppercase tracking-widest hover:bg-surface hover:text-brand-purple transition-all shadow-xl">
+            <Link to="/contact" className="bg-brand-purple text-white px-12 py-6 rounded-[24px] font-black text-sm uppercase tracking-widest hover:bg-surface hover:text-brand-purple transition-all shadow-xl text-center">
               დაგვიკავშირდით
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -647,44 +650,25 @@ const LandingPage = ({ user }) => {
         </div>
       </section>
 
-      {/* 9. Contact - WHITE BG */}
-      <section id="contact" className="py-32 px-6 bg-surface border-t border-border-main">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-24 items-center">
-          <div>
-            <SectionTag>კონტაქტი</SectionTag>
-            <h2 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter leading-[1] mb-10 italic">
-              მოგვწერეთ <br />
-              ნებისმიერ დროს.
-            </h2>
-            <div className="space-y-12">
-              <ContactInfo
-                icon={Mail}
-                title="ელ-ფოსტა"
-                detail="hello@dentalhub.ge"
-              />
-              <ContactInfo
-                icon={Phone}
-                title="ტელეფონი"
-                detail="+995 555 10 20 30"
-              />
-            </div>
-          </div>
-          <div className="bg-surface-soft p-12 rounded-[40px] border border-border-dark shadow-inner">
-            <form className="space-y-6">
-              <input
-                type="text"
-                placeholder="სახელი"
-                className="w-full px-8 py-5 rounded-2xl bg-surface border border-border-main outline-none font-bold text-sm focus:border-brand-purple transition-all"
-              />
-              <textarea
-                rows="4"
-                placeholder="შეტყობინება"
-                className="w-full px-8 py-5 rounded-2xl bg-surface border border-border-main outline-none font-bold text-sm focus:border-brand-purple transition-all resize-none"
-              ></textarea>
-              <button className="w-full bg-brand-deep text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-brand-purple transition-all shadow-xl">
-                გაგზავნა
-              </button>
-            </form>
+      {/* 9. Contact - ENHANCED CTA */}
+      <section id="contact" className="py-32 px-6 bg-surface border-t border-border-main relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-purple/5 blur-[100px] rounded-full -mr-20 -mt-20"></div>
+        <div className="max-w-7xl mx-auto text-center">
+          <SectionTag>კონტაქტი</SectionTag>
+          <h2 className="text-5xl md:text-8xl font-black text-text-main tracking-tighter leading-[0.9] mb-12 italic uppercase">
+            გაქვთ <br /> <span className="text-brand-purple">კითხვები?</span>
+          </h2>
+          <p className="text-xl text-text-muted max-w-2xl mx-auto font-medium italic leading-relaxed mb-16">
+            ჩვენი გუნდი მზად არის დაგეხმაროთ DentalHub-ის დანერგვასა და ეფექტურ გამოყენებაში.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
+             <Link to="/contact" className="bg-brand-deep text-white px-16 py-7 rounded-[32px] font-black text-sm uppercase tracking-[0.2em] hover:bg-brand-purple transition-all shadow-2xl shadow-brand-deep/20 flex items-center gap-4 group">
+               მოგვწერეთ <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+             </Link>
+             <div className="flex flex-col items-start text-left pl-8 border-l-2 border-border-main">
+                <span className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">დაგვირეკეთ</span>
+                <span className="text-2xl font-black text-text-main italic tracking-tighter">+995 555 10 20 30</span>
+             </div>
           </div>
         </div>
       </section>

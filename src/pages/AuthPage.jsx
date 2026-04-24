@@ -43,6 +43,10 @@ const AuthPage = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState(""); // ახალი: ტელეფონის ნომერი
+  const [smsStatus, setSmsStatus] = useState("idle"); // idle, loading, sent, verified
+  const [showSmsModal, setShowSmsModal] = useState(false); // ახალი მოდალის სტეიტი
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [userOtp, setUserOtp] = useState("");
   const [loginName, setLoginName] = useState(""); 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -65,24 +69,33 @@ const AuthPage = () => {
     
     if (isLogin) {
         if (!loginName) errors.loginName = "ჩაწერეთ კლინიკის ლოგინი";
+        if (!password) errors.password = "ჩაწერეთ პაროლი";
     } else {
-        if (!email.includes("@")) errors.email = "ჩაწერეთ სწორი ელ-ფოსტა";
-        if (!phone) errors.phone = "მიუთითეთ ტელეფონის ნომერი";
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) errors.email = "შეიყვანეთ სწორი ელ-ფოსტა (@ და .)";
         
-        // Latin characters validation
+        const phoneRegex = /^5\d{8}$/;
+        if (!phoneRegex.test(phone)) errors.phone = "უნდა იწყებოდეს 5-ით და შეიცავდეს 9 ციფრს";
+
         const latinRegex = /^[a-zA-Z0-9-]+$/;
         if (!loginName) {
             errors.loginName = "მიუთითეთ კლინიკის ID (ლოგინი)";
         } else if (!latinRegex.test(loginName)) {
-            errors.loginName = "გამოიყენეთ ლოგინისთვის მხოლოდ ლათინური ასოები და ციფრები";
+            errors.loginName = "გამოიყენეთ მხოლოდ ლათინური ასოები და ციფრები";
         }
 
         if (!fullName) errors.fullName = "მიუთითეთ სახელი და გვარი";
-        if (password !== confirmPassword) errors.confirmPassword = "პაროლები არ ემთხვევა";
         if (!clinicName) errors.clinicName = "მიუთითეთ კლინიკის სახელი";
-    }
+        if (password !== confirmPassword) errors.confirmPassword = "პაროლები არ ემთხვევა";
+        
+        const hasNumber = /\d/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        const hasLength = password.length >= 8;
 
-    if (password.length < 6) errors.password = "მინიმუმ 6 სიმბოლო";
+        if (!hasLength || !hasNumber || !hasSpecialChar) {
+            errors.password = "პაროლი არ აკმაყოფილებს უსაფრთხოების მოთხოვნებს";
+        }
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -143,6 +156,13 @@ const AuthPage = () => {
           if (!phoneSnap.empty) {
               setFormErrors({ phone: "ეს ტელეფონის ნომერი უკვე რეგისტრირებულია" });
               setIsLoading(false);
+              return;
+          }
+
+          if (smsStatus !== "verified") {
+              setIsLoading(false);
+              setShowSmsModal(true);
+              handleSendSms(); // ეგრევე ვაგზავნით SMS-ს მოდალის გახსნისას
               return;
           }
 
@@ -282,6 +302,60 @@ const AuthPage = () => {
     }
   };
 
+  const handleSendSms = async () => {
+    let formattedPhone = phone.trim();
+    
+    // ქართული ნომრის ვალიდაცია
+    const phoneRegex = /^(?:\+?995)?(5\d{8})$/;
+    const match = formattedPhone.match(phoneRegex);
+    
+    if (!match) {
+      setFormErrors(prev => ({ ...prev, phone: "არასწორი ფორმატი. მაგ: 555123456" }));
+      return;
+    }
+    
+    const finalPhone = "995" + match[1];
+    setFormErrors(prev => ({ ...prev, phone: undefined, general: undefined }));
+    setSmsStatus("loading");
+    
+    // ვქმნით 6 ნიშნა კოდს
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(otp);
+    
+    try {
+      const apiKey = import.meta.env.VITE_UBILL_API_KEY;
+      const response = await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandID: 2,
+          numbers: [finalPhone],
+          text: `თქვენი DentalHub სარეგისტრაციო კოდია: ${otp}`,
+          otp: true
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error("SMS-ის გაგზავნა ვერ მოხერხდა API-დან");
+      }
+
+      const data = await response.json();
+      if (data.statusID === 10) {
+          throw new Error("გამგზავნის სახელი (Brand ID) არ არის ვერიფიცირებული UBill-ზე.");
+      } else if (data.statusID !== undefined && data.statusID !== 0) {
+          throw new Error(`UBill შეცდომა: ${data.message || "უცნობი შეცდომა"}`);
+      }
+      
+      setSmsStatus("sent");
+    } catch (err) {
+      console.error("UBill Error:", err);
+      setFormErrors({ general: "სისტემური შეცდომა SMS-ის გაგზავნისას. გადაამოწმეთ API კავშირი." });
+      setSmsStatus("idle");
+    }
+  };
+
+  // ძველი handleVerifyOtp ამოვიღეთ, რადგან მოდალში პირდაპირ გვიწერია ლოგიკა
+
   return (
     <>
       <Helmet>
@@ -367,9 +441,33 @@ const AuthPage = () => {
                         }} 
                         error={formErrors.loginName} 
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-4">
                         <InputField icon={User} placeholder="სახელი და გვარი" value={fullName} onChange={setFullName} error={formErrors.fullName} />
-                        <InputField icon={Phone} placeholder="ტელეფონი" value={phone} onChange={setPhone} error={formErrors.phone} />
+                        <InputField 
+                            icon={Phone} 
+                            placeholder="ტელეფონი (მაგ: 555123456)" 
+                            value={phone} 
+                            onChange={(v) => { 
+                                const cleaned = v.replace(/\D/g, '').slice(0, 9);
+                                setPhone(cleaned);
+                                setSmsStatus("idle");
+                                setUserOtp("");
+                                
+                                if (cleaned.length > 0 && cleaned[0] !== '5') {
+                                    setFormErrors(prev => ({...prev, phone: "ნომერი უნდა იწყებოდეს 5-ით"}));
+                                } else if (cleaned.length === 9) {
+                                    setFormErrors(prev => ({...prev, phone: undefined}));
+                                } else if (formErrors.phone === "ნომერი უნდა იწყებოდეს 5-ით" && (cleaned.length === 0 || cleaned[0] === '5')) {
+                                    setFormErrors(prev => ({...prev, phone: undefined}));
+                                }
+                            }} 
+                            onBlur={() => {
+                                if (phone.length > 0 && phone.length < 9) {
+                                    setFormErrors(prev => ({...prev, phone: "ნომერი არასწორია (უნდა შეიცავდეს 9 ციფრს)"}));
+                                }
+                            }}
+                            error={formErrors.phone} 
+                        />
                     </div>
                   </div>
                 )}
@@ -386,6 +484,19 @@ const AuthPage = () => {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                {!isLogin && (
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 px-2 mt-1 mb-4">
+                    <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${password.length >= 8 ? 'text-emerald-500' : 'text-text-muted'}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full transition-colors ${password.length >= 8 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> 8+ სიმბოლო
+                    </span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'text-emerald-500' : 'text-text-muted'}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full transition-colors ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> სპეც. სიმბოლო
+                    </span>
+                    <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${/\d/.test(password) ? 'text-emerald-500' : 'text-text-muted'}`}>
+                      <div className={`w-1.5 h-1.5 rounded-full transition-colors ${/\d/.test(password) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> ციფრი
+                    </span>
+                  </div>
+                )}
                 {!isLogin && <InputField icon={Lock} type={showPassword ? "text" : "password"} placeholder="გაიმეორეთ პაროლი" value={confirmPassword} onChange={setConfirmPassword} error={formErrors.confirmPassword} />}
 
                 {isLogin && (
@@ -417,7 +528,7 @@ const AuthPage = () => {
 
                 <button 
                   disabled={isLoading}
-                  className="w-full bg-brand-deep text-white py-5 sm:py-7 rounded-[20px] sm:rounded-[28px] font-black text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-brand-purple transition-all shadow-2xl hover:shadow-brand-purple/20 flex items-center justify-center gap-3 group mt-8 sm:mt-10 active:scale-[0.98] disabled:opacity-50"
+                  className="w-full bg-brand-purple text-white py-5 sm:py-7 rounded-[20px] sm:rounded-[28px] font-black text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:brightness-110 transition-all shadow-2xl hover:shadow-brand-purple/60 flex items-center justify-center gap-3 group mt-8 sm:mt-10 active:scale-[0.98] disabled:opacity-50"
                 >
                   {isLoading ? (
                     <Loader2 className="animate-spin" size={22} />
@@ -543,13 +654,94 @@ const AuthPage = () => {
         </div>
       </div>
     </div>
+
+    {/* --- SMS Verification Modal --- */}
+    {showSmsModal && (
+        <div className="fixed inset-0 bg-surface-deep/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-surface w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 sm:p-8 pb-10 sm:pb-8 shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+             <div className="w-12 h-1.5 bg-border-main rounded-full mx-auto mb-6 sm:hidden" />
+             <div className="text-center mb-8">
+               <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ShieldCheck size={40} />
+               </div>
+               <h3 className="text-2xl font-black italic tracking-tight text-text-main mb-2">SMS დადასტურება</h3>
+               {smsStatus !== "verified" && (
+                   <p className="text-text-muted text-[11px] font-bold mt-2 leading-relaxed">
+                      თქვენს ნომერზე ({phone}) გაიგზავნა სარეგისტრაციო კოდი.
+                   </p>
+               )}
+             </div>
+             
+             {smsStatus === "loading" && (
+                <div className="flex flex-col items-center justify-center py-6 gap-4">
+                    <Loader2 className="animate-spin text-brand-purple" size={32} />
+                    <p className="text-[10px] uppercase font-black tracking-widest text-text-muted">კოდი იგზავნება...</p>
+                </div>
+             )}
+
+             {smsStatus === "sent" && (
+                <div className="space-y-6">
+                    <InputField 
+                        icon={Lock} 
+                        placeholder="შეიყვანეთ 6-ნიშნა კოდი" 
+                        value={userOtp} 
+                        onChange={setUserOtp} 
+                        error={formErrors.otp}
+                        maxLength={6}
+                        autoFocus
+                    />
+                    <button 
+                        onClick={() => {
+                            if (userOtp === generatedOtp && userOtp.length > 0) {
+                                setSmsStatus("verified");
+                                setFormErrors(prev => ({...prev, otp: undefined}));
+                                // ვაჩვენებთ დადასტურებულს წამიერად და მერე ვხურავთ მოდალს
+                                setTimeout(() => {
+                                    setShowSmsModal(false);
+                                    setAuthStep("pin");
+                                }, 800);
+                            } else {
+                                setFormErrors(prev => ({...prev, otp: "კოდი არასწორია"}));
+                            }
+                        }}
+                        className="w-full bg-brand-purple hover:bg-brand-deep text-white py-5 rounded-[20px] text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.98] cursor-pointer"
+                    >
+                        დადასტურება
+                    </button>
+                </div>
+             )}
+
+             {smsStatus === "verified" && (
+                <div className="flex flex-col items-center justify-center py-6 gap-4">
+                    <div className="w-16 h-16 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center">
+                        <ShieldCheck size={32} />
+                    </div>
+                    <p className="text-[11px] uppercase font-black tracking-widest text-emerald-500">დადასტურებულია!</p>
+                </div>
+             )}
+             
+             {formErrors.general && (
+                 <p className="text-red-500 text-center text-[10px] mt-4 font-black uppercase">{formErrors.general}</p>
+             )}
+
+             {smsStatus !== "verified" && (
+                 <button 
+                    onClick={() => { setShowSmsModal(false); setSmsStatus("idle"); }}
+                    className="mt-6 w-full text-center text-[10px] text-text-muted font-black uppercase hover:text-text-main transition-colors cursor-pointer"
+                 >
+                    გაუქმება
+                 </button>
+             )}
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
 // --- დამხმარე კომპონენტები ---
 
-const InputField = ({ icon: Icon, error, value, onChange, ...props }) => (
+const InputField = ({ icon: Icon, error, value, onChange, onBlur, ...props }) => (
   <div className="space-y-1 w-full group">
     <div className={`relative border-2 rounded-[26px] transition-all duration-300 ${
       error ? "border-red-500 bg-red-500/10 animate-shake" : "border-transparent bg-surface-soft focus-within:border-brand-purple focus-within:bg-surface focus-within:shadow-lg focus-within:shadow-brand-purple/5"
@@ -560,6 +752,7 @@ const InputField = ({ icon: Icon, error, value, onChange, ...props }) => (
       <input 
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         {...props} 
         className="w-full pl-16 pr-8 py-5 sm:py-6 bg-transparent outline-none font-bold text-base sm:text-sm text-text-main placeholder:text-text-muted transition-all" 
       />
