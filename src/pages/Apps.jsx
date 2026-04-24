@@ -2,8 +2,11 @@ import React from 'react';
 import { Smartphone, Monitor, Download, ArrowLeft, CheckCircle2, ChevronRight, Share, PlusSquare, Globe, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useAuth } from '../context/AuthContext';
+import MainHeader from '../components/Common/MainHeader';
 
 const Apps = () => {
+  const { currentUser } = useAuth();
   const platforms = [
     {
       id: 'windows',
@@ -34,7 +37,7 @@ const Apps = () => {
     {
       id: 'ios',
       name: 'iOS / iPhone',
-      icon: <Smartphone className="text-slate-900" size={32} />,
+      icon: <Smartphone className="text-text-main" size={32} />,
       description: 'ოპტიმიზირებული გამოცდილება iPhone და iPad მომხმარებლებისთვის.',
       badge: 'Apple ოპტიმიზაცია',
       features: ['Apple-ის სტანდარტები', 'სუფთა ინტერფეისი', 'სწრაფი ნავიგაცია'],
@@ -47,35 +50,21 @@ const Apps = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 font-nino">
+    <div className="min-h-screen bg-surface-soft font-nino">
       <Helmet>
         <title>გადმოწერეთ აპლიკაცია — DentalHub</title>
         <meta name="description" content="DentalHub ხელმისაწვდომია ყველა პლატფორმაზე: Windows, Android და iOS. მართეთ თქვენი კლინიკა ნებისმიერი მოწყობილობიდან." />
       </Helmet>
 
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 text-slate-600 hover:text-brand-deep transition-colors group">
-            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="font-bold text-sm uppercase tracking-wider">მთავარზე დაბრუნება</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-brand-deep rounded-xl flex items-center justify-center">
-              <span className="text-white font-black text-xl italic">D</span>
-            </div>
-            <span className="font-black text-brand-deep text-xl tracking-tighter italic">DentalHub</span>
-          </div>
-        </div>
-      </header>
+      <MainHeader user={currentUser} />
 
       <main className="max-w-5xl mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-20">
-          <h1 className="text-4xl md:text-6xl font-black text-brand-deep tracking-tighter italic mb-6">
+          <h1 className="text-4xl md:text-6xl font-black text-text-main tracking-tighter italic mb-6">
             მართეთ კლინიკა <span className="text-brand-purple">ყველგან</span>
           </h1>
-          <p className="text-slate-500 text-lg max-w-2xl mx-auto font-medium">
+          <p className="text-text-muted text-lg max-w-2xl mx-auto font-medium">
             ჩვენი პლატფორმა მორგებულია ნებისმიერ მოწყობილობაზე. გადმოწერეთ დესკტოპ ვერსია ან დააინსტალირეთ მობილური აპლიკაცია წამებში.
           </p>
         </div>
@@ -83,9 +72,9 @@ const Apps = () => {
         {/* Platform Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {platforms.map((p) => (
-            <div key={p.id} className="bg-white rounded-[32px] border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all p-8 flex flex-col">
+            <div key={p.id} className="bg-surface rounded-[32px] border border-border-dark shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all p-8 flex flex-col">
               <div className="flex justify-between items-start mb-6">
-                <div className="p-4 bg-slate-50 rounded-2xl">
+                <div className="p-4 bg-surface-soft rounded-2xl">
                   {p.icon}
                 </div>
                 <span className="bg-brand-purple/10 text-brand-purple text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
@@ -93,8 +82,8 @@ const Apps = () => {
                 </span>
               </div>
 
-              <h3 className="text-2xl font-black text-brand-deep mb-4 tracking-tight italic">{p.name}</h3>
-              <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">
+              <h3 className="text-2xl font-black text-text-main mb-4 tracking-tight italic">{p.name}</h3>
+              <p className="text-text-muted text-sm font-medium mb-8 leading-relaxed">
                 {p.description}
               </p>
 
@@ -102,7 +91,7 @@ const Apps = () => {
                 {p.features.map((f, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <CheckCircle2 size={16} className="text-emerald-500" />
-                    <span className="text-slate-600 text-[13px] font-bold">{f}</span>
+                    <span className="text-text-muted text-[13px] font-bold">{f}</span>
                   </div>
                 ))}
               </div>
@@ -117,14 +106,14 @@ const Apps = () => {
                   <span className="text-xs font-black uppercase tracking-widest">{p.action.text}</span>
                 </a>
               ) : (
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">ინსტალაციის ნაბიჯები:</p>
+                <div className="space-y-3 pt-4 border-t border-border-main">
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">ინსტალაციის ნაბიჯები:</p>
                   {p.steps.map((step, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-brand-deep shadow-sm">
+                    <div key={i} className="flex items-center gap-3 bg-surface-soft p-3 rounded-xl">
+                      <div className="w-8 h-8 bg-surface rounded-lg flex items-center justify-center text-text-main shadow-sm">
                         {step.icon}
                       </div>
-                      <span className="text-[11px] font-bold text-slate-600">{step.text}</span>
+                      <span className="text-[11px] font-bold text-text-muted">{step.text}</span>
                     </div>
                   ))}
                 </div>
@@ -135,7 +124,7 @@ const Apps = () => {
 
         {/* FAQ / Info */}
         <div className="mt-24 bg-brand-deep rounded-[40px] p-12 text-center text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-surface/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
           <div className="relative z-10">
             <h2 className="text-3xl font-black italic tracking-tighter mb-6">გაქვთ კითხვები?</h2>
             <p className="text-white/70 font-medium mb-10 max-w-xl mx-auto">
@@ -144,13 +133,13 @@ const Apps = () => {
             <div className="flex justify-center">
               <a 
                 href="tel:+995555102030" 
-                className="inline-flex items-center gap-4 px-10 py-5 bg-white text-brand-deep rounded-[24px] shadow-2xl hover:scale-105 transition-all group"
+                className="inline-flex items-center gap-4 px-10 py-5 bg-surface text-text-main rounded-[24px] shadow-2xl hover:scale-105 transition-all group"
               >
                 <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-xl flex items-center justify-center group-hover:bg-brand-purple group-hover:text-white transition-all">
                   <Phone size={24} />
                 </div>
                 <div className="text-left">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">ტექნიკური მხარდაჭერა</p>
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-0.5">ტექნიკური მხარდაჭერა</p>
                   <p className="text-xl font-black italic tracking-tighter">+995 555 10 20 30</p>
                 </div>
               </a>
@@ -159,9 +148,9 @@ const Apps = () => {
         </div>
       </main>
 
-      <footer className="py-12 border-t border-slate-200 bg-white">
+      <footer className="py-12 border-t border-border-dark bg-surface">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">© 2024 DentalHub — ყველა უფლება დაცულია</p>
+          <p className="text-text-muted text-xs font-bold uppercase tracking-widest">© 2024 DentalHub — ყველა უფლება დაცულია</p>
         </div>
       </footer>
     </div>

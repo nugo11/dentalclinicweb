@@ -48,7 +48,7 @@ const cols = [
 const renderCell = (val) => {
   if (val === true)  return <CHECK />;
   if (val === false) return <DASH />;
-  return <span style={{fontSize:13,fontWeight:500,color:'#1E293B'}}>{val}</span>;
+  return <span style={{fontSize:13,fontWeight:500,color:'var(--text-main)'}}>{val}</span>;
 };
 
 const Billing = () => {
@@ -64,7 +64,7 @@ const Billing = () => {
       <Helmet>
         <title>ანგარიშსწორება და პაკეტები — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -77,10 +77,10 @@ const Billing = () => {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-purple/10 text-brand-purple rounded-full text-[10px] font-black uppercase tracking-widest">
                 <Sparkles size={14} /> Subscription Management
               </div>
-              <h1 className="text-4xl font-black text-brand-deep italic tracking-tighter">
+              <h1 className="text-4xl font-black text-text-main italic tracking-tighter">
                 თქვენი პაკეტი
               </h1>
-              <p className="text-gray-400 font-bold text-sm max-w-lg mx-auto italic">
+              <p className="text-text-muted font-bold text-sm max-w-lg mx-auto italic">
                 ამჟამად გააქტიურებულია{" "}
                 <span className="text-brand-purple font-black">
                   {PLANS[currentPlanId]?.title || currentPlanId}
@@ -90,14 +90,14 @@ const Billing = () => {
               
               <button 
                 onClick={() => setSelectedPlanForDetails(currentPlanId)}
-                className="mt-6 inline-flex items-center gap-3 px-8 py-4 bg-white text-brand-purple border-2 border-brand-purple/20 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-brand-purple hover:text-white transition-all shadow-lg shadow-brand-purple/5"
+                className="mt-6 inline-flex items-center gap-3 px-8 py-4 bg-surface text-brand-purple border-2 border-brand-purple/20 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-brand-purple hover:text-white transition-all shadow-lg shadow-brand-purple/5"
               >
                 <Info size={16} /> პაკეტის დეტალები
               </button>
             </div>
 
-            <div style={{background:'white',borderRadius:32,overflow:'hidden',border:'1px solid #E2E8F0',boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}}>
-              <div style={{display:'grid',gridTemplateColumns:'1fr repeat(3,1fr)',borderBottom:'1px solid #E2E8F0'}}>
+            <div style={{background:'var(--bg-surface)',borderRadius:32,overflow:'hidden',border:'1px solid var(--border-main)',boxShadow:'0 1px 3px rgba(0,0,0,0.04)'}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr repeat(3,1fr)',borderBottom:'1px solid var(--border-main)'}}>
                 <div style={{padding:'20px 24px'}} />
                 {cols.map(c => {
                   const isCurrent = c.key === currentPlanId;
@@ -116,12 +116,12 @@ const Billing = () => {
                         </div>
                       )}
                       <div style={{fontSize:11,fontWeight:900,textTransform:'uppercase',letterSpacing:'0.1em',
-                        color: isCurrent ? 'rgba(255,255,255,0.9)' : '#64748B', display:'flex', alignItems:'center', justifyContent:'center', gap:6}}>
+                        color: isCurrent ? 'rgba(255,255,255,0.9)' : 'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center', gap:6}}>
                         {c.label}
                         <button 
                           onClick={() => setSelectedPlanForDetails(c.key)}
                           style={{
-                            padding:4, borderRadius:6, background: isCurrent ? 'rgba(255,255,255,0.1)' : '#F1F5F9',
+                            padding:4, borderRadius:6, background: isCurrent ? 'rgba(255,255,255,0.1)' : 'var(--bg-surface-soft)',
                             color: isCurrent ? 'white' : '#7C3AED', border:'none', cursor:'pointer'
                           }}
                           title="დეტალები"
@@ -137,10 +137,10 @@ const Billing = () => {
               {rows.map((row, i) => (
                 <div key={i} style={{
                   display:'grid',gridTemplateColumns:'1fr repeat(3,1fr)',
-                  borderBottom: i < rows.length-1 ? '1px solid #F1F5F9' : 'none',
-                  background: i % 2 === 0 ? 'white' : '#FAFAFA'
+                  borderBottom: i < rows.length-1 ? '1px solid var(--border-main)' : 'none',
+                  background: i % 2 === 0 ? 'var(--bg-surface)' : 'var(--bg-surface-soft)'
                 }}>
-                  <div style={{padding:'13px 24px',fontSize:13,fontWeight:500,color:'#475569',display:'flex',alignItems:'center'}}>
+                  <div style={{padding:'13px 24px',fontSize:13,fontWeight:500,color:'var(--text-muted)',display:'flex',alignItems:'center'}}>
                     {row.label}
                   </div>
                   {cols.map(c => {
@@ -152,7 +152,7 @@ const Billing = () => {
                       }}>
                         {row.isPrice ? (
                           <span style={{fontSize:isCurrent?18:14,fontWeight:900,
-                            color:isCurrent?'white':'#1E293B',fontStyle:'italic'}}>
+                            color:isCurrent?'white':'var(--text-main)',fontStyle:'italic'}}>
                             {row[c.key]}
                           </span>
                         ) : renderCell(row[c.key])}
@@ -163,8 +163,8 @@ const Billing = () => {
               ))}
 
               <div style={{display:'grid',gridTemplateColumns:'1fr repeat(3,1fr)',
-                borderTop:'1px solid #E2E8F0',background:'#F8FAFC'}}>
-                <div style={{padding:'16px 24px',fontSize:12,color:'#94A3B8',fontWeight:600,display:'flex',alignItems:'center'}}>
+                borderTop:'1px solid var(--border-main)',background:'var(--bg-surface-soft)'}}>
+                <div style={{padding:'16px 24px',fontSize:12,color:'var(--text-muted)',fontWeight:600,display:'flex',alignItems:'center'}}>
                   * Upgrade ხელშეკრულებით
                 </div>
                 {cols.map(c => {
@@ -205,7 +205,7 @@ const Billing = () => {
               </div>
               <div className="flex flex-col sm:flex-row gap-3 relative z-10 shrink-0">
                 <a href="tel:+99555102030"
-                  className="flex items-center gap-3 bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all text-white no-underline">
+                  className="flex items-center gap-3 bg-surface/10 hover:bg-surface/20 border border-white/20 px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all text-white no-underline">
                   <Phone size={16} /> +995 555 10 20 30
                 </a>
                 <a href="mailto:upgrade@dentalhub.ge"
@@ -225,16 +225,16 @@ const Billing = () => {
             className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md animate-in fade-in duration-300" 
             onClick={() => setSelectedPlanForDetails(null)} 
           />
-          <div className="bg-white rounded-[40px] w-full max-w-2xl max-h-[80vh] flex flex-col relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+          <div className="bg-surface rounded-[40px] w-full max-w-2xl max-h-[80vh] flex flex-col relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
             
-            <div className="p-10 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+            <div className="p-10 border-b border-border-main flex justify-between items-center bg-surface-soft/50">
               <div>
-                <h3 className="text-2xl font-black text-brand-deep italic leading-none">{PLANS[selectedPlanForDetails]?.title || selectedPlanForDetails}</h3>
+                <h3 className="text-2xl font-black text-text-main italic leading-none">{PLANS[selectedPlanForDetails]?.title || selectedPlanForDetails}</h3>
                 <p className="text-[10px] text-brand-purple font-black uppercase tracking-[0.2em] mt-3">პაკეტის სრული შესაძლებლობები</p>
               </div>
               <button 
                 onClick={() => setSelectedPlanForDetails(null)}
-                className="p-3 bg-white text-slate-300 hover:text-brand-deep rounded-2xl shadow-sm border border-slate-100 transition-all"
+                className="p-3 bg-surface text-text-muted hover:text-text-main rounded-2xl shadow-sm border border-border-main transition-all"
               >
                 <X size={20} />
               </button>
@@ -242,13 +242,13 @@ const Billing = () => {
 
             <div className="flex-1 overflow-y-auto p-10 custom-scrollbar space-y-6">
               {PLANS[selectedPlanForDetails]?.features?.map((feature, idx) => (
-                <div key={idx} className="flex gap-6 p-6 rounded-[32px] bg-slate-50 border border-transparent hover:border-brand-purple/20 transition-all group">
-                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-purple shadow-sm shrink-0 group-hover:scale-110 transition-transform">
+                <div key={idx} className="flex gap-6 p-6 rounded-[32px] bg-surface-soft border border-transparent hover:border-brand-purple/20 transition-all group">
+                  <div className="w-12 h-12 bg-surface rounded-2xl flex items-center justify-center text-brand-purple shadow-sm shrink-0 group-hover:scale-110 transition-transform">
                     <CheckCircle2 size={24} />
                   </div>
                   <div>
-                    <h4 className="font-black text-brand-deep uppercase text-sm mb-2 italic">{feature.name}</h4>
-                    <p className="text-xs font-bold text-slate-500 leading-relaxed italic">{feature.desc}</p>
+                    <h4 className="font-black text-text-main uppercase text-sm mb-2 italic">{feature.name}</h4>
+                    <p className="text-xs font-bold text-text-muted leading-relaxed italic">{feature.desc}</p>
                   </div>
                 </div>
               ))}

@@ -133,10 +133,10 @@ const PatientsTable = ({ externalSearch = "" }) => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-white rounded-[40px] border border-gray-100">
+      <div className="flex-1 flex items-center justify-center bg-surface rounded-[40px] border border-border-main">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="text-brand-purple animate-spin" size={40} />
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">
             მონაცემები იტვირთება...
           </p>
         </div>
@@ -146,7 +146,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
 
   return (
     // დავამატეთ ref ამ დივზე
-    <div ref={tableTopRef} className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full relative font-nino">
+    <div ref={tableTopRef} className="bg-surface rounded-[40px] border border-border-main shadow-sm overflow-hidden flex flex-col h-full relative font-nino">
       
       {/* --- ფორმა 100-ის მოდალი --- */}
       {isModalOpen && (
@@ -156,39 +156,39 @@ const PatientsTable = ({ externalSearch = "" }) => {
             onClick={() => setIsModalOpen(false)} 
           />
           
-          <div className="relative bg-white w-full max-w-xl rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="relative bg-surface w-full max-w-xl rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-black text-brand-deep tracking-tight">ფორმა 100-ის გენერაცია</h3>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-widest">
+                  <h3 className="text-xl font-black text-text-main tracking-tight">ფორმა 100-ის გენერაცია</h3>
+                  <p className="text-[10px] text-text-muted font-bold uppercase mt-1 tracking-widest">
                     პაციენტი: {selectedPatient?.fullName}
                   </p>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-surface-soft rounded-full transition-colors"
                 >
-                  <X size={20} className="text-gray-400" />
+                  <X size={20} className="text-text-muted" />
                 </button>
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 ml-1">
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-text-muted ml-1">
                   ექიმის დასკვნა და დანიშნულება
                 </label>
                 <textarea
                   value={doctorNotes}
                   onChange={(e) => setDoctorNotes(e.target.value)}
                   placeholder="ჩაწერეთ დიაგნოზი, ჩატარებული პროცედურები და მკურნალობის გეგმა..."
-                  className="w-full h-48 p-6 bg-gray-50 rounded-[24px] border-2 border-transparent focus:border-brand-purple focus:bg-white outline-none transition-all font-bold text-sm text-brand-deep resize-none custom-scrollbar"
+                  className="w-full h-48 p-6 bg-surface-soft rounded-[24px] border-2 border-transparent focus:border-brand-purple focus:bg-surface outline-none transition-all font-bold text-sm text-text-main resize-none custom-scrollbar"
                 />
               </div>
 
               <div className="flex gap-3 mt-8">
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all"
+                  className="flex-1 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-muted hover:bg-surface-soft transition-all"
                 >
                   გაუქმება
                 </button>
@@ -206,10 +206,10 @@ const PatientsTable = ({ externalSearch = "" }) => {
       )}
 
       {/* Table Header Controls */}
-      <div className="p-6 md:p-8 border-b border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+      <div className="p-6 md:p-8 border-b border-border-main flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
         <div className="relative w-full sm:max-w-md group">
           <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-purple transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors"
             size={18}
           />
           <input
@@ -220,36 +220,36 @@ const PatientsTable = ({ externalSearch = "" }) => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl outline-none font-bold text-sm text-brand-deep focus:bg-white focus:border-brand-purple border-2 border-transparent transition-all"
+            className="w-full pl-12 pr-4 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm text-text-main focus:bg-surface focus:border-brand-purple border-2 border-transparent transition-all"
           />
         </div>
       </div>
 
       <div className="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
         <table className="w-full text-left min-w-[1000px]">
-          <thead className="bg-slate-50/50 sticky top-0 z-10 backdrop-blur-md">
+          <thead className="bg-surface-soft/50 sticky top-0 z-10 backdrop-blur-md">
             <tr>
-              <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+              <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest border-b border-border-main">
                 პაციენტის ბარათი
               </th>
-              <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+              <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest border-b border-border-main">
                 კონტაქტი
               </th>
-              <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+              <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest border-b border-border-main">
                 სამედიცინო სტატუსი
               </th>
-              <th className="py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">
+              <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest border-b border-border-main">
                 ბოლო ვიზიტი
               </th>
-              <th className="py-5 px-8 border-b border-gray-100"></th>
+              <th className="py-5 px-8 border-b border-border-main"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-border-main">
             {currentPatients.length > 0 ? (
               currentPatients.map((patient) => (
                 <tr
                   key={patient.id}
-                  className="group hover:bg-slate-50/50 transition-all cursor-default"
+                  className="group hover:bg-surface-soft transition-all cursor-default"
                 >
                   <td className="py-6 px-8">
                     <div className="flex items-center gap-4">
@@ -257,10 +257,10 @@ const PatientsTable = ({ externalSearch = "" }) => {
                         {(patient.fullName || "?")[0]}
                       </div>
                       <div>
-                        <p className="font-black text-brand-deep text-sm tracking-tight">
+                        <p className="font-black text-text-main text-sm tracking-tight">
                           {patient.fullName || "უცნობი პაციენტი"}
                         </p>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+                        <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-0.5">
                           ID: {patient.personalId || "N/A"}
                         </p>
                       </div>
@@ -268,12 +268,12 @@ const PatientsTable = ({ externalSearch = "" }) => {
                   </td>
                   <td className="py-6 px-8">
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-brand-deep font-bold text-xs">
-                        <Phone size={14} className="text-gray-400" />{" "}
+                      <div className="flex items-center gap-2 text-text-main font-bold text-xs">
+                        <Phone size={14} className="text-text-muted" />{" "}
                         {patient.phone}
                       </div>
                       {patient.email && (
-                        <div className="flex items-center gap-2 text-gray-400 font-medium text-[11px]">
+                        <div className="flex items-center gap-2 text-text-muted font-medium text-[11px]">
                           <History size={12} /> {patient.email}
                         </div>
                       )}
@@ -281,21 +281,21 @@ const PatientsTable = ({ externalSearch = "" }) => {
                   </td>
                   <td className="py-6 px-8">
                     {patient.allergies ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-red-100">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-red-500/20">
                         ⚠ ალერგიული
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-emerald-100">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">
                         ✓ ნორმალური
                       </span>
                     )}
                   </td>
                   <td className="py-6 px-8">
                     <div className="flex flex-col">
-                      <span className="font-bold text-xs text-brand-deep">
+                      <span className="font-bold text-xs text-text-main">
                         {patient.lastVisit || "ვიზიტები არ არის"}
                       </span>
-                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+                      <span className="text-[10px] text-text-muted font-bold uppercase tracking-tight">
                         ჯავშნები: {patient.appointmentCount || 0}
                       </span>
                     </div>
@@ -341,8 +341,8 @@ const PatientsTable = ({ externalSearch = "" }) => {
 
       {/* --- Pagination Footer --- */}
       {totalPages > 1 && (
-        <div className="px-8 py-5 border-t border-gray-50 bg-slate-50/30 flex items-center justify-between shrink-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+        <div className="px-8 py-5 border-t border-border-main bg-surface-soft/30 flex items-center justify-between shrink-0">
+          <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">
             გვერდი {currentPage} / {totalPages} — სულ {filteredPatients.length} პაციენტი
           </p>
           <div className="flex items-center gap-2">
@@ -351,8 +351,8 @@ const PatientsTable = ({ externalSearch = "" }) => {
               disabled={currentPage === 1}
               className={`p-2.5 cursor-pointer rounded-xl border transition-all ${
                 currentPage === 1 
-                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed" 
-                : "bg-white text-brand-deep border-gray-200 hover:border-brand-purple hover:text-brand-purple active:scale-90"
+                ? "bg-surface-soft text-text-muted border-border-main cursor-not-allowed" 
+                : "bg-surface text-text-main border-border-dark hover:border-brand-purple hover:text-brand-purple active:scale-90"
               }`}
             >
               <ChevronLeft size={18} />
@@ -362,7 +362,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
               {[...Array(totalPages)].map((_, index) => {
                 const pageNum = index + 1;
                 if (totalPages > 5 && (pageNum !== 1 && pageNum !== totalPages && Math.abs(pageNum - currentPage) > 1)) {
-                    if (pageNum === currentPage - 2 || pageNum === currentPage + 2) return <span key={pageNum} className="text-gray-300">...</span>;
+                    if (pageNum === currentPage - 2 || pageNum === currentPage + 2) return <span key={pageNum} className="text-text-muted">...</span>;
                     return null;
                 }
                 return (
@@ -372,7 +372,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
                     className={`w-9 cursor-pointer h-9 rounded-xl text-[10px] font-black transition-all ${
                       currentPage === pageNum
                       ? "bg-brand-purple text-white shadow-lg shadow-brand-purple/20"
-                      : "text-gray-400 hover:bg-gray-100"
+                      : "text-text-muted hover:bg-surface-soft"
                     }`}
                   >
                     {pageNum}
@@ -386,8 +386,8 @@ const PatientsTable = ({ externalSearch = "" }) => {
               disabled={currentPage === totalPages}
               className={`p-2.5 cursor-pointer rounded-xl border transition-all ${
                 currentPage === totalPages 
-                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed" 
-                : "bg-white text-brand-deep border-gray-200 hover:border-brand-purple hover:text-brand-purple active:scale-90"
+                ? "bg-surface-soft text-text-muted border-border-main cursor-not-allowed" 
+                : "bg-surface text-text-main border-border-dark hover:border-brand-purple hover:text-brand-purple active:scale-90"
               }`}
             >
               <ChevronRight size={18} />

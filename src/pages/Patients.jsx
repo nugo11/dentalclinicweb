@@ -56,25 +56,25 @@ const Patients = () => {
         <title>პაციენტები — DentalHub</title>
       </Helmet>
 
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
           <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-          <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#F8FAFC] custom-scrollbar flex flex-col">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-surface-soft custom-scrollbar flex flex-col">
             <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 shrink-0">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-white shadow-sm border border-gray-100 rounded-[20px] flex items-center justify-center text-brand-purple">
+                  <div className="w-14 h-14 bg-surface shadow-sm border border-border-main rounded-[20px] flex items-center justify-center text-brand-purple">
                     <Users size={24} />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-black text-brand-deep italic tracking-tighter">პაციენტების ბაზა</h1>
+                    <h1 className="text-3xl font-black text-text-main italic tracking-tighter">პაციენტების ბაზა</h1>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">სულ რეგისტრირებულია:</p>
-                      <span className={`text-xs font-black px-2 py-0.5 rounded-md ${isLimitReached ? 'bg-red-50 text-red-500' : 'bg-brand-purple/10 text-brand-purple'}`}>
+                      <p className="text-text-muted font-bold text-xs uppercase tracking-widest">სულ რეგისტრირებულია:</p>
+                      <span className={`text-xs font-black px-2 py-0.5 rounded-md ${isLimitReached ? 'bg-red-500/10 text-red-500' : 'bg-brand-purple/10 text-brand-purple'}`}>
                         {patientsCount} {maxPatients === Infinity ? '(ულიმიტო)' : `/ ${maxPatients}`}
                       </span>
                     </div>
@@ -86,7 +86,7 @@ const Patients = () => {
                   onClick={() => setIsAddModalOpen(true)}
                   className={`flex items-center gap-3 px-6 py-4 rounded-[20px] shadow-xl transition-all active:scale-95 group
                     ${isLimitReached
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                      ? 'bg-surface-soft text-text-muted cursor-not-allowed shadow-none'
                       : 'bg-brand-purple text-white hover:bg-brand-deep shadow-brand-purple/20'
                     }`}
                 >

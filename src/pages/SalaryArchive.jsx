@@ -167,7 +167,7 @@ const SalaryArchive = () => {
       <Helmet>
         <title>ხელფასების არქივი — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -180,37 +180,37 @@ const SalaryArchive = () => {
               <div>
                 <button 
                   onClick={() => navigate(-1)}
-                  className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 hover:text-brand-purple transition-colors"
+                  className="flex items-center gap-2 text-[10px] font-black text-text-muted uppercase tracking-widest mb-4 hover:text-brand-purple transition-colors"
                 >
                   <ArrowLeft size={14} /> უკან დაბრუნება
                 </button>
-                <h1 className="text-3xl font-black text-brand-deep italic tracking-tighter">ხელფასების არქივი</h1>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1 italic">
+                <h1 className="text-3xl font-black text-text-main italic tracking-tighter">ხელფასების არქივი</h1>
+                <p className="text-xs text-text-muted font-bold uppercase tracking-widest mt-1 italic">
                   გაცემული ხელფასების სრული ისტორია
                 </p>
               </div>
 
               <div className="relative group">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-purple transition-colors" size={18} />
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors" size={18} />
                 <input 
                   type="text"
                   placeholder="ძებნა (სახელი)..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-14 pr-6 py-4 bg-white border border-slate-100 rounded-2xl outline-none font-bold text-sm w-72 shadow-sm focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/5 transition-all"
+                  className="pl-14 pr-6 py-4 bg-surface border border-border-main rounded-2xl outline-none font-bold text-sm w-72 shadow-sm focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/5 transition-all"
                 />
               </div>
             </div>
 
-            <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+            <div className="bg-surface rounded-[40px] border border-border-main shadow-sm overflow-hidden">
+              <div className="p-8 border-b border-border-main flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-brand-purple/10 text-brand-purple rounded-xl flex items-center justify-center">
                     <History size={20} />
                   </div>
-                  <h3 className="text-xl font-black text-brand-deep italic">ტრანზაქციების ისტორია</h3>
+                  <h3 className="text-xl font-black text-text-main italic">ტრანზაქციების ისტორია</h3>
                 </div>
-                <span className="px-4 py-2 bg-slate-50 rounded-xl text-[10px] font-black uppercase text-gray-400 tracking-widest border border-slate-100 italic">
+                <span className="px-4 py-2 bg-surface-soft rounded-xl text-[10px] font-black uppercase text-text-muted tracking-widest border border-border-main italic">
                   სულ: {filteredHistory.length} ჩანაწერი
                 </span>
               </div>
@@ -218,31 +218,31 @@ const SalaryArchive = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/50">
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">თანამშრომელი / აღწერა</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">თარიღი</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">პერიოდი</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">თანხა</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest text-center">მოქმედება</th>
+                    <tr className="bg-surface-soft/50">
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">თანამშრომელი / აღწერა</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">თარიღი</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">პერიოდი</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">თანხა</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest text-center">მოქმედება</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-border-main">
                     {loading ? (
                       <tr>
-                        <td colSpan={5} className="p-20 text-center text-slate-300 uppercase font-black text-[10px] tracking-widest">
+                        <td colSpan={5} className="p-20 text-center text-text-muted uppercase font-black text-[10px] tracking-widest">
                            იტვირთება...
                         </td>
                       </tr>
                     ) : filteredHistory.length > 0 ? (
                       filteredHistory.map((h) => (
-                        <tr key={h.id} className="hover:bg-slate-50/50 transition-colors group">
+                        <tr key={h.id} className="hover:bg-surface-soft/50 transition-colors group">
                           <td className="p-6">
-                            <h5 className="font-bold text-brand-deep">{h.description?.replace('ხელფასი: ', '')}</h5>
-                            <p className="text-[9px] text-slate-400 uppercase font-black mt-0.5 tracking-tighter">
+                            <h5 className="font-bold text-text-main">{h.description?.replace('ხელფასი: ', '')}</h5>
+                            <p className="text-[9px] text-text-muted uppercase font-black mt-0.5 tracking-tighter">
                                ხელფასის გაცემა
                             </p>
                           </td>
-                          <td className="p-6 text-sm font-medium text-slate-500 italic">
+                          <td className="p-6 text-sm font-medium text-text-muted italic">
                             {new Date(h.date).toLocaleDateString('ka-GE', { day: 'numeric', month: 'long', year: 'numeric' })}
                           </td>
                           <td className="p-6">
@@ -260,7 +260,7 @@ const SalaryArchive = () => {
                                 <button 
                                  disabled={printingId === h.id}
                                  onClick={() => handlePrint(h)}
-                                 className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all disabled:opacity-50"
+                                 className="p-2 text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all disabled:opacity-50"
                                  title="ბეჭდვა"
                                 >
                                    {printingId === h.id ? <Loader2 className="animate-spin" size={16} /> : <Printer size={16} />}
@@ -268,7 +268,7 @@ const SalaryArchive = () => {
                                 <button 
                                  disabled={printingId === h.id}
                                  onClick={() => handlePrint(h)}
-                                 className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all disabled:opacity-50"
+                                 className="p-2 text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all disabled:opacity-50"
                                  title="PDF ჩამოტვირთვა"
                                 >
                                    {printingId === h.id ? <Loader2 className="animate-spin" size={16} /> : <FileDown size={16} />}
@@ -279,7 +279,7 @@ const SalaryArchive = () => {
                                     setEditTarget(h);
                                     setNewAmount(h.amount.toString());
                                   }}
-                                  className="p-2 text-slate-400 hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all"
+                                  className="p-2 text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all"
                                   title="თანხის ჩასწორება"
                                  >
                                     <Edit size={16} />
@@ -291,7 +291,7 @@ const SalaryArchive = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={isAdmin ? 5 : 4} className="p-20 text-center text-slate-300 uppercase font-black text-[10px] tracking-widest">
+                        <td colSpan={isAdmin ? 5 : 4} className="p-20 text-center text-text-muted uppercase font-black text-[10px] tracking-widest">
                            ჩანაწერები არ მოიძებნა
                         </td>
                       </tr>
@@ -308,24 +308,24 @@ const SalaryArchive = () => {
       {editTarget && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" onClick={() => setEditTarget(null)} />
-          <div className="bg-white rounded-[40px] w-full max-w-sm p-10 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-surface rounded-[40px] w-full max-w-sm p-10 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200">
              <div className="text-center mb-8">
                 <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6">
                    <Edit size={40} />
                 </div>
-                <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter">თანხის ჩასწორება</h3>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">
+                <h3 className="text-2xl font-black text-text-main italic tracking-tighter">თანხის ჩასწორება</h3>
+                <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-2">
                    {editTarget.description?.replace('ხელფასი: ', '')}
                 </p>
              </div>
 
              <div className="space-y-6">
                 <div className="space-y-1">
-                   <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-4">ახალი ოდენობა (₾)</label>
+                   <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ახალი ოდენობა (₾)</label>
                    <input 
                       type="number" 
                       autoFocus
-                      className="w-full bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-5 outline-none font-black text-xl text-brand-deep transition-all"
+                      className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-5 outline-none font-black text-xl text-text-main transition-all"
                       value={newAmount}
                       onChange={(e) => setNewAmount(e.target.value)}
                    />
@@ -334,7 +334,7 @@ const SalaryArchive = () => {
                 <div className="grid grid-cols-2 gap-4">
                    <button 
                       onClick={() => setEditTarget(null)}
-                      className="py-5 bg-slate-50 text-slate-400 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all"
+                      className="py-5 bg-surface-soft text-text-muted rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-surface-soft transition-all"
                    >
                       გაუქმება
                    </button>

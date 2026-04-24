@@ -2,13 +2,13 @@ import React from 'react';
 
 const Tooth = ({ number, status, onClick }) => {
   const statusConfig = {
-    healthy: { color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 shadow-sm', iconColor: 'text-emerald-500', label: 'ჯანსაღი' },
-    caries: { color: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100 shadow-sm', iconColor: 'text-amber-500', label: 'კარიესი' },
-    pulpitis: { color: 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100 shadow-sm', iconColor: 'text-red-500', label: 'პულპიტი' },
-    filling: { color: 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100 shadow-sm', iconColor: 'text-blue-500', label: 'ბჟენი' },
+    healthy: { color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-100 shadow-sm', iconColor: 'text-emerald-500', label: 'ჯანსაღი' },
+    caries: { color: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-100 shadow-sm', iconColor: 'text-amber-500', label: 'კარიესი' },
+    pulpitis: { color: 'bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-100 shadow-sm', iconColor: 'text-red-500', label: 'პულპიტი' },
+    filling: { color: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-100 shadow-sm', iconColor: 'text-blue-500', label: 'ბჟენი' },
     implant: { color: 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100 shadow-sm', iconColor: 'text-indigo-500', label: 'იმპლანტი' },
-    missing: { color: 'bg-slate-50 text-slate-300 border-slate-100 opacity-40', iconColor: 'text-slate-300', label: 'არ არის' },
-    default: { color: 'bg-white text-gray-400 border-gray-100 hover:border-brand-purple shadow-sm', iconColor: 'text-gray-200', label: '-' }
+    missing: { color: 'bg-surface-soft text-text-muted border-border-main opacity-40', iconColor: 'text-text-muted', label: 'არ არის' },
+    default: { color: 'bg-surface text-text-muted border-border-main hover:border-brand-purple shadow-sm', iconColor: 'text-text-muted', label: '-' }
   };
 
   const current = statusConfig[status] || statusConfig.default;
@@ -34,7 +34,7 @@ const Tooth = ({ number, status, onClick }) => {
         <span className={`text-[7px] font-black uppercase tracking-tighter block leading-none px-1`}>{current.label}</span>
       </div>
       {status && status !== 'healthy' && (
-        <div className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white border-2 border-current flex items-center justify-center shadow-sm">
+        <div className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-surface border-2 border-current flex items-center justify-center shadow-sm">
             <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
         </div>
       )}

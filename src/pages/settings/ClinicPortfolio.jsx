@@ -54,9 +54,9 @@ const DIRECTIONS = [
   "რენტგენო-დიაგნოსტიკა"
 ];
 const UpgradeOverlay = ({ title }) => (
-  <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-slate-200 group-hover:border-brand-purple/20 transition-all">
-     <Lock className="text-slate-400 mb-2" size={24} />
-     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">{title || "Upgrade Required"}</p>
+  <div className="absolute inset-0 bg-surface/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-border-dark group-hover:border-brand-purple/20 transition-all">
+     <Lock className="text-text-muted mb-2" size={24} />
+     <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-4">{title || "Upgrade Required"}</p>
      <Link to="/settings/billing" className="px-4 py-2 bg-brand-purple text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">გაუმჯობესება</Link>
   </div>
 );
@@ -281,7 +281,7 @@ const ClinicPortfolio = () => {
       <Helmet>
         <title>პორტფოლიო და პარამეტრები — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -292,21 +292,21 @@ const ClinicPortfolio = () => {
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div>
-                <h1 className="text-3xl font-black text-brand-deep italic tracking-tighter">კლინიკის პორტფოლიო</h1>
-                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-1 italic">მართეთ თქვენი საჯარო გვერდი და კატალოგი</p>
+                <h1 className="text-3xl font-black text-text-main italic tracking-tighter">კლინიკის პორტფოლიო</h1>
+                <p className="text-text-muted text-xs font-bold uppercase tracking-widest mt-1 italic">მართეთ თქვენი საჯარო გვერდი და კატალოგი</p>
               </div>
               <div className="flex items-center gap-3">
                 {toast.text && (
                   <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-3xl shadow-2xl border flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 text-[11px] font-black uppercase tracking-widest ${
                     toast.type === "success" 
-                      ? "bg-white text-emerald-600 border-emerald-100" 
-                      : "bg-white text-red-500 border-red-100"
+                      ? "bg-surface text-emerald-600 border-emerald-500/20" 
+                      : "bg-surface text-red-500 border-red-500/20"
                   }`}>
                     {toast.type === "success" ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
                     {toast.text}
                   </div>
                 )}
-                <Link to={`/catalog/${clinicData.id}`} className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-brand-purple hover:bg-brand-purple hover:text-white transition-all shadow-sm">
+                <Link to={`/catalog/${clinicData.id}`} className="flex items-center gap-2 px-6 py-3 bg-surface border border-border-main rounded-2xl text-[10px] font-black uppercase tracking-widest text-brand-purple hover:bg-brand-purple hover:text-white transition-all shadow-sm">
                    <ExternalLink size={14} /> ჩემი გვერდი
                 </Link>
               </div>
@@ -314,14 +314,14 @@ const ClinicPortfolio = () => {
 
             <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                <div className="lg:col-span-7 space-y-8">
-                  <div className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
+                  <div className="bg-surface p-10 rounded-[40px] border border-border-main shadow-sm space-y-8">
                      <div className="flex items-center gap-6">
                         <div className="relative group">
-                           <div className="w-32 h-32 bg-slate-50 rounded-[32px] border-4 border-white shadow-xl flex items-center justify-center overflow-hidden">
+                           <div className="w-32 h-32 bg-surface-soft rounded-[32px] border-4 border-border-main shadow-xl flex items-center justify-center overflow-hidden">
                               {formData.logoUrl ? (
                                 <img src={formData.logoUrl} className="w-full h-full object-cover" alt="Logo" />
                               ) : (
-                                <ImageIcon className="text-slate-200" size={40} />
+                                <ImageIcon className="text-text-muted" size={40} />
                               )}
                               {uploading && <div className="absolute inset-0 bg-brand-deep/50 flex items-center justify-center text-white"><Loader2 className="animate-spin" /></div>}
                            </div>
@@ -334,7 +334,7 @@ const ClinicPortfolio = () => {
                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/5 text-brand-purple rounded-full text-[9px] font-black uppercase tracking-widest mb-3">
                               პაკეტი: {plan.title}
                            </div>
-                           <h3 className="text-xl font-black text-brand-deep italic">ლოგო და სახელი</h3>
+                           <h3 className="text-xl font-black text-text-main italic">ლოგო და სახელი</h3>
                         </div>
                      </div>
 
@@ -347,11 +347,11 @@ const ClinicPortfolio = () => {
                      </div>
                   </div>
 
-                  <div className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
+                  <div className="bg-surface p-10 rounded-[40px] border border-border-main shadow-sm space-y-8">
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                            <Layout className="text-brand-purple" size={20} />
-                           <h3 className="text-sm font-black uppercase tracking-widest text-brand-deep italic">მიმართულებები</h3>
+                           <h3 className="text-sm font-black uppercase tracking-widest text-text-main italic">მიმართულებები</h3>
                         </div>
                      </div>
                      
@@ -363,7 +363,7 @@ const ClinicPortfolio = () => {
                                 value={customDir} 
                                 onChange={e => setCustomDir(e.target.value)}
                                 placeholder="სხვა მიმართულება..."
-                                className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-brand-purple transition-all"
+                                className="flex-1 bg-surface-soft border border-border-main rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-brand-purple transition-all"
                              />
                              <button type="button" onClick={addCustomSpecialty} className="p-3 bg-brand-purple text-white rounded-xl hover:bg-brand-deep transition-all shadow-md">
                                 <Plus size={18} />
@@ -375,7 +375,7 @@ const ClinicPortfolio = () => {
                            {DIRECTIONS.map(s => (
                               <button 
                                 key={s} type="button" onClick={() => toggleSpecialty(s)}
-                                className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${formData.specialties.includes(s) ? "bg-brand-purple text-white border-brand-purple" : "bg-slate-50 text-slate-500 border-transparent"}`}
+                                className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${formData.specialties.includes(s) ? "bg-brand-purple text-white border-brand-purple" : "bg-surface-soft text-text-muted border-transparent"}`}
                               >
                                  <span className="text-[11px] font-black uppercase tracking-tight">{s}</span>
                               </button>
@@ -397,8 +397,8 @@ const ClinicPortfolio = () => {
                </div>
 
                <div className="lg:col-span-5 space-y-8">
-                  <div className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm space-y-8">
-                     <h3 className="text-xl font-black text-brand-deep italic flex items-center gap-3">
+                  <div className="bg-surface p-10 rounded-[40px] border border-border-main shadow-sm space-y-8">
+                     <h3 className="text-xl font-black text-text-main italic flex items-center gap-3">
                         <Phone className="text-brand-purple" size={20} /> კონტაქტი
                      </h3>
                      <div className="space-y-6">
@@ -420,30 +420,30 @@ const ClinicPortfolio = () => {
                      </div>
                   </div>
 
-                  <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
+                  <div className="bg-surface p-10 rounded-[40px] border border-border-main shadow-sm space-y-8">
                      <div className="flex items-center gap-3">
                         <Lock className="text-brand-purple" size={20} />
-                        <h3 className="text-sm font-black uppercase tracking-widest text-brand-deep italic">იურიდიული მონაცემები (ინვოისისთვის)</h3>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-text-main italic">იურიდიული მონაცემები (ინვოისისთვის)</h3>
                      </div>
 
                      <div className="space-y-6">
                         <FormInput label="კომპანიის იურიდიული დასახელება" value={formData.legalName} onChange={val => setFormData({...formData, legalName: val})} />
                         <FormInput label="საიდენტიფიკაციო კოდი" value={formData.idCode} onChange={val => setFormData({...formData, idCode: val})} />
                         
-                        <div className="space-y-4 pt-4 border-t border-slate-50">
+                        <div className="space-y-4 pt-4 border-t border-border-main">
                            <div className="flex justify-between items-center">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">საბანკო რეკვიზიტები</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">საბანკო რეკვიზიტები</p>
                               <button 
                                  type="button" 
                                  onClick={() => setFormData(prev => ({ ...prev, bankAccounts: [...prev.bankAccounts, { bankName: "", iban: "" }] }))}
-                                 className="text-[10px] font-black text-brand-purple hover:text-brand-deep flex items-center gap-1"
+                                 className="text-[10px] font-black text-brand-purple hover:text-text-main flex items-center gap-1"
                               >
                                  <Plus size={14} /> ბანკის დამატება
                               </button>
                            </div>
                            
                            {formData.bankAccounts.map((acc, index) => (
-                              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl relative group/bank">
+                              <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-surface-soft rounded-2xl relative group/bank">
                                  <FormInput 
                                     label="მიმღები ბანკი" 
                                     value={acc.bankName} 
@@ -478,32 +478,32 @@ const ClinicPortfolio = () => {
                            ))}
                         </div>
                         
-                        <div className="pt-4 border-t border-slate-50">
-                           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">კლინიკის შტამპი / ბეჭედი</p>
+                        <div className="pt-4 border-t border-border-main">
+                           <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-4">კლინიკის შტამპი / ბეჭედი</p>
                            <div className="flex items-center gap-6">
-                              <div className="w-24 h-24 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden relative group/stamp">
+                              <div className="w-24 h-24 bg-surface-soft rounded-2xl border-2 border-dashed border-border-dark flex items-center justify-center overflow-hidden relative group/stamp">
                                  {formData.stampUrl ? (
                                    <img src={formData.stampUrl} className="w-full h-full object-contain" alt="Stamp" />
                                  ) : (
-                                   <Camera className="text-slate-200" size={24} />
+                                   <Camera className="text-text-muted" size={24} />
                                  )}
                                  <label className="absolute inset-0 bg-brand-purple/80 text-white flex items-center justify-center opacity-0 group-hover/stamp:opacity-100 transition-all cursor-pointer">
                                     <Camera size={20} />
                                     <input type="file" className="hidden" accept="image/*" onChange={handleStampUpload} />
                                  </label>
                               </div>
-                              <p className="text-[9px] text-slate-400 font-bold max-w-[200px]">ატვირთეთ PNG ან JPG ფორმატის ბეჭედი (სასურველია გამჭვირვალე ფონით)</p>
+                              <p className="text-[9px] text-text-muted font-bold max-w-[200px]">ატვირთეთ PNG ან JPG ფორმატის ბეჭედი (სასურველია გამჭვირვალე ფონით)</p>
                            </div>
                         </div>
                      </div>
                   </div>
 
-                  <div className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm">
+                  <div className="bg-surface p-10 rounded-[40px] border border-border-main shadow-sm">
                      <button type="button" onClick={() => setFormData({...formData, isPublic: !formData.isPublic})} className="flex items-center gap-4 group cursor-pointer w-full">
-                        <div className={`w-14 h-8 rounded-full transition-all duration-300 flex items-center px-1 ${formData.isPublic ? "bg-emerald-500" : "bg-gray-200"}`}>
-                           <div className={`w-6 h-6 bg-white rounded-full shadow-sm transition-all duration-300 transform ${formData.isPublic ? "translate-x-6" : "translate-x-0"}`} />
+                        <div className={`w-14 h-8 rounded-full transition-all duration-300 flex items-center px-1 ${formData.isPublic ? "bg-emerald-500" : "bg-surface-soft"}`}>
+                           <div className={`w-6 h-6 bg-surface rounded-full shadow-sm transition-all duration-300 transform ${formData.isPublic ? "translate-x-6" : "translate-x-0"}`} />
                         </div>
-                        <div className="text-left"><span className="text-xs font-black text-brand-deep uppercase tracking-widest block">საჯარო სტატუსი</span></div>
+                        <div className="text-left"><span className="text-xs font-black text-text-main uppercase tracking-widest block">საჯარო სტატუსი</span></div>
                      </button>
                      <button type="submit" disabled={loading} className="w-full mt-10 py-5 bg-brand-deep text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-brand-purple transition-all flex justify-center items-center gap-3">
                         {loading ? <Loader2 className="animate-spin" size={20} /> : <><Save size={20} /> შენახვა</>}

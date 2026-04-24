@@ -287,18 +287,18 @@ const AuthPage = () => {
       <Helmet>
         <title>{isLogin ? "ავტორიზაცია" : "რეგისტრაცია"} — DentalHub</title>
       </Helmet>
-      <div className="min-h-screen lg:h-screen w-full bg-[#F8FAFC] font-nino flex overflow-hidden">
+      <div className="min-h-screen lg:h-screen w-full bg-surface-soft font-nino flex overflow-hidden">
       
       {/* --- მარცხენა პანელი: Modern & Sharp --- */}
       <div className={`hidden lg:flex relative w-[45%] h-screen p-20 flex-col justify-between text-white transition-all duration-1000 ease-in-out ${!isLogin ? "bg-brand-purple" : "bg-brand-deep"}`}>
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-white/5 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-surface/5 blur-[120px] rounded-full animate-pulse" />
           <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] bg-brand-purple/20 blur-[100px] rounded-full" />
         </div>
 
         <div className="relative z-10">
           <Link to="/" className="flex items-center gap-4 group">
-            <div className="w-14 h-14 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[22px] flex items-center justify-center group-hover:bg-white group-hover:text-brand-deep transition-all duration-500 shadow-xl">
+            <div className="w-14 h-14 bg-surface/10 backdrop-blur-2xl border border-white/20 rounded-[22px] flex items-center justify-center group-hover:bg-surface group-hover:text-text-main transition-all duration-500 shadow-xl">
               <Activity size={32} />
             </div>
             <span className="text-4xl font-black italic tracking-tighter">DentalHub</span>
@@ -324,12 +324,12 @@ const AuthPage = () => {
       </div>
 
       {/* --- მარჯვენა პანელი: White & Clean --- */}
-      <div className="flex-1 min-h-screen lg:h-full flex items-center justify-center p-4 sm:p-8 bg-white lg:bg-[#F8FAFC] overflow-y-auto">
-        <div className="max-w-[520px] w-full bg-white lg:p-14 rounded-[32px] lg:rounded-[56px] lg:shadow-[0_40px_100px_rgba(0,0,0,0.03)] transition-all py-6 sm:py-0">
+      <div className="flex-1 min-h-screen lg:h-full flex items-center justify-center p-4 sm:p-8 bg-surface lg:bg-surface-soft overflow-y-auto">
+        <div className="max-w-[520px] w-full bg-surface lg:p-14 rounded-[32px] lg:rounded-[56px] lg:shadow-[0_40px_100px_rgba(0,0,0,0.03)] transition-all py-6 sm:py-0">
           {authStep === "credentials" && (
             <button
               onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
-              className="lg:hidden mb-4 flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-brand-deep"
+              className="lg:hidden mb-4 flex items-center gap-2 text-[10px] font-black uppercase text-text-muted hover:text-text-main"
             >
               <ChevronLeft size={16} /> უკან
             </button>
@@ -341,10 +341,10 @@ const AuthPage = () => {
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-purple/5 text-brand-purple rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
                   <Sparkles size={14} /> Intelligence Platform
                 </div>
-                <h3 className="text-3xl sm:text-5xl font-black text-brand-deep italic tracking-tighter mb-3">
+                <h3 className="text-3xl sm:text-5xl font-black text-text-main italic tracking-tighter mb-3">
                   {isLogin ? "ავტორიზაცია" : "რეგისტრაცია"}
                 </h3>
-                <p className="text-gray-400 text-[11px] font-black uppercase tracking-[0.2em] leading-relaxed">
+                <p className="text-text-muted text-[11px] font-black uppercase tracking-[0.2em] leading-relaxed">
                    {isLogin ? "კეთილი იყოს თქვენი მობრძანება" : "შექმენით თქვენი კლინიკის ციფრული პროფილი"}
                 </p>
               </div>
@@ -382,7 +382,7 @@ const AuthPage = () => {
 
                 <div className="relative">
                   <InputField icon={Lock} type={showPassword ? "text" : "password"} placeholder="პაროლი" value={password} onChange={setPassword} error={formErrors.password} />
-                  <button type="button" tabIndex="-1" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-[26px] text-gray-300 hover:text-brand-purple transition-colors outline-none">
+                  <button type="button" tabIndex="-1" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-[26px] text-text-muted hover:text-brand-purple transition-colors outline-none">
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
@@ -394,7 +394,7 @@ const AuthPage = () => {
                       type="button"
                       onClick={handlePasswordReset}
                       disabled={isLoading}
-                      className="text-[10px] font-black uppercase tracking-widest text-brand-purple hover:text-brand-deep transition-colors disabled:opacity-50"
+                      className="text-[10px] font-black uppercase tracking-widest text-brand-purple hover:text-text-main transition-colors disabled:opacity-50"
                     >
                       პაროლის აღდგენა
                     </button>
@@ -402,7 +402,7 @@ const AuthPage = () => {
                 )}
 
                 {resetMessage && (
-                  <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                  <div className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
                     <p className="text-[11px] text-emerald-600 font-black text-center uppercase tracking-tight">
                       {resetMessage}
                     </p>
@@ -410,7 +410,7 @@ const AuthPage = () => {
                 )}
 
                 {formErrors.general && (
-                   <div className="p-4 bg-red-50 rounded-2xl border border-red-100 animate-in shake duration-300">
+                   <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20 animate-in shake duration-300">
                       <p className="text-[11px] text-red-500 font-black text-center uppercase tracking-tight">{formErrors.general}</p>
                    </div>
                 )}
@@ -430,7 +430,7 @@ const AuthPage = () => {
               </form>
 
               <div className="mt-10 text-center">
-                <button onClick={() => { setIsLogin(!isLogin); setFormErrors({}); }} className="text-gray-400 font-black text-[11px] uppercase tracking-widest hover:text-brand-purple transition-colors">
+                <button onClick={() => { setIsLogin(!isLogin); setFormErrors({}); }} className="text-text-muted font-black text-[11px] uppercase tracking-widest hover:text-brand-purple transition-colors">
                   {isLogin ? "ახალი კლინიკის რეგისტრაცია" : "უკვე გაქვთ პროფილი? შესვლა"}
                 </button>
               </div>
@@ -440,27 +440,27 @@ const AuthPage = () => {
           {authStep === "staff_select" && (
             <div className="animate-in fade-in slide-in-from-right-8 duration-500">
                <div className="mb-10">
-                  <h3 className="text-3xl font-black text-brand-deep italic tracking-tighter mb-2">ვინ ხართ?</h3>
-                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">აირჩიეთ თქვენი პროფილი სამუშაოდ</p>
+                  <h3 className="text-3xl font-black text-text-main italic tracking-tighter mb-2">ვინ ხართ?</h3>
+                  <p className="text-text-muted text-[10px] font-black uppercase tracking-widest">აირჩიეთ თქვენი პროფილი სამუშაოდ</p>
                </div>
                <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {staffList.map((member) => (
                     <button 
                       key={member.id}
                       onClick={() => handleStaffSelect(member)}
-                      className="p-6 bg-gray-50 border-2 border-transparent hover:border-brand-purple hover:bg-white rounded-[32px] transition-all group text-left"
+                      className="p-6 bg-surface-soft border-2 border-transparent hover:border-brand-purple hover:bg-surface rounded-[32px] transition-all group text-left"
                     >
                        <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center mb-4 group-hover:bg-brand-purple group-hover:text-white transition-all font-black text-xl">
                           {member.fullName ? member.fullName[0] : "?"}
                        </div>
-                       <h4 className="font-black text-brand-deep text-sm leading-tight">{member.fullName}</h4>
-                       <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">{member.role}</p>
+                       <h4 className="font-black text-text-main text-sm leading-tight">{member.fullName}</h4>
+                       <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest mt-1">{member.role}</p>
                     </button>
                   ))}
                </div>
                <button 
                 onClick={() => { auth.signOut(); setAuthStep("credentials"); }}
-                className="w-full mt-8 py-5 border-2 border-dashed border-gray-100 text-gray-400 rounded-[28px] font-black text-[10px] uppercase tracking-widest hover:border-red-200 hover:text-red-400 transition-all"
+                className="w-full mt-8 py-5 border-2 border-dashed border-border-main text-text-muted rounded-[28px] font-black text-[10px] uppercase tracking-widest hover:border-red-200 hover:text-red-400 transition-all"
                >
                  სხვა კლინიკა
                </button>
@@ -469,19 +469,19 @@ const AuthPage = () => {
 
           {authStep === "staff_pin" && (
             <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-              <button onClick={() => setAuthStep("staff_select")} className="mb-10 flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-brand-deep">
+              <button onClick={() => setAuthStep("staff_select")} className="mb-10 flex items-center gap-2 text-[10px] font-black uppercase text-text-muted hover:text-text-main">
                 <ChevronLeft size={16} /> სხვა პროფილი
               </button>
               <div className="text-center mb-12">
                 <div className="w-24 h-24 bg-brand-purple/10 rounded-[38px] flex items-center justify-center mx-auto mb-8 text-brand-purple font-black text-3xl">
                   {selectedStaff?.fullName ? selectedStaff.fullName[0] : "?"}
                 </div>
-                <h3 className="text-4xl font-black text-brand-deep tracking-tighter italic uppercase">შეიყვანეთ PIN</h3>
-                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-4">{selectedStaff?.fullName}, გთხოვთ დაადასტუროთ წვდომა</p>
+                <h3 className="text-4xl font-black text-text-main tracking-tighter italic uppercase">შეიყვანეთ PIN</h3>
+                <p className="text-text-muted text-[10px] font-black uppercase tracking-widest mt-4">{selectedStaff?.fullName}, გთხოვთ დაადასტუროთ წვდომა</p>
               </div>
               <form onSubmit={handleFinalAuth} className="space-y-10">
                 <div className="flex justify-center">
-                  <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 sm:py-6 text-center text-5xl sm:text-6xl tracking-[0.35em] sm:tracking-[0.5em] font-black text-brand-deep bg-gray-50 border-2 border-transparent focus:border-brand-purple rounded-[28px] sm:rounded-[36px] outline-none transition-all" placeholder="••••" />
+                  <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 sm:py-6 text-center text-5xl sm:text-6xl tracking-[0.35em] sm:tracking-[0.5em] pl-[0.35em] sm:pl-[0.5em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] sm:rounded-[36px] outline-none transition-all" placeholder="••••" />
                 </div>
                 {formErrors.pin && <p className="text-center text-[10px] text-red-500 font-black uppercase tracking-widest">{formErrors.pin}</p>}
                 <button disabled={isLoading} className="w-full bg-brand-purple text-white py-7 rounded-[28px] font-black text-xs uppercase tracking-[0.3em] hover:bg-brand-deep transition-all shadow-xl active:scale-[0.98] disabled:opacity-50">
@@ -493,25 +493,25 @@ const AuthPage = () => {
 
           {authStep === "pin" && (
             <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-              <button onClick={() => setAuthStep("credentials")} className="mb-10 flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-brand-deep">
+              <button onClick={() => setAuthStep("credentials")} className="mb-10 flex items-center gap-2 text-[10px] font-black uppercase text-text-muted hover:text-text-main">
                 <ChevronLeft size={16} /> უკან
               </button>
               <div className="text-center mb-12">
                 <div className="w-24 h-24 bg-brand-purple/10 rounded-[38px] flex items-center justify-center mx-auto mb-8 text-brand-purple">
                   <ShieldCheck size={48} />
                 </div>
-                <h3 className="text-4xl font-black text-brand-deep tracking-tighter italic uppercase">შექმენით PIN</h3>
-                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mt-4">ეს არის თქვენი უსაფრთხოების გასაღები</p>
+                <h3 className="text-4xl font-black text-text-main tracking-tighter italic uppercase">შექმენით PIN</h3>
+                <p className="text-text-muted text-[10px] font-black uppercase tracking-widest mt-4">ეს არის თქვენი უსაფრთხოების გასაღები</p>
               </div>
               <form onSubmit={handleFinalAuth} className="space-y-10">
                 <div className="space-y-8">
                   <div className="flex flex-col items-center gap-4">
-                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">ახალი PIN</span>
-                    <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 text-center text-4xl tracking-[0.4em] font-black text-brand-deep bg-gray-50 border-2 border-transparent focus:border-brand-purple rounded-[28px] outline-none transition-all" placeholder="••••" />
+                    <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">ახალი PIN</span>
+                    <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 text-center text-4xl tracking-[0.4em] pl-[0.4em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] outline-none transition-all" placeholder="••••" />
                   </div>
                   <div className="flex flex-col items-center gap-4">
-                    <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">გაიმეორეთ PIN</span>
-                    <input type="password" maxLength={4} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 text-center text-4xl tracking-[0.4em] font-black text-brand-deep bg-gray-50 border-2 border-transparent focus:border-brand-purple rounded-[28px] outline-none transition-all" placeholder="••••" />
+                    <span className="text-[10px] font-black uppercase text-text-muted tracking-widest">გაიმეორეთ PIN</span>
+                    <input type="password" maxLength={4} value={confirmPin} onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 text-center text-4xl tracking-[0.4em] pl-[0.4em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] outline-none transition-all" placeholder="••••" />
                   </div>
                 </div>
                 {formErrors.pin && <p className="text-center text-[10px] text-red-500 font-black uppercase tracking-widest">{formErrors.pin}</p>}
@@ -527,8 +527,8 @@ const AuthPage = () => {
               <div className="w-28 h-28 bg-emerald-500 text-white rounded-[44px] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-emerald-500/30 animate-bounce">
                 <Rocket size={56} />
               </div>
-              <h3 className="text-4xl font-black text-brand-deep tracking-tighter italic mb-6">MABAL SERI!</h3>
-              <p className="text-gray-500 font-bold text-sm leading-relaxed mb-12 max-w-xs mx-auto">
+              <h3 className="text-4xl font-black text-text-main tracking-tighter italic mb-6">MABAL SERI!</h3>
+              <p className="text-text-muted font-bold text-sm leading-relaxed mb-12 max-w-xs mx-auto">
                 თქვენი კლინიკა დარეგისტრირდა <span className="text-brand-purple font-black">Free Plan</span>-ზე. პაკეტის გასაუმჯობესებლად დაგვიკავშირდით:
               </p>
               <div className="space-y-4 mb-12">
@@ -552,16 +552,16 @@ const AuthPage = () => {
 const InputField = ({ icon: Icon, error, value, onChange, ...props }) => (
   <div className="space-y-1 w-full group">
     <div className={`relative border-2 rounded-[26px] transition-all duration-300 ${
-      error ? "border-red-500 bg-red-50 animate-shake" : "border-transparent bg-gray-50 focus-within:border-brand-purple focus-within:bg-white focus-within:shadow-lg focus-within:shadow-brand-purple/5"
+      error ? "border-red-500 bg-red-500/10 animate-shake" : "border-transparent bg-surface-soft focus-within:border-brand-purple focus-within:bg-surface focus-within:shadow-lg focus-within:shadow-brand-purple/5"
     }`}>
       <Icon className={`absolute left-7 top-1/2 -translate-y-1/2 transition-colors ${
-        error ? "text-red-500" : "text-gray-400 group-focus-within:text-brand-purple"
+        error ? "text-red-500" : "text-text-muted group-focus-within:text-brand-purple"
       }`} size={20} />
       <input 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         {...props} 
-        className="w-full pl-16 pr-8 py-5 sm:py-6 bg-transparent outline-none font-bold text-base sm:text-sm text-brand-deep placeholder:text-gray-300 transition-all" 
+        className="w-full pl-16 pr-8 py-5 sm:py-6 bg-transparent outline-none font-bold text-base sm:text-sm text-text-main placeholder:text-text-muted transition-all" 
       />
     </div>
     {error && (
@@ -573,11 +573,11 @@ const InputField = ({ icon: Icon, error, value, onChange, ...props }) => (
 );
 
 const ContactCard = ({ icon: Icon, text }) => (
-  <div className="p-6 bg-gray-50 rounded-[28px] flex items-center gap-5 border border-gray-100 hover:bg-white hover:border-brand-purple/20 transition-all cursor-default">
-    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand-purple shadow-sm">
+  <div className="p-6 bg-surface-soft rounded-[28px] flex items-center gap-5 border border-border-main hover:bg-surface hover:border-brand-purple/20 transition-all cursor-default">
+    <div className="w-12 h-12 bg-surface rounded-2xl flex items-center justify-center text-brand-purple shadow-sm">
       <Icon size={22} />
     </div>
-    <span className="font-black text-brand-deep text-sm">{text}</span>
+    <span className="font-black text-text-main text-sm">{text}</span>
   </div>
 );
 

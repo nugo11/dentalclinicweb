@@ -38,7 +38,7 @@ const QuickActions = () => {
       {(canAddPatient && role !== 'accountant') && (
         <button 
           onClick={() => navigate('/patients?add=true')}
-          className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center text-slate-400 hover:text-brand-purple hover:border-brand-purple hover:bg-white transition-all shadow-sm active:scale-90"
+          className="w-10 h-10 bg-surface-soft border border-border-dark rounded-2xl flex items-center justify-center text-text-muted hover:text-brand-purple hover:border-brand-purple hover:bg-surface transition-all shadow-sm active:scale-90"
           title="პაციენტის სწრაფი დამატება"
         >
           <Plus size={20} />

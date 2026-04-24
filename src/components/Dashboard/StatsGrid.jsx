@@ -57,20 +57,20 @@ const StatsGrid = ({ patientsGrowth = 0, inventoryAlerts = 0, monthlyIncome = 0,
 };
 
 const StatCard = ({ title, value, desc, icon: Icon, iconColor, bgColor, trend, trendColor, isAlert }) => (
-  <div className={`bg-white p-5 rounded-[28px] border ${isAlert ? 'border-amber-200 bg-amber-50/10' : 'border-slate-200/60'} shadow-sm hover:shadow-md transition-all group relative overflow-hidden`}>
+  <div className={`bg-surface p-5 rounded-[28px] border ${isAlert ? 'border-amber-200 bg-amber-500/10/10' : 'border-border-dark/60'} shadow-sm hover:shadow-md transition-all group relative overflow-hidden`}>
     <div className="flex items-center gap-4 relative z-10">
       <div className={`p-3 rounded-2xl ${bgColor} ${iconColor} group-hover:scale-110 transition-transform`}>
         <Icon size={20} />
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{title}</h4>
+        <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-0.5">{title}</h4>
         <div className="flex items-baseline gap-2">
-          <p className="text-xl font-black text-brand-deep italic tracking-tighter">{value}</p>
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{desc}</span>
+          <p className="text-xl font-black text-text-main italic tracking-tighter">{value}</p>
+          <span className="text-[9px] font-bold text-text-muted uppercase tracking-tight">{desc}</span>
         </div>
       </div>
       {trend && (
-        <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${isAlert ? 'bg-amber-500 text-white' : trendColor || 'bg-slate-50 text-slate-400'}`}>
+        <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${isAlert ? 'bg-amber-500 text-white' : trendColor || 'bg-surface-soft text-text-muted'}`}>
           {trend}
         </span>
       )}

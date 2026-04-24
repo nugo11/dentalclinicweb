@@ -18,14 +18,14 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-red-50/30 rounded-[40px] border border-red-100 font-nino">
+        <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-red-500/10/30 rounded-[40px] border border-red-500/20 font-nino">
           <div className="w-16 h-16 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center mb-6">
             <AlertTriangle size={32} />
           </div>
-          <h2 className="text-xl font-black text-brand-deep italic tracking-tight mb-2">
+          <h2 className="text-xl font-black text-text-main italic tracking-tight mb-2">
             უპს! რაღაც შეცდომა მოხდა
           </h2>
-          <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-8 text-center max-w-xs leading-relaxed">
+          <p className="text-xs text-text-muted font-bold uppercase tracking-widest mb-8 text-center max-w-xs leading-relaxed">
             კომპონენტის ჩატვირთვისას დაფიქსირდა ტექნიკური ხარვეზი
           </p>
           <button

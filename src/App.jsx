@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { HelmetProvider, Helmet } from "react-helmet-async";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import ErrorBoundary from "./components/Common/ErrorBoundary";
 
 import LandingPage from "./pages/LandingPage";
@@ -188,9 +189,11 @@ function App() {
   return (
     <HelmetProvider>
       <ErrorBoundary>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </ThemeProvider>
       </ErrorBoundary>
     </HelmetProvider>
   );

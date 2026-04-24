@@ -3,7 +3,7 @@ import { Activity } from 'lucide-react';
 
 const GlobalLoader = () => {
   return (
-    <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
+    <div className="fixed inset-0 z-[9999] bg-surface flex flex-col items-center justify-center">
       {/* Background Ornaments */}
       <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-brand-purple/5 rounded-full blur-[100px] animate-pulse" />
       <div className="absolute bottom-[-10%] left-[-5%] w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[80px]" />
@@ -20,7 +20,7 @@ const GlobalLoader = () => {
 
         {/* Text */}
         <div className="mt-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
-          <h2 className="text-2xl font-black text-brand-deep tracking-tighter italic mb-2">
+          <h2 className="text-2xl font-black text-text-main tracking-tighter italic mb-2">
             Dental<span className="text-brand-purple">Hub</span>
           </h2>
           <div className="flex items-center gap-1.5 justify-center">
@@ -28,7 +28,7 @@ const GlobalLoader = () => {
              <div className="w-1.5 h-1.5 bg-brand-purple rounded-full animate-bounce [animation-delay:-0.15s]"></div>
              <div className="w-1.5 h-1.5 bg-brand-purple rounded-full animate-bounce"></div>
           </div>
-          <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">იტვირთება...</p>
+          <p className="mt-4 text-[10px] font-black text-text-muted uppercase tracking-[0.3em]">იტვირთება...</p>
         </div>
       </div>
     </div>

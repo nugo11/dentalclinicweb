@@ -166,7 +166,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 text-white/30 hover:text-white hover:bg-white/10 rounded-xl transition-all cursor-pointer"
+          className="p-2 text-white/30 hover:text-white hover:bg-surface/10 rounded-xl transition-all cursor-pointer"
         >
           <ChevronLeft
             size={20}
@@ -190,7 +190,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   onClick={() => toggleMenu(item.id)}
                   className={`w-full flex items-center rounded-2xl transition-all cursor-pointer 
                     ${isOpen ? "px-4 py-4 justify-between" : "p-4 justify-center"} 
-                    ${hasActiveSubItem ? "bg-white/10 text-white" : "text-white/50 hover:bg-white/5 hover:text-white"}`}
+                    ${hasActiveSubItem ? "bg-surface/10 text-white" : "text-white/50 hover:bg-surface/5 hover:text-white"}`}
                 >
                   <div className="flex items-center gap-4">
                     <item.icon size={24} className="shrink-0" />
@@ -215,7 +215,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         key={sub.path}
                         to={sub.path}
                         className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all cursor-pointer 
-                          ${location.pathname === sub.path ? "text-brand-purple bg-white shadow-md" : "text-white/40 hover:text-white hover:bg-white/5"}`}
+                          ${location.pathname === sub.path ? "text-brand-purple bg-surface shadow-md" : "text-white/40 hover:text-white hover:bg-surface/5"}`}
                       >
                         <sub.icon size={18} className="shrink-0" />
                         <span className="text-[10px] font-black uppercase tracking-widest">
@@ -235,7 +235,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               to={item.path}
               className={`flex items-center rounded-2xl transition-all cursor-pointer 
                 ${isOpen ? "px-4 py-4 gap-4" : "p-4 justify-center"} 
-                ${location.pathname === item.path ? "bg-brand-purple text-white shadow-lg shadow-brand-purple/20" : "text-white/50 hover:bg-white/5 hover:text-white"}`}
+                ${location.pathname === item.path ? "bg-brand-purple text-white shadow-lg shadow-brand-purple/20" : "text-white/50 hover:bg-surface/5 hover:text-white"}`}
             >
               <item.icon size={24} className="shrink-0" />
               {isOpen && (
@@ -251,7 +251,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {/* --- Upgrade / Plan Section --- */}
       <div className="mt-6 mb-6 px-2 shrink-0">
         {isOpen ? (
-          <div className={`p-5 rounded-[32px] relative overflow-hidden transition-all duration-500 ${isFreePlan ? 'bg-gradient-to-br from-brand-purple to-purple-700 shadow-xl shadow-brand-purple/20' : 'bg-white/5 border border-white/10'}`}>
+          <div className={`p-5 rounded-[32px] relative overflow-hidden transition-all duration-500 ${isFreePlan ? 'bg-gradient-to-br from-brand-purple to-purple-700 shadow-xl shadow-brand-purple/20' : 'bg-surface/5 border border-white/10'}`}>
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-2">
                 <Crown size={14} className={isFreePlan ? "text-white" : "text-brand-purple"} />
@@ -271,12 +271,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                  </p>
               </div>
             </div>
-            <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
+            <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-surface/10 rounded-full blur-xl"></div>
           </div>
         ) : (
           <button 
             onClick={() => isAdmin ? navigate('/settings/billing') : null}
-            className={`w-full aspect-square rounded-2xl flex items-center justify-center transition-all ${isFreePlan ? 'bg-brand-purple text-white animate-pulse shadow-lg shadow-brand-purple/40' : 'bg-white/5 text-white/30 hover:text-white'}`}
+            className={`w-full aspect-square rounded-2xl flex items-center justify-center transition-all ${isFreePlan ? 'bg-brand-purple text-white animate-pulse shadow-lg shadow-brand-purple/40' : 'bg-surface/5 text-white/30 hover:text-white'}`}
           >
             <Crown size={20} />
           </button>

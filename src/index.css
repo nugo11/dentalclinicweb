@@ -2,17 +2,42 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-light: #ffffff;
-  --color-bg-soft: #f1f5f9;
   --color-brand-purple: #7c3aed;
-  --color-brand-deep: #272b41;
+  --color-brand-deep: var(--brand-deep);
   --color-brand-text: #1e293b;
-  /* დარწმუნდი, რომ სახელი ზუსტად ემთხვევა პაკეტის CSS-ში არსებულს */
-  --font-nino: "BPG Nino Mtavruli", sans-serif;
   
-  /* PWA Safe Area Support */
+  /* Semantic Variables */
+  --color-surface: var(--bg-surface);
+  --color-surface-soft: var(--bg-surface-soft);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-main: var(--border-main);
+  --color-border-dark: var(--border-dark);
+
+  /* Fonts & Safe Areas */
+  --font-nino: "BPG Nino Mtavruli", sans-serif;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+:root {
+  --bg-surface: #ffffff;
+  --bg-surface-soft: #f8fafc;
+  --text-main: #272b41;
+  --text-muted: #64748b;
+  --border-main: #f1f5f9;
+  --border-dark: #e2e8f0;
+  --brand-deep: #272b41;
+}
+
+.dark {
+  --bg-surface: #0f172a;
+  --bg-surface-soft: #020617;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-main: #1e293b;
+  --border-dark: #334155;
+  --brand-deep: #0f172a;
 }
 
 /* Tip Card-ის სპეციალური ეფექტი */
@@ -40,7 +65,7 @@
 body {
   font-family: var(--font-nino);
   margin: 0;
-  background: #f8fafc;
+  background: var(--bg-surface-soft);
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -202,21 +227,21 @@ html {
 }
 
 
-.autofill-fix:-webkit-autofill,
+  .autofill-fix:-webkit-autofill,
   .autofill-fix:-webkit-autofill:hover, 
   .autofill-fix:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0px 1000px #F9FAFB inset !important;
-    -webkit-text-fill-color: #0F172A !important; /* მუქი ფერი */
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-surface-soft) inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
     transition: background-color 5000s ease-in-out 0s;
   }
   
   /* ეს ხაზი უზრუნველყოფს რომ ტექსტი ყოველთვის გამოჩნდეს */
   input, select, textarea {
-    color: #0F172A !important; 
+    color: var(--text-main) !important; 
   }
 
   input::placeholder {
-    color: #94A3B8 !important;
+    color: var(--text-muted) !important;
   }
 
 /* App-like mobile behavior for webview */

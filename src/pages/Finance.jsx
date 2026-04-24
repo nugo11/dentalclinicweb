@@ -84,7 +84,7 @@ const Finance = () => {
       <Helmet>
         <title>ფინანსები — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -96,10 +96,10 @@ const Finance = () => {
             {/* Header Section */}
             <div className="flex justify-between items-end">
               <div>
-                <h1 className="text-3xl font-black text-brand-deep italic tracking-tighter">
+                <h1 className="text-3xl font-black text-text-main italic tracking-tighter">
                   ფინანსური მიმოხილვა
                 </h1>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+                <p className="text-xs text-text-muted font-bold uppercase tracking-widest mt-1">
                   შემოსავლების, ხარჯების და მოგების ანალიტიკა
                 </p>
               </div>
@@ -121,33 +121,33 @@ const Finance = () => {
                 amount={stats.expenses}
                 icon={PieChart}
                 color="text-orange-500"
-                bg="bg-orange-50"
+                bg="bg-orange-500/10"
               />
               <StatCard
                 title="დღგ (18%)"
                 amount={stats.vat}
                 icon={Tag}
                 color="text-amber-500"
-                bg="bg-amber-50"
+                bg="bg-amber-500/10"
               />
               <StatCard
                 title="წმინდა მოგება"
                 amount={stats.netProfit}
                 icon={Wallet}
                 color="text-emerald-500"
-                bg="bg-emerald-50"
+                bg="bg-emerald-500/10"
                 highlight={true}
               />
             </div>
 
             {/* Transactions Table */}
-            <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-8 border-b border-gray-50 flex justify-between items-center">
-                <h3 className="text-xl font-black text-brand-deep italic">
+            <div className="bg-surface rounded-[40px] border border-border-main shadow-sm overflow-hidden">
+              <div className="p-8 border-b border-border-main flex justify-between items-center">
+                <h3 className="text-xl font-black text-text-main italic">
                   ბოლო ტრანზაქციები
                 </h3>
                 <div className="flex gap-2">
-                    <span className="px-4 py-2 bg-slate-50 rounded-xl text-[10px] font-black uppercase text-gray-400 tracking-widest border border-gray-100 italic">
+                    <span className="px-4 py-2 bg-surface-soft rounded-xl text-[10px] font-black uppercase text-text-muted tracking-widest border border-border-main italic">
                         სულ: {transactions.length} ვიზიტი
                     </span>
                 </div>
@@ -156,30 +156,30 @@ const Finance = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-50/50">
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">პაციენტი / მომსახურება</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">თარიღი</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">ფასი</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">ხარჯი</th>
-                      <th className="px-8 py-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">დღგ (18%)</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest">გადახდილი</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-gray-400 tracking-widest text-right">ინვოისი</th>
+                    <tr className="bg-surface-soft/50">
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">პაციენტი / მომსახურება</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">თარიღი</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">ფასი</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">ხარჯი</th>
+                      <th className="px-8 py-6 text-left text-[10px] font-black text-text-muted uppercase tracking-widest">დღგ (18%)</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">გადახდილი</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">ინვოისი</th>
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-border-main">
                     {transactions.map((t) => (
-                      <tr key={t.id} className="group hover:bg-slate-50/50 transition-colors">
+                      <tr key={t.id} className="group hover:bg-surface-soft/50 transition-colors">
                         <td className="p-6">
-                          <h5 className="font-bold text-slate-800">{t.patientName}</h5>
-                          <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter truncate max-w-[200px]">
+                          <h5 className="font-bold text-text-main">{t.patientName}</h5>
+                          <p className="text-[10px] text-text-muted uppercase font-bold tracking-tighter truncate max-w-[200px]">
                             {t.billedServices?.map((s) => s.name).join(", ") || "მომსახურება"}
                           </p>
                         </td>
-                        <td className="p-6 text-sm font-medium text-gray-500 italic">
+                        <td className="p-6 text-sm font-medium text-text-muted italic">
                           {t.finalizedAt ? new Date(t.finalizedAt).toLocaleDateString("ka-GE") : "—"}
                         </td>
-                        <td className="p-6 font-bold text-slate-700">{t.price} ₾</td>
+                        <td className="p-6 font-bold text-text-main">{t.price} ₾</td>
                         <td className="p-6">
                            <span className="text-[11px] font-bold text-orange-400">-{t.materialCost || 0} ₾</span>
                         </td>
@@ -194,7 +194,7 @@ const Finance = () => {
                         <td className="p-6 text-right">
                           <button
                             onClick={() => generateInvoice(t, dbClinicData)}
-                            className="p-3 text-gray-400 hover:text-brand-purple hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-gray-100 cursor-pointer active:scale-90"
+                            className="p-3 text-text-muted hover:text-brand-purple hover:bg-surface rounded-xl transition-all shadow-sm border border-transparent hover:border-border-main cursor-pointer active:scale-90"
                           >
                             <Download size={18} />
                           </button>
@@ -219,15 +219,15 @@ const Finance = () => {
 };
 
 const StatCard = ({ title, amount, icon: Icon, color, bg, highlight }) => (
-  <div className={`bg-white p-8 rounded-[32px] border ${highlight ? 'border-emerald-100 shadow-emerald-500/5' : 'border-gray-100'} shadow-sm flex items-center gap-6`}>
+  <div className={`bg-surface p-8 rounded-[32px] border ${highlight ? 'border-emerald-500/20 shadow-emerald-500/5' : 'border-border-main'} shadow-sm flex items-center gap-6`}>
     <div className={`w-16 h-16 ${bg} ${color} rounded-2xl flex items-center justify-center shadow-sm`}>
       <Icon size={28} />
     </div>
     <div>
-      <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">
+      <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-1">
         {title}
       </p>
-      <p className={`text-2xl font-black italic ${highlight ? 'text-emerald-600' : 'text-brand-deep'}`}>
+      <p className={`text-2xl font-black italic ${highlight ? 'text-emerald-600' : 'text-text-main'}`}>
         {Number(amount).toLocaleString()} ₾
       </p>
     </div>

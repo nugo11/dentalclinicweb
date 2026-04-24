@@ -291,25 +291,25 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
         onClick={onClose}
       />
 
-      <div className="app-sheet bg-white rounded-t-[28px] md:rounded-[40px] w-full max-w-4xl shadow-2xl relative z-10 overflow-hidden font-nino flex flex-col max-h-[92vh] md:max-h-[90vh] animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
+      <div className="app-sheet bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-4xl shadow-2xl relative z-10 overflow-hidden font-nino flex flex-col max-h-[92vh] md:max-h-[90vh] animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-5 md:p-8 border-b border-gray-50 flex items-center justify-between bg-slate-50/50">
+        <div className="p-5 md:p-8 border-b border-border-main flex items-center justify-between bg-surface-soft/50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <Receipt size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-brand-deep italic">
+              <h3 className="text-xl font-black text-text-main italic">
                 ანგარიშსწორება
               </h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+              <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">
                 პაციენტი: {orderData.patientName}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:bg-white rounded-xl transition-all"
+            className="p-2 text-text-muted hover:bg-surface rounded-xl transition-all"
           >
             <X size={20} />
           </button>
@@ -319,12 +319,12 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
           {/* მარცხენა მხარე: სერვისების არჩევა */}
           <div className="space-y-6">
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 italic">
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
                 აირჩიე კატალოგიდან
               </label>
               <select
                 disabled={isReadOnly}
-                className="w-full px-5 py-4 bg-gray-50 rounded-2xl outline-none font-bold text-sm text-slate-900 border-2 border-transparent focus:border-brand-purple transition-all cursor-pointer"
+                className="w-full px-5 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm text-text-main border-2 border-transparent focus:border-brand-purple transition-all cursor-pointer"
                 onChange={(e) => {
                   const s = availableServices.find(
                     (serv) => serv.id === e.target.value,
@@ -342,8 +342,8 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
               </select>
             </div>
 
-            <div className="p-6 bg-slate-50 rounded-[32px] space-y-4">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 italic">
+            <div className="p-6 bg-surface-soft rounded-[32px] space-y-4">
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
                 სხვა მომსახურება (ხელით)
               </label>
               <input
@@ -354,7 +354,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                 onChange={(e) =>
                   setCustomService({ ...customService, name: e.target.value })
                 }
-                className={`w-full px-4 py-3 bg-white rounded-xl outline-none text-sm font-bold border ${customServiceErrors.name ? 'border-red-500 animate-shake' : 'border-gray-100'} disabled:opacity-50`}
+                className={`w-full px-4 py-3 bg-surface rounded-xl outline-none text-sm font-bold border ${customServiceErrors.name ? 'border-red-500 animate-shake' : 'border-border-main'} disabled:opacity-50`}
               />
               {!isReadOnly && (
                 <div className="flex gap-2">
@@ -368,7 +368,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                         price: e.target.value,
                       })
                     }
-                    className={`flex-1 px-4 py-3 bg-white rounded-xl outline-none text-sm font-bold border ${customServiceErrors.price ? 'border-red-500 animate-shake' : 'border-gray-100'}`}
+                    className={`flex-1 px-4 py-3 bg-surface rounded-xl outline-none text-sm font-bold border ${customServiceErrors.price ? 'border-red-500 animate-shake' : 'border-border-main'}`}
                   />
                   <button
                     onClick={addCustomService}
@@ -380,13 +380,13 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
               )}
             </div>
 
-            <div className="p-6 bg-amber-50/50 rounded-[32px] space-y-4 border border-amber-100/50">
+            <div className="p-6 bg-amber-500/10 rounded-[32px] space-y-4 border border-amber-500/10">
               <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest ml-2 italic">
                 დამატებითი მასალები საწყობიდან
               </label>
               <select
                 disabled={isReadOnly}
-                className="w-full px-4 py-3 bg-white rounded-xl outline-none text-sm font-bold border border-amber-100"
+                className="w-full px-4 py-3 bg-surface rounded-xl outline-none text-sm font-bold border border-amber-500/20"
                 onChange={(e) => {
                   const m = availableMaterials.find(mat => mat.id === e.target.value);
                   if (m) addExtraMaterial(m);
@@ -401,8 +401,8 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
 
               <div className="space-y-2">
                 {selectedExtraMaterials.map(m => (
-                  <div key={m.id} className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-amber-50">
-                    <span className="text-[10px] font-bold text-slate-700 flex-1">{m.name}</span>
+                  <div key={m.id} className="flex items-center justify-between gap-3 p-3 bg-surface rounded-xl border border-amber-500/10">
+                    <span className="text-[10px] font-bold text-text-main flex-1">{m.name}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-[9px] font-black text-amber-600">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)}₾</span>
                       <div className="flex items-center gap-2">
@@ -410,9 +410,9 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                           type="number" 
                           value={m.amount}
                           onChange={(e) => updateMaterialAmount(m.id, e.target.value)}
-                          className="w-12 py-1 px-2 bg-slate-50 rounded-lg text-[10px] font-black text-center outline-none border border-slate-100"
+                          className="w-12 py-1 px-2 bg-surface-soft rounded-lg text-[10px] font-black text-center outline-none border border-border-main"
                         />
-                        <span className="text-[8px] text-gray-400 uppercase">{m.unit}</span>
+                        <span className="text-[8px] text-text-muted uppercase">{m.unit}</span>
                         <button onClick={() => removeExtraMaterial(m.id)} className="text-red-300 hover:text-red-500"><Trash2 size={12} /></button>
                       </div>
                     </div>
@@ -424,16 +424,16 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
 
           {/* მარჯვენა მხარე: კალათა */}
           <div className="flex flex-col h-full min-h-[300px]">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mb-3 italic block">
+            <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 mb-3 italic block">
               არჩეული მომსახურებები
             </label>
             <div className="flex-1 space-y-2 mb-6">
               {selectedServices.map((s) => (
                 <div
                   key={s.uniqueId}
-                  className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl group animate-in slide-in-from-right-2"
+                  className="flex items-center justify-between p-4 bg-surface border border-border-main rounded-2xl group animate-in slide-in-from-right-2"
                 >
-                  <span className="text-xs font-bold text-brand-deep">
+                  <span className="text-xs font-bold text-text-main">
                     {s.name}
                   </span>
                   <div className="flex items-center gap-3">
@@ -443,7 +443,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                     {!isReadOnly && (
                       <button
                         onClick={() => removeService(s.uniqueId)}
-                        className="text-gray-300 hover:text-red-500 transition-colors"
+                        className="text-text-muted hover:text-red-500 transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -452,7 +452,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                 </div>
               ))}
               {selectedServices.length === 0 && (
-                <p className="text-center py-10 text-gray-300 text-[10px] uppercase font-bold italic tracking-widest">
+                <p className="text-center py-10 text-text-muted text-[10px] uppercase font-bold italic tracking-widest">
                   ჯერ არაფერია არჩეული
                 </p>
               )}
@@ -491,7 +491,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                     key={m.id}
                     disabled={isReadOnly}
                     onClick={() => setPaymentMethod(m.id)}
-                    className={`py-3 rounded-xl flex flex-col items-center gap-1 transition-all border ${paymentMethod === m.id ? 'bg-white text-brand-deep border-white' : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'}`}
+                    className={`py-3 rounded-xl flex flex-col items-center gap-1 transition-all border ${paymentMethod === m.id ? 'bg-surface text-text-main border-brand-purple' : 'bg-surface/5 text-white/60 border-white/10 hover:bg-surface/10'}`}
                   >
                     <m.icon size={14} />
                     <span className="text-[8px] font-black uppercase tracking-widest">{m.label}</span>
@@ -512,7 +512,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                     key={p.id}
                     disabled={isReadOnly}
                     onClick={() => setPayerType(p.id)}
-                    className={`py-3 rounded-xl flex flex-col items-center gap-1 transition-all border ${payerType === p.id ? 'bg-white text-brand-deep border-white' : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'}`}
+                    className={`py-3 rounded-xl flex flex-col items-center gap-1 transition-all border ${payerType === p.id ? 'bg-surface text-text-main border-brand-purple' : 'bg-surface/5 text-white/60 border-white/10 hover:bg-surface/10'}`}
                   >
                     <p.icon size={14} />
                     <span className="text-[8px] font-black uppercase tracking-widest">{p.label}</span>
@@ -529,7 +529,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                     disabled={isReadOnly}
                     value={insuranceInfo.company} 
                     onChange={e => setInsuranceInfo({...insuranceInfo, company: e.target.value})}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 outline-none text-xs font-bold text-white placeholder:text-white/30 focus:bg-white/20"
+                    className="w-full bg-surface/10 border border-white/20 rounded-xl py-3 px-4 outline-none text-xs font-bold text-white placeholder:text-white/30 focus:bg-surface/20"
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <input 
@@ -538,7 +538,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                       disabled={isReadOnly}
                       value={insuranceInfo.policyNum} 
                       onChange={e => setInsuranceInfo({...insuranceInfo, policyNum: e.target.value})}
-                      className="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 outline-none text-xs font-bold text-white placeholder:text-white/30 focus:bg-white/20"
+                      className="w-full bg-surface/10 border border-white/20 rounded-xl py-3 px-4 outline-none text-xs font-bold text-white placeholder:text-white/30 focus:bg-surface/20"
                     />
                     <input 
                       type="text" 
@@ -546,7 +546,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                       disabled={isReadOnly}
                       value={insuranceInfo.approvalCode} 
                       onChange={e => setInsuranceInfo({...insuranceInfo, approvalCode: e.target.value})}
-                      className="w-full bg-white/10 border border-white/20 rounded-xl py-3 px-4 outline-none text-xs font-bold text-white placeholder:text-white/30 focus:bg-white/20"
+                      className="w-full bg-surface/10 border border-white/20 rounded-xl py-3 px-4 outline-none text-xs font-bold text-white placeholder:text-white/30 focus:bg-surface/20"
                     />
                   </div>
                 </div>
@@ -566,7 +566,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                     disabled={isReadOnly}
                     value={paidAmount}
                     onChange={(e) => setPaidAmount(e.target.value)}
-                    className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-10 pr-4 outline-none font-black text-lg focus:bg-white/20 transition-all"
+                    className="w-full bg-surface/10 border border-white/20 rounded-xl py-3 pl-10 pr-4 outline-none font-black text-lg focus:bg-surface/20 transition-all"
                   />
                 </div>
               </div>
@@ -576,9 +576,9 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-5 md:p-8 bg-slate-50/50 border-t border-gray-50 flex flex-col gap-4">
+        <div className="p-5 md:p-8 bg-surface-soft/50 border-t border-border-main flex flex-col gap-4">
           {error && (
-            <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 animate-in fade-in">
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 animate-in fade-in">
               <AlertTriangle className="text-red-500" size={18} />
               <p className="text-[11px] font-black text-red-600 uppercase">
                 {error}
@@ -591,7 +591,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
               <>
                 <button
                   onClick={handleDeleteOrder}
-                  className="p-5 bg-red-50 text-red-500 rounded-[24px] font-black text-[11px] uppercase tracking-widest hover:bg-red-100 transition-all"
+                  className="p-5 bg-red-500/10 text-red-500 rounded-[24px] font-black text-[11px] uppercase tracking-widest hover:bg-red-500/20 transition-all"
                 >
                   <Trash2 size={20} />
                 </button>
@@ -613,7 +613,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
             ) : (
               <button
                 onClick={onClose}
-                className="flex-1 py-5 bg-slate-100 text-slate-500 rounded-[24px] font-black text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                className="flex-1 py-5 bg-surface-soft text-text-muted rounded-[24px] font-black text-[11px] uppercase tracking-widest hover:bg-surface-soft transition-all"
               >
                 დახურვა
               </button>

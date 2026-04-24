@@ -159,24 +159,24 @@ const CalendarPage = () => {
       <Helmet>
         <title>განრიგი — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-[#F8FAFC] custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-surface-soft custom-scrollbar">
           <div className="max-w-[1600px] mx-auto h-full flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white shadow-sm border border-gray-100 rounded-2xl flex items-center justify-center text-brand-purple">
+                <div className="w-12 h-12 bg-surface shadow-sm border border-border-main rounded-2xl flex items-center justify-center text-brand-purple">
                   <CalendarIcon size={24} />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-black text-brand-deep italic tracking-tighter">
+                  <h1 className="text-3xl font-black text-text-main italic tracking-tighter">
                     განრიგი
                   </h1>
-                  <p className="text-gray-400 font-bold text-xs mt-1 uppercase tracking-widest">
+                  <p className="text-text-muted font-bold text-xs mt-1 uppercase tracking-widest">
                     ვიზიტების მართვა
                   </p>
                 </div>
@@ -199,7 +199,7 @@ const CalendarPage = () => {
             </div>
 
             {/* კალენდრის კონტეინერი */}
-            <div className="flex-1 bg-white rounded-[28px] sm:rounded-[40px] p-3 sm:p-6 border border-gray-200 shadow-sm overflow-hidden calendar-container">
+            <div className="flex-1 bg-surface rounded-[28px] sm:rounded-[40px] p-3 sm:p-6 border border-border-dark shadow-sm overflow-hidden calendar-container">
               <FullCalendar
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                 initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
@@ -263,21 +263,33 @@ const CalendarPage = () => {
 
       <style>{`
         .calendar-container .fc { 
-          --fc-border-color: #E2E8F0; 
-          --fc-today-bg-color: #F8FAFC; 
-          --fc-now-indicator-color: #FF0000; 
-          font-family: 'nino', sans-serif; 
+          --fc-border-color: var(--border-main); 
+          --fc-today-bg-color: var(--bg-surface-soft); 
+          --fc-now-indicator-color: #EF4444; 
+          --fc-page-bg-color: var(--bg-surface);
+          --fc-neutral-bg-color: var(--bg-surface-soft);
+          --fc-list-event-hover-bg-color: var(--bg-surface-soft);
+          font-family: var(--font-nino);
+        }
+
+        /* FullCalendar dark mode adjustments */
+        .fc-theme-standard td, .fc-theme-standard th {
+          border-color: var(--border-main) !important;
+        }
+
+        .fc-col-header-cell {
+          background-color: var(--bg-surface-soft) !important;
         }
 
         /* მიმდინარე დროის ხაზის გაძლიერება */
         .calendar-container .fc-timegrid-now-indicator-line {
-          border-width: 3px !important;
+          border-width: 2px !important;
           z-index: 5;
         }
         
         .calendar-container .fc-timegrid-now-indicator-arrow {
           border-width: 6px !important;
-          border-left-color: #FF0000 !important;
+          border-left-color: #EF4444 !important;
           margin-top: -5px !important;
         }
 
@@ -288,7 +300,7 @@ const CalendarPage = () => {
           top: -5px;
           width: 10px;
           height: 10px;
-          background: #FF0000;
+          background: #EF4444;
           border-radius: 50%;
           animation: pulse 2s infinite;
         }
@@ -299,35 +311,36 @@ const CalendarPage = () => {
           100% { transform: scale(1); opacity: 1; }
         }
 
-        /* უჯრების გამოკვეთა - კონტურული სტილი */
+        /* უჯრების გამოკვეთა */
         .calendar-container .fc-timegrid-slot {
-          border-bottom: 1px solid #CBD5E1 !important; /* უფრო მუქი კონტური */
+          border-bottom: 1px solid var(--border-main) !important;
         }
         
         .calendar-container .fc-timegrid-slot-minor {
-          border-bottom: 1px solid #E2E8F0 !important;
+          border-bottom: 1px solid var(--border-main) !important;
+          opacity: 0.3;
         }
 
         .calendar-container .fc-timegrid-slot:hover {
-          background-color: #F8FAFC !important;
+          background-color: var(--bg-surface-soft) !important;
           cursor: cell;
         }
 
         .calendar-container .fc-timegrid-col {
-          border-left: 1.5px solid #CBD5E1 !important;
+          border-left: 1px solid var(--border-main) !important;
         }
 
         .calendar-container .fc-daygrid-day {
-          border: 1px solid #CBD5E1 !important;
+          border: 1px solid var(--border-main) !important;
         }
         
         .calendar-container .fc-header-toolbar { margin-bottom: 1rem !important; gap: 0.5rem; flex-wrap: wrap; }
-        .calendar-container .fc-toolbar-title { font-size: 1rem !important; font-weight: 900 !important; color: #1E293B; font-style: italic; }
+        .calendar-container .fc-toolbar-title { font-size: 1rem !important; font-weight: 900 !important; color: var(--text-main); font-style: italic; }
         
         .calendar-container .fc-button { 
-          background: #F1F5F9 !important; 
-          border: none !important; 
-          color: #475569 !important; 
+          background: var(--bg-surface-soft) !important; 
+          border: 1px solid var(--border-main) !important; 
+          color: var(--text-muted) !important; 
           font-weight: 800 !important; 
           font-size: 11px !important; 
           text-transform: uppercase !important; 
@@ -337,11 +350,11 @@ const CalendarPage = () => {
           transition: all 0.2s; 
           box-shadow: none !important;
         }
-        .calendar-container .fc-button:hover { background: #E2E8F0 !important; color: #1E293B !important; }
-        .calendar-container .fc-button-active { background: #7C3AED !important; color: white !important; }
+        .calendar-container .fc-button:hover { background: var(--border-main) !important; color: var(--text-main) !important; }
+        .calendar-container .fc-button-active { background: var(--color-brand-purple) !important; color: white !important; border-color: var(--color-brand-purple) !important; }
         
-        .calendar-container .fc-timegrid-axis { background-color: #F8FAFC; border-right: 2px solid #E2E8F0; }
-        .calendar-container .fc-timegrid-slot-label-cushion { font-weight: 900 !important; color: #64748B; font-size: 11px; padding: 4px 8px !important; }
+        .calendar-container .fc-timegrid-axis { background-color: var(--bg-surface-soft); border-right: 1px solid var(--border-main); }
+        .calendar-container .fc-timegrid-slot-label-cushion { font-weight: 900 !important; color: var(--text-muted); font-size: 10px; padding: 4px 8px !important; }
         
         .calendar-container .fc-event { 
           border-radius: 8px !important; 
@@ -349,7 +362,7 @@ const CalendarPage = () => {
           font-size: 10px !important; 
           font-weight: 800 !important; 
           border: none !important; 
-          box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.05) !important;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
           transition: transform 0.1s;
         }
 
@@ -359,12 +372,13 @@ const CalendarPage = () => {
         }
         
         .calendar-container .fc-daygrid-event-dot {
-          border-color: #7C3AED !important;
+          border-color: var(--color-brand-purple) !important;
         }
 
         .calendar-container .fc-event:hover { transform: scale(1.02); z-index: 10; cursor: pointer; }
         
-        .calendar-container .fc-col-header-cell-cushion { font-weight: 900 !important; color: #1E293B; text-transform: uppercase; font-size: 10px; padding: 8px 0 !important; }
+        .calendar-container .fc-col-header-cell-cushion { font-weight: 900 !important; color: var(--text-main); text-transform: uppercase; font-size: 10px; padding: 8px 0 !important; }
+        
         @media (min-width: 768px) {
           .calendar-container .fc-header-toolbar { margin-bottom: 2rem !important; }
           .calendar-container .fc-toolbar-title { font-size: 1.25rem !important; }

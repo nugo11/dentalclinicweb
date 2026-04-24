@@ -13,13 +13,13 @@ const FormInput = ({
   iconClassName = "",
   ...props 
 }) => {
-  const inputStyle = `w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 rounded-2xl outline-none font-bold text-sm text-brand-deep transition-all ${
+  const inputStyle = `w-full pl-12 pr-4 py-3.5 bg-surface-soft border-2 rounded-2xl outline-none font-bold text-sm text-text-main transition-all ${
     error 
-      ? "border-red-500 bg-red-50 animate-shake" 
-      : "border-transparent focus:bg-white focus:border-brand-purple"
+      ? "border-red-500 bg-red-500/10 animate-shake" 
+      : "border-transparent focus:bg-surface focus:border-brand-purple"
   } ${className}`;
 
-  const labelStyle = `text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 mb-2 block ${labelClassName}`;
+  const labelStyle = `text-[10px] font-black text-text-muted uppercase tracking-widest ml-4 mb-2 block ${labelClassName}`;
 
   const handleChange = (e) => {
     if (onChange) {
@@ -38,7 +38,7 @@ const FormInput = ({
         {Icon && (
           <Icon 
             className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${
-              error ? "text-red-500" : `text-gray-400 group-focus-within:text-brand-purple ${iconClassName}`
+              error ? "text-red-500" : `text-text-muted group-focus-within:text-brand-purple ${iconClassName}`
             }`} 
             size={18} 
           />

@@ -188,7 +188,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-slate-50">
+      <div className="h-screen w-full flex items-center justify-center bg-surface-soft">
         <Loader2 className="animate-spin text-brand-purple" size={40} />
       </div>
     );
@@ -199,7 +199,7 @@ const Dashboard = () => {
       <Helmet>
         <title>სამართავი პანელი — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
@@ -211,14 +211,14 @@ const Dashboard = () => {
             
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
-                <h1 className="text-4xl font-black text-brand-deep italic tracking-tighter leading-none">
+                <h1 className="text-4xl font-black text-text-main italic tracking-tighter leading-none">
                   {(() => {
                     const nameParts = (activeStaff?.fullName || userData?.fullName || 'მომხმარებელო').split(' ');
                     const firstName = nameParts[0] === 'ექიმი' ? (nameParts[1] || nameParts[0]) : nameParts[0];
                     return `${greeting}, ${firstName}`;
                   })()}
                 </h1>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-3 italic flex items-center gap-2">
+                <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.3em] mt-3 italic flex items-center gap-2">
                    <Activity size={12} className="text-brand-purple" />
                    {role === 'admin' ? 'კლინიკის მართვის პანელი' : 
                     role === 'doctor' ? 'პირადი სამუშაო სივრცე' : 
@@ -243,12 +243,12 @@ const Dashboard = () => {
 
                   if (!nextApp) {
                     return (
-                      <div className="bg-white rounded-[40px] p-10 border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center group hover:border-brand-purple/20 transition-all">
-                        <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-brand-purple/5 group-hover:text-brand-purple transition-all">
+                      <div className="bg-surface rounded-[40px] p-10 border border-border-main shadow-sm flex flex-col items-center justify-center text-center group hover:border-brand-purple/20 transition-all">
+                        <div className="w-16 h-16 bg-surface-soft text-text-muted rounded-2xl flex items-center justify-center mb-4 group-hover:bg-brand-purple/5 group-hover:text-brand-purple transition-all">
                           <CalendarDays size={32} />
                         </div>
-                        <h3 className="text-lg font-black text-brand-deep italic">დღეს სხვა ჯავშნები არ გაქვთ</h3>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">დაისვენეთ ან გადახედეთ ხვალინდელ გეგმას</p>
+                        <h3 className="text-lg font-black text-text-main italic">დღეს სხვა ჯავშნები არ გაქვთ</h3>
+                        <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-2">დაისვენეთ ან გადახედეთ ხვალინდელ გეგმას</p>
                       </div>
                     );
                   }
@@ -258,7 +258,7 @@ const Dashboard = () => {
                   const initials = nextApp.patientName ? nextApp.patientName.split(' ').map(n => n[0]).join('') : '??';
 
                   return (
-                    <div className="bg-white rounded-[40px] p-8 border border-brand-purple/20 shadow-xl shadow-brand-purple/5 relative overflow-hidden group">
+                    <div className="bg-surface rounded-[40px] p-8 border border-brand-purple/20 shadow-xl shadow-brand-purple/5 relative overflow-hidden group">
                       <div className="absolute top-0 right-0 p-8">
                           <Crown size={64} className="text-brand-purple/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />
                       </div>
@@ -267,18 +267,18 @@ const Dashboard = () => {
                             <Clock size={12} /> შემდეგი ვიზიტი {diffMins < 60 ? `${diffMins} წუთში` : `${Math.floor(diffMins/60)} საათში`}
                           </div>
                           <div className="flex flex-col md:flex-row md:items-center gap-8">
-                            <div className="w-24 h-24 bg-slate-50 text-brand-purple rounded-[32px] flex items-center justify-center text-3xl font-black shadow-inner uppercase">
+                            <div className="w-24 h-24 bg-surface-soft text-brand-purple rounded-[32px] flex items-center justify-center text-3xl font-black shadow-inner uppercase">
                                 {initials}
                             </div>
                             <div className="flex-1">
-                                <h2 className="text-3xl font-black text-brand-deep tracking-tighter mb-2">{nextApp.patientName}</h2>
-                                <div className="flex flex-wrap gap-4 text-slate-500">
+                                <h2 className="text-3xl font-black text-text-main tracking-tighter mb-2">{nextApp.patientName}</h2>
+                                <div className="flex flex-wrap gap-4 text-text-muted">
                                   <div className="flex items-center gap-2">
                                       <div className="w-2 h-2 bg-brand-purple rounded-full"></div>
                                       <span className="text-xs font-bold">{nextApp.service}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                      <Clock size={14} className="text-slate-400" />
+                                      <Clock size={14} className="text-text-muted" />
                                       <span className="text-xs font-bold">{startTime.toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' })}</span>
                                   </div>
                                 </div>
@@ -292,27 +292,27 @@ const Dashboard = () => {
 
                 {/* Pending Closures Section */}
                 {(role === 'admin' || role === 'manager' || role === 'accountant') && (
-                  <div className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm">
+                  <div className="bg-surface rounded-[40px] p-8 border border-border-main shadow-sm">
                     <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center">
                         <DollarSign size={24} />
                       </div>
                       <div>
-                        <h3 className="text-xl font-black text-brand-deep italic uppercase tracking-tighter">ჩასახურავი შეკვეთები</h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ფინანსური მონიტორინგი</p>
+                        <h3 className="text-xl font-black text-text-main italic uppercase tracking-tighter">ჩასახურავი შეკვეთები</h3>
+                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">ფინანსური მონიტორინგი</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="p-6 bg-slate-50 rounded-[32px] border border-transparent hover:border-amber-200 transition-all">
-                        <p className="text-[10px] font-black text-slate-400 uppercase mb-2">მოლოდინშია</p>
-                        <p className="text-3xl font-black text-brand-deep italic">{pendingClosuresCount} ვიზიტი</p>
+                      <div className="p-6 bg-surface-soft rounded-[32px] border border-transparent hover:border-amber-200 transition-all">
+                        <p className="text-[10px] font-black text-text-muted uppercase mb-2">მოლოდინშია</p>
+                        <p className="text-3xl font-black text-text-main italic">{pendingClosuresCount} ვიზიტი</p>
                       </div>
-                      <div className="p-6 bg-slate-100/50 rounded-[32px] border border-transparent flex items-center justify-between group">
+                      <div className="p-6 bg-surface-soft/50 rounded-[32px] border border-transparent flex items-center justify-between group">
                         <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase mb-1">რეპორტი</p>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">დეტალები</p>
+                          <p className="text-[10px] font-black text-text-muted uppercase mb-1">რეპორტი</p>
+                          <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest">დეტალები</p>
                         </div>
-                        <button onClick={() => navigate('/finance')} className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-brand-deep hover:bg-brand-deep hover:text-white transition-all">
+                        <button onClick={() => navigate('/finance')} className="w-10 h-10 bg-surface rounded-xl shadow-sm flex items-center justify-center text-text-main hover:bg-brand-deep hover:text-white transition-all">
                           <ChevronRight size={18} />
                         </button>
                       </div>
@@ -340,20 +340,20 @@ const Dashboard = () => {
 
                 {/* Inventory Low Stock Alert */}
                 {(role === 'admin' || role === 'manager') && lowStockItems.length > 0 && (
-                  <div className="bg-white p-8 rounded-[40px] border border-slate-200/60 shadow-sm group">
+                  <div className="bg-surface p-8 rounded-[40px] border border-border-dark/60 shadow-sm group">
                     <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center">
                         <PackageSearch size={24} />
                       </div>
                       <div>
-                        <h4 className="text-[11px] font-black text-brand-deep uppercase tracking-widest leading-none mb-1">ინვენტარი</h4>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase">დაბალი მარაგი</p>
+                        <h4 className="text-[11px] font-black text-text-main uppercase tracking-widest leading-none mb-1">ინვენტარი</h4>
+                        <p className="text-[9px] font-bold text-text-muted uppercase">დაბალი მარაგი</p>
                       </div>
                     </div>
                     <div className="space-y-3">
                       {lowStockItems.slice(0, 3).map(item => (
-                        <div key={item.id} className="flex justify-between items-center p-3 bg-amber-50/50 rounded-xl">
-                          <span className="text-[10px] font-black text-brand-deep uppercase">{item.name}</span>
+                        <div key={item.id} className="flex justify-between items-center p-3 bg-amber-500/10/50 rounded-xl">
+                          <span className="text-[10px] font-black text-text-main uppercase">{item.name}</span>
                           <span className="text-[10px] font-black text-amber-600 uppercase">{item.quantity} {item.unit}</span>
                         </div>
                       ))}

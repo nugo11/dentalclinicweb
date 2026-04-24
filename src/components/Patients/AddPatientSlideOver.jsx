@@ -82,29 +82,29 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
     }
   };
 
-  const inputStyle = "w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-transparent focus:bg-white focus:border-brand-purple rounded-2xl outline-none font-bold text-sm text-brand-deep transition-all";
-  const labelStyle = "text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4 mb-2 block";
+  const inputStyle = "w-full pl-12 pr-4 py-3.5 bg-surface-soft border-2 border-transparent focus:bg-surface focus:border-brand-purple rounded-2xl outline-none font-bold text-sm text-text-main transition-all";
+  const labelStyle = "text-[10px] font-black text-text-muted uppercase tracking-widest ml-4 mb-2 block";
 
   return (
     <>
       <div className="app-overlay fixed inset-0 bg-brand-deep/30 backdrop-blur-sm z-40 animate-in fade-in duration-300" onClick={onClose} />
       
-      <div className="app-sheet fixed top-0 right-0 w-full max-w-xl h-full bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-500 font-nino">
+      <div className="app-sheet fixed top-0 right-0 w-full max-w-xl h-full bg-surface shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-500 font-nino">
         
         {/* Header */}
-        <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
+        <div className="p-8 border-b border-border-main flex items-center justify-between bg-surface-soft/50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-brand-purple text-white rounded-2xl flex items-center justify-center shadow-lg shadow-brand-purple/20">
               <UserPlus size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-black text-brand-deep italic tracking-tighter">პაციენტის რეგისტრაცია</h2>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+              <h2 className="text-2xl font-black text-text-main italic tracking-tighter">პაციენტის რეგისტრაცია</h2>
+              <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.2em]">
                 სამედიცინო ბარათი #HUB-{Math.floor(Math.random() * 9000) + 1000}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-3 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all">
+          <button onClick={onClose} className="p-3 hover:bg-red-500/10 text-text-muted hover:text-red-500 rounded-xl transition-all">
             <X size={20} />
           </button>
         </div>
@@ -115,7 +115,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
             {/* სექცია 1: პირადი ინფორმაცია */}
             <div className="space-y-6">
               <div className="flex items-center gap-2 border-l-4 border-brand-purple pl-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-brand-deep">პირადი მონაცემები</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-text-main">პირადი მონაცემები</h3>
               </div>
               
               <div className="grid grid-cols-1 gap-5">
@@ -152,7 +152,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
             {/* სექცია 2: კონტაქტი */}
             <div className="space-y-6">
               <div className="flex items-center gap-2 border-l-4 border-blue-500 pl-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-brand-deep">საკონტაქტო ინფორმაცია</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-text-main">საკონტაქტო ინფორმაცია</h3>
               </div>
               <div className="grid grid-cols-2 gap-5">
                 <FormInput 
@@ -176,9 +176,9 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
             </div>
 
             {/* სექცია 3: სამედიცინო ანამნეზი */}
-            <div className="space-y-6 bg-slate-50 p-6 rounded-[32px] border border-gray-100">
+            <div className="space-y-6 bg-surface-soft p-6 rounded-[32px] border border-border-main">
               <div className="flex items-center gap-2 border-l-4 border-red-500 pl-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-brand-deep">სამედიცინო ანამნეზი</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-text-main">სამედიცინო ანამნეზი</h3>
               </div>
               
               <div className="grid grid-cols-2 gap-5">
@@ -213,7 +213,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                 icon={ShieldAlert} 
                 placeholder="მაგ: ანესთეზია, პენიცილინი..."
                 value={formData.allergies}
-                className="border-red-100 focus:border-red-400"
+                className="border-red-500/20 focus:border-red-400"
                 iconClassName="text-red-400"
                 onChange={val => setFormData({...formData, allergies: val})}
               />
@@ -231,8 +231,8 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
         </form>
 
         {/* Footer */}
-        <div className="p-8 border-t border-gray-100 bg-white grid grid-cols-2 gap-4">
-          <button type="button" onClick={onClose} className="py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-gray-400 hover:bg-gray-50 transition-all">გაუქმება</button>
+        <div className="p-8 border-t border-border-main bg-surface grid grid-cols-2 gap-4">
+          <button type="button" onClick={onClose} className="py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-text-muted hover:bg-surface-soft transition-all">გაუქმება</button>
           <button 
             onClick={handleSubmit} 
             disabled={loading || (clinicData?.plan === "free" && currentCount >= 50)} 

@@ -15,13 +15,13 @@ import {
 } from 'lucide-react';
 
 const DocContentSection = ({ id, title, icon: Icon, children }) => (
-  <section id={id} className="scroll-mt-24 space-y-12 py-24 border-b border-slate-100 last:border-0">
+  <section id={id} className="scroll-mt-24 space-y-12 py-24 border-b border-border-main last:border-0">
     <div className="flex items-center gap-8">
       <div className="w-24 h-24 bg-brand-purple/10 text-brand-purple rounded-[40px] flex items-center justify-center shadow-sm">
         <Icon size={44} />
       </div>
       <div>
-        <h2 className="text-6xl font-black text-brand-deep italic uppercase tracking-tighter leading-none">{title}</h2>
+        <h2 className="text-6xl font-black text-text-main italic uppercase tracking-tighter leading-none">{title}</h2>
         <p className="text-sm text-brand-purple font-black uppercase tracking-[0.5em] mt-4 italic">Advanced Logic & Business Rules</p>
       </div>
     </div>
@@ -32,20 +32,20 @@ const DocContentSection = ({ id, title, icon: Icon, children }) => (
 );
 
 const FeatureCard = ({ title, desc, buttons = [], fields = [], roles = [], logic = [] }) => (
-  <div className="bg-white p-12 rounded-[60px] border border-slate-100 shadow-sm hover:border-brand-purple/20 transition-all space-y-10">
-    <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 border-b border-slate-50 pb-10">
+  <div className="bg-surface p-12 rounded-[60px] border border-border-main shadow-sm hover:border-brand-purple/20 transition-all space-y-10">
+    <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 border-b border-border-main pb-10">
       <div className="space-y-5">
-        <h4 className="font-black text-brand-deep uppercase text-xl flex items-center gap-4 italic">
+        <h4 className="font-black text-text-main uppercase text-xl flex items-center gap-4 italic">
            <div className="w-4 h-4 bg-brand-purple rounded-full"></div>
            {title}
         </h4>
-        <p className="text-base font-bold text-slate-500 leading-relaxed max-w-3xl">{desc}</p>
+        <p className="text-base font-bold text-text-muted leading-relaxed max-w-3xl">{desc}</p>
       </div>
       
       {roles.length > 0 && (
         <div className="flex flex-wrap gap-2 shrink-0">
            {roles.map((role, idx) => (
-             <span key={idx} className="px-5 py-2.5 bg-slate-50 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-slate-100">
+             <span key={idx} className="px-5 py-2.5 bg-surface-soft text-text-muted rounded-2xl text-[10px] font-black uppercase tracking-widest border border-border-main">
                {role}
              </span>
            ))}
@@ -60,11 +60,11 @@ const FeatureCard = ({ title, desc, buttons = [], fields = [], roles = [], logic
         </p>
         <div className="grid grid-cols-1 gap-4">
           {logic.map((l, i) => (
-            <div key={i} className="flex gap-4 p-5 bg-white rounded-3xl border border-brand-purple/10">
+            <div key={i} className="flex gap-4 p-5 bg-surface rounded-3xl border border-brand-purple/10">
               <div className="w-8 h-8 rounded-full bg-brand-purple/10 text-brand-purple flex items-center justify-center shrink-0 font-black text-xs">
                 {i + 1}
               </div>
-              <p className="text-xs font-bold text-slate-700 leading-relaxed">{l}</p>
+              <p className="text-xs font-bold text-text-main leading-relaxed">{l}</p>
             </div>
           ))}
         </div>
@@ -72,22 +72,22 @@ const FeatureCard = ({ title, desc, buttons = [], fields = [], roles = [], logic
     )}
 
     {fields.length > 0 && (
-      <div className="bg-slate-50 p-10 rounded-[40px] space-y-8">
-        <p className="text-[11px] font-black text-brand-deep uppercase tracking-widest flex items-center gap-3">
+      <div className="bg-surface-soft p-10 rounded-[40px] space-y-8">
+        <p className="text-[11px] font-black text-text-main uppercase tracking-widest flex items-center gap-3">
           <Info size={16} className="text-brand-purple" /> ველების დეტალური აღწერა:
         </p>
         <div className="grid grid-cols-1 gap-4">
           {fields.map((f, i) => (
-            <div key={i} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3">
+            <div key={i} className="bg-surface p-6 rounded-[32px] border border-border-main space-y-3">
               <div className="flex justify-between items-center">
-                <span className="font-black text-[11px] text-brand-deep uppercase tracking-tighter">{f.name}</span>
+                <span className="font-black text-[11px] text-text-main uppercase tracking-tighter">{f.name}</span>
                 {f.restricted && (
-                  <span className="flex items-center gap-2 text-[9px] font-black text-amber-500 uppercase bg-amber-50 px-3 py-1 rounded-full">
+                  <span className="flex items-center gap-2 text-[9px] font-black text-amber-500 uppercase bg-amber-500/10 px-3 py-1 rounded-full">
                     <Lock size={12} /> როლური შეზღუდვა
                   </span>
                 )}
               </div>
-              <p className="text-xs font-bold text-slate-500 leading-relaxed italic">
+              <p className="text-xs font-bold text-text-muted leading-relaxed italic">
                  {f.guide}
               </p>
             </div>
@@ -98,16 +98,16 @@ const FeatureCard = ({ title, desc, buttons = [], fields = [], roles = [], logic
 
     {buttons.length > 0 && (
       <div className="space-y-4">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ინტერაქტიული ღილაკები:</p>
+        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">ინტერაქტიული ღილაკები:</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {buttons.map((btn, idx) => (
-            <div key={idx} className="flex items-center gap-5 p-6 bg-slate-50 rounded-[32px] group hover:bg-brand-purple/5 transition-all border border-transparent">
-              <div className="p-4 bg-white rounded-2xl text-brand-purple shadow-sm group-hover:scale-110 transition-transform">
+            <div key={idx} className="flex items-center gap-5 p-6 bg-surface-soft rounded-[32px] group hover:bg-brand-purple/5 transition-all border border-transparent">
+              <div className="p-4 bg-surface rounded-2xl text-brand-purple shadow-sm group-hover:scale-110 transition-transform">
                 {btn.icon}
               </div>
               <div>
-                <p className="text-xs font-black text-brand-deep uppercase tracking-tighter">{btn.name}</p>
-                <p className="text-[10px] text-slate-400 font-bold leading-tight mt-1">{btn.action}</p>
+                <p className="text-xs font-black text-text-main uppercase tracking-tighter">{btn.name}</p>
+                <p className="text-[10px] text-text-muted font-bold leading-tight mt-1">{btn.action}</p>
               </div>
             </div>
           ))}
@@ -142,7 +142,7 @@ const Documentation = () => {
       <Helmet>
         <title>დოკუმენტაცია — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -162,7 +162,7 @@ const Documentation = () => {
                           <button 
                             key={item.id}
                             onClick={() => scrollToSection(item.id)}
-                            className="w-full flex items-center gap-5 p-5 rounded-[24px] hover:bg-white/10 transition-all text-left group"
+                            className="w-full flex items-center gap-5 p-5 rounded-[24px] hover:bg-surface/10 transition-all text-left group"
                           >
                             <item.icon size={22} className="text-brand-purple group-hover:scale-110 transition-transform" />
                             <span className="text-[11px] font-black uppercase tracking-widest text-white/60 group-hover:text-white">{item.name}</span>
@@ -176,11 +176,11 @@ const Documentation = () => {
             </aside>
 
             <div className="flex-1 space-y-6">
-              <div className="pb-20 border-b border-slate-100">
-                <h1 className="text-9xl font-black text-brand-deep italic tracking-tighter leading-[0.85] mb-10">
+              <div className="pb-20 border-b border-border-main">
+                <h1 className="text-9xl font-black text-text-main italic tracking-tighter leading-[0.85] mb-10">
                   სრული <br /><span className="text-brand-purple">ლოგიკა</span>
                 </h1>
-                <p className="text-slate-400 font-bold text-lg max-w-3xl leading-relaxed uppercase tracking-[0.2em]">
+                <p className="text-text-muted font-bold text-lg max-w-3xl leading-relaxed uppercase tracking-[0.2em]">
                   როგორ მუშაობს სისტემა - წესები და შეზღუდვები
                 </p>
               </div>

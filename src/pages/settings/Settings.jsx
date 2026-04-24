@@ -43,14 +43,14 @@ const Settings = () => {
   // წვდომის შემოწმება
   if (userData && userData.role !== 'admin') {
     return (
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         <div className="flex-1 flex flex-col items-center justify-center p-8">
-          <div className="w-24 h-24 bg-red-50 text-red-500 rounded-[32px] flex items-center justify-center mb-6">
+          <div className="w-24 h-24 bg-red-500/10 text-red-500 rounded-[32px] flex items-center justify-center mb-6">
             <Shield size={44} />
           </div>
-          <h2 className="text-3xl font-black text-brand-deep italic">წვდომა შეზღუდულია</h2>
-          <p className="text-gray-400 font-bold text-sm uppercase tracking-widest mt-4 max-w-sm text-center leading-relaxed">
+          <h2 className="text-3xl font-black text-text-main italic">წვდომა შეზღუდულია</h2>
+          <p className="text-text-muted font-bold text-sm uppercase tracking-widest mt-4 max-w-sm text-center leading-relaxed">
             ამ გვერდის მართვა შეუძლია მხოლოდ კლინიკის ადმინისტრატორს.
           </p>
         </div>
@@ -114,7 +114,7 @@ const Settings = () => {
       <Helmet>
         <title>პარამეტრები — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -125,12 +125,12 @@ const Settings = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-black text-brand-deep italic tracking-tighter">პარამეტრები</h1>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">პროფილისა და კლინიკის მართვა</p>
+                <h1 className="text-3xl font-black text-text-main italic tracking-tighter">პარამეტრები</h1>
+                <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">პროფილისა და კლინიკის მართვა</p>
               </div>
               
               {message.text && (
-                <div className={`px-6 py-3 rounded-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300 ${message.type === "success" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}>
+                <div className={`px-6 py-3 rounded-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300 ${message.type === "success" ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"}`}>
                   <CheckCircle2 size={16} />
                   <span className="text-[11px] font-black uppercase tracking-widest">{message.text}</span>
                 </div>
@@ -140,7 +140,7 @@ const Settings = () => {
             <div className="grid grid-cols-1 gap-8">
               
               {/* 1. ძირითადი ინფორმაცია */}
-              <section className="bg-white p-10 rounded-[48px] border border-gray-100 shadow-sm relative overflow-hidden">
+              <section className="bg-surface p-10 rounded-[48px] border border-border-main shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
                   <User size={120} />
                 </div>
@@ -148,17 +148,17 @@ const Settings = () => {
                 <form onSubmit={handleUpdateProfile} className="space-y-8 relative z-10">
                   <div className="flex items-center gap-3 mb-4">
                     <User className="text-brand-purple" size={20} />
-                    <h3 className="text-xl font-black text-brand-deep italic">პირადი და კლინიკის ინფორმაცია</h3>
+                    <h3 className="text-xl font-black text-text-main italic">პირადი და კლინიკის ინფორმაცია</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">სრული სახელი</label>
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">სრული სახელი</label>
                       <div className="relative group">
-                        <User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-brand-purple transition-colors" size={18} />
+                        <User className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors" size={18} />
                         <input 
                           type="text" 
-                          className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
+                          className="w-full pl-14 pr-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
                           value={personalInfo.fullName}
                           onChange={(e) => setPersonalInfo({...personalInfo, fullName: e.target.value})}
                         />
@@ -166,13 +166,13 @@ const Settings = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">ელ-ფოსტა (მხოლოდ ნახვა)</label>
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">ელ-ფოსტა (მხოლოდ ნახვა)</label>
                       <div className="relative">
-                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-200" size={18} />
+                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                         <input 
                           disabled
                           type="email" 
-                          className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none font-bold text-sm text-gray-300 cursor-not-allowed"
+                          className="w-full pl-14 pr-6 py-4 bg-surface-soft border-2 border-transparent rounded-2xl outline-none font-bold text-sm text-text-muted cursor-not-allowed"
                           value={personalInfo.email}
                         />
                       </div>
@@ -180,12 +180,12 @@ const Settings = () => {
 
                     {userData?.role === 'admin' && (
                       <div className="space-y-2 md:col-span-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">კლინიკის დასახელება</label>
+                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">კლინიკის დასახელება</label>
                         <div className="relative group">
-                          <Building2 className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-brand-purple transition-colors" size={18} />
+                          <Building2 className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors" size={18} />
                           <input 
                             type="text" 
-                            className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
+                            className="w-full pl-14 pr-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
                             value={clinicInfo.clinicName}
                             onChange={(e) => setClinicInfo({...clinicInfo, clinicName: e.target.value})}
                           />
@@ -204,7 +204,7 @@ const Settings = () => {
               </section>
 
               {/* 2. უსაფრთხოება / პაროლი */}
-              <section className="bg-white p-10 rounded-[48px] border border-gray-100 shadow-sm relative overflow-hidden">
+              <section className="bg-surface p-10 rounded-[48px] border border-border-main shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
                   <Lock size={120} />
                 </div>
@@ -212,16 +212,16 @@ const Settings = () => {
                 <form onSubmit={handleChangePassword} className="space-y-8 relative z-10">
                   <div className="flex items-center gap-3 mb-4">
                     <Shield className="text-brand-purple" size={20} />
-                    <h3 className="text-xl font-black text-brand-deep italic">უსაფრთხოება</h3>
+                    <h3 className="text-xl font-black text-text-main italic">უსაფრთხოება</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">ახალი პაროლი</label>
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">ახალი პაროლი</label>
                       <input 
                         type="password" 
                         required
-                        className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
+                        className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
                         value={passwords.newPassword}
                         onChange={(e) => setPasswords({...passwords, newPassword: e.target.value})}
                         placeholder="••••••••"
@@ -229,11 +229,11 @@ const Settings = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-4">გაიმეორეთ პაროლი</label>
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">გაიმეორეთ პაროლი</label>
                       <input 
                         type="password" 
                         required
-                        className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
+                        className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
                         value={passwords.confirmPassword}
                         onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
                         placeholder="••••••••"

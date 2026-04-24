@@ -58,7 +58,7 @@ const ClinicCatalog = () => {
       <Helmet>
         <title>კლინიკების კატალოგი — DentalHub</title>
       </Helmet>
-      <div className="min-h-screen bg-slate-50 font-nino">
+      <div className="min-h-screen bg-surface-soft font-nino transition-colors duration-300">
       <MainHeader user={currentUser} />
 
       {/* Hero Search */}
@@ -105,11 +105,11 @@ const ClinicCatalog = () => {
 
         {!loading && filteredClinics.length === 0 && (
           <div className="text-center py-40 animate-in fade-in duration-500">
-             <div className="w-24 h-24 bg-white rounded-[32px] shadow-sm flex items-center justify-center text-gray-200 mx-auto mb-6 border border-gray-50">
+             <div className="w-24 h-24 bg-surface rounded-[32px] shadow-sm flex items-center justify-center text-text-muted mx-auto mb-6 border border-border-main">
                 <Search size={40} />
              </div>
-             <h3 className="text-2xl font-black text-brand-deep italic">კლინიკა ვერ მოიძებნა</h3>
-             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">სცადეთ სხვა საძიებო სიტყვა</p>
+             <h3 className="text-2xl font-black text-text-main italic">კლინიკა ვერ მოიძებნა</h3>
+             <p className="text-text-muted text-xs font-bold uppercase tracking-widest mt-2">სცადეთ სხვა საძიებო სიტყვა</p>
           </div>
         )}
       </div>
@@ -125,13 +125,13 @@ const ClinicCard = ({ clinic }) => {
 
   return (
   <Link to={`/catalog/${clinic.id}`} className="block group h-full">
-    <div className={`bg-white rounded-[40px] p-8 border-2 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 flex flex-col h-full relative overflow-hidden ${isVip ? 'border-brand-purple/10 shadow-lg shadow-brand-purple/5' : isBasic ? 'border-blue-500/5' : 'border-gray-50'}`}>
+    <div className={`bg-surface rounded-[40px] p-8 border-2 transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 flex flex-col h-full relative overflow-hidden ${isVip ? 'border-brand-purple/20 shadow-xl shadow-brand-purple/5' : isBasic ? 'border-brand-purple/5' : 'border-border-main/50'}`}>
         <div className="absolute top-0 right-0 p-8 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
             <Activity size={100} />
         </div>
 
         <div className="flex items-start justify-between mb-8 relative z-10">
-            <div className="w-20 h-20 bg-slate-50 rounded-[24px] border-2 border-white shadow-inner flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-20 h-20 bg-surface-soft rounded-[24px] border-2 border-border-main shadow-inner flex items-center justify-center overflow-hidden shrink-0">
                 {clinic.logoUrl ? (
                 <img src={clinic.logoUrl} alt={clinic.clinicName} className="w-full h-full object-cover" />
                 ) : (
@@ -146,24 +146,24 @@ const ClinicCard = ({ clinic }) => {
         </div>
 
         <div className="flex-1 relative z-10">
-            <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter mb-2 group-hover:text-brand-purple transition-colors">
+            <h3 className="text-2xl font-black text-text-main italic tracking-tighter mb-2 group-hover:text-brand-purple transition-colors">
             {clinic.clinicName}
             </h3>
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-6">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-text-muted mb-6">
                 <MapPin size={12} className="text-brand-purple" />
                 {clinic.city || "თბილისი"}{clinic.address ? `, ${clinic.address}` : ''}
             </div>
-            <p className="text-gray-500 text-sm font-medium leading-relaxed italic line-clamp-4">
+            <p className="text-text-muted font-medium leading-relaxed italic line-clamp-4 text-sm">
             {clinic.description || "ამ კლინიკას ჯერ არ დაუმატებია აღწერა."}
             </p>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-2 text-[10px] font-black text-brand-deep uppercase tracking-widest group-hover:gap-4 transition-all">
+        <div className="mt-8 pt-6 border-t border-border-main flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-2 text-[10px] font-black text-text-main uppercase tracking-widest group-hover:gap-4 transition-all">
                 გვერდის ნახვა <ArrowRight size={14} className="text-brand-purple" />
             </div>
             {clinic.phone && (
-                <div className="flex items-center gap-1.5 text-slate-400">
+                <div className="flex items-center gap-1.5 text-text-muted">
                     <Phone size={12} />
                     <span className="text-[10px] font-bold">{clinic.phone}</span>
                 </div>

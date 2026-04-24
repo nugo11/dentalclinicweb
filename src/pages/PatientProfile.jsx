@@ -140,7 +140,7 @@ const PatientProfile = () => {
 
   if (loading)
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
+      <div className="h-screen flex items-center justify-center bg-surface-soft">
         <Loader2 className="animate-spin text-brand-purple" size={40} />
       </div>
     );
@@ -150,7 +150,7 @@ const PatientProfile = () => {
       <Helmet>
         <title>{patientData?.fullName || "პაციენტი"} — DentalHub</title>
       </Helmet>
-      <div className="h-screen w-full bg-slate-50 flex overflow-hidden font-nino text-slate-900">
+      <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -162,7 +162,7 @@ const PatientProfile = () => {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => navigate("/patients")}
-                className="flex items-center gap-2 text-gray-400 hover:text-brand-deep font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer"
+                className="flex items-center gap-2 text-text-muted hover:text-text-main font-black uppercase text-[10px] tracking-widest transition-all cursor-pointer"
               >
                 <ArrowLeft size={16} /> უკან სიაში
               </button>
@@ -170,7 +170,7 @@ const PatientProfile = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="p-4 bg-white border border-red-100 text-red-400 rounded-2xl hover:bg-red-50 transition-all shadow-sm cursor-pointer"
+                  className="p-4 bg-surface border border-red-500/20 text-red-400 rounded-2xl hover:bg-red-500/10 transition-all shadow-sm cursor-pointer"
                 >
                   <Trash2 size={20} />
                 </button>
@@ -202,7 +202,7 @@ const PatientProfile = () => {
             </div>
 
             {/* Profile Header Card */}
-            <div className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+            <div className="bg-surface rounded-[40px] p-10 border border-border-main shadow-sm flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
               <div className="w-28 h-28 bg-brand-purple/10 rounded-[32px] flex items-center justify-center text-brand-purple text-4xl font-black shrink-0">
                 {patientData.fullName ? patientData.fullName[0] : "?"}
               </div>
@@ -217,10 +217,10 @@ const PatientProfile = () => {
                         fullName: transliterateToGeorgian(e.target.value),
                       })
                     }
-                    className="text-4xl font-black text-brand-deep italic tracking-tighter mb-3 bg-slate-50 border-b-2 border-brand-purple outline-none px-2 w-full max-w-md"
+                    className="text-4xl font-black text-text-main italic tracking-tighter mb-3 bg-surface-soft border-b-2 border-brand-purple outline-none px-2 w-full max-w-md"
                   />
                 ) : (
-                  <h1 className="text-4xl font-black text-brand-deep italic tracking-tighter mb-3">
+                  <h1 className="text-4xl font-black text-text-main italic tracking-tighter mb-3">
                     {patientData.fullName}
                   </h1>
                 )}
@@ -231,14 +231,14 @@ const PatientProfile = () => {
                       maxLength={11}
                       value={patientData.personalId}
                       onChange={e => setPatientData({...patientData, personalId: e.target.value})}
-                      className="px-4 py-2 bg-slate-50 rounded-xl text-[10px] font-black uppercase text-brand-purple tracking-widest border border-brand-purple/20 outline-none w-32"
+                      className="px-4 py-2 bg-surface-soft rounded-xl text-[10px] font-black uppercase text-brand-purple tracking-widest border border-brand-purple/20 outline-none w-32"
                     />
                   ) : (
-                    <span className="px-4 py-2 bg-slate-50 rounded-xl text-[10px] font-black uppercase text-gray-400 tracking-widest border border-gray-100 italic">
+                    <span className="px-4 py-2 bg-surface-soft rounded-xl text-[10px] font-black uppercase text-text-muted tracking-widest border border-border-main italic">
                       ID: {patientData.personalId}
                     </span>
                   )}
-                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-xl text-[10px] font-black uppercase text-blue-500 tracking-widest border border-blue-100 italic text-nowrap	">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 rounded-xl text-[10px] font-black uppercase text-blue-500 tracking-widest border border-blue-500/20 italic text-nowrap	">
                     <HeartPulse size={12} /> ჯგუფი:{" "}
                     {isEditing ? (
                       <select
@@ -333,7 +333,7 @@ const PatientProfile = () => {
                 />
 
                 <div
-                  className={`bg-white p-6 rounded-[28px] border-2 transition-all ${patientData.allergies ? "border-red-100 shadow-red-50" : "border-gray-50 shadow-sm"}`}
+                  className={`bg-surface p-6 rounded-[28px] border-2 transition-all ${patientData.allergies ? "border-red-500/20 shadow-red-50" : "border-border-main shadow-sm"}`}
                 >
                   <label className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-3 block italic flex items-center gap-2">
                     <ShieldAlert size={12} /> ალერგიები
@@ -348,18 +348,18 @@ const PatientProfile = () => {
                         })
                       }
                       placeholder="მაგ: პენიცილინი..."
-                      className="w-full bg-red-50/30 border-none rounded-xl p-3 outline-none font-bold text-sm text-red-600 min-h-[80px] resize-none"
+                      className="w-full bg-red-500/10/30 border-none rounded-xl p-3 outline-none font-bold text-sm text-red-600 min-h-[80px] resize-none"
                     />
                   ) : (
                     <p
-                      className={`font-black text-sm italic ${patientData.allergies ? "text-red-500" : "text-gray-300"}`}
+                      className={`font-black text-sm italic ${patientData.allergies ? "text-red-500" : "text-text-muted"}`}
                     >
                       {patientData.allergies || "არ არის დაფიქსირებული"}
                     </p>
                   )}
                 </div>
 
-                <div className="bg-white p-6 rounded-[28px] border border-gray-50 shadow-sm">
+                <div className="bg-surface p-6 rounded-[28px] border border-border-main shadow-sm">
                   <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-3 block italic flex items-center gap-2">
                     <Activity size={12} /> ქრონიკული დაავადებები
                   </label>
@@ -373,11 +373,11 @@ const PatientProfile = () => {
                         })
                       }
                       placeholder="მაგ: დიაბეტი..."
-                      className="w-full bg-blue-50/30 border-none rounded-xl p-3 outline-none font-bold text-sm text-blue-600 min-h-[80px] resize-none"
+                      className="w-full bg-blue-500/10/30 border-none rounded-xl p-3 outline-none font-bold text-sm text-blue-600 min-h-[80px] resize-none"
                     />
                   ) : (
                     <p
-                      className={`font-black text-sm italic ${patientData.diseases ? "text-blue-500" : "text-gray-300"}`}
+                      className={`font-black text-sm italic ${patientData.diseases ? "text-blue-500" : "text-text-muted"}`}
                     >
                       {patientData.diseases || "არ არის დაფიქსირებული"}
                     </p>
@@ -387,8 +387,8 @@ const PatientProfile = () => {
 
               {/* სამედიცინო სვეტი */}
               <div className="lg:col-span-2 space-y-8">
-                <div className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm relative overflow-hidden">
-                  <h3 className="text-2xl font-black text-brand-deep italic tracking-tighter flex items-center gap-3 mb-10">
+                <div className="bg-surface p-10 rounded-[40px] border border-border-main shadow-sm relative overflow-hidden">
+                  <h3 className="text-2xl font-black text-text-main italic tracking-tighter flex items-center gap-3 mb-10">
                     <Activity className="text-brand-purple" size={24} />{" "}
                     სტომატოლოგიური სტატუსი
                   </h3>
@@ -412,20 +412,20 @@ const PatientProfile = () => {
                 className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md"
                 onClick={() => setShowDeleteConfirm(false)}
               />
-              <div className="bg-white rounded-[40px] w-full max-w-sm p-10 shadow-2xl relative z-10 text-center animate-in zoom-in-95 duration-200">
-                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <div className="bg-surface rounded-[40px] w-full max-w-sm p-10 shadow-2xl relative z-10 text-center animate-in zoom-in-95 duration-200">
+                <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
                   <AlertTriangle size={40} />
                 </div>
-                <h3 className="text-xl font-black text-brand-deep italic mb-2">
+                <h3 className="text-xl font-black text-text-main italic mb-2">
                   ბარათის წაშლა
                 </h3>
-                <p className="text-xs text-gray-400 font-bold leading-relaxed mb-8 uppercase tracking-widest">
+                <p className="text-xs text-text-muted font-bold leading-relaxed mb-8 uppercase tracking-widest">
                   პაციენტის ყველა მონაცემი სამუდამოდ წაიშლება.
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
-                    className="py-4 bg-slate-50 text-gray-500 rounded-2xl font-black text-[10px] uppercase tracking-widest cursor-pointer"
+                    className="py-4 bg-surface-soft text-text-muted rounded-2xl font-black text-[10px] uppercase tracking-widest cursor-pointer"
                   >
                     გაუქმება
                   </button>
@@ -451,19 +451,19 @@ const PatientProfile = () => {
                 className="fixed inset-0 bg-brand-deep/40 backdrop-blur-sm"
                 onClick={() => setIsStatusModalOpen(false)}
               />
-              <div className="bg-white rounded-[32px] w-full max-w-md p-8 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200">
+              <div className="bg-surface rounded-[32px] w-full max-w-md p-8 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center mb-6">
                   <div>
-                    <h3 className="text-xl font-black text-brand-deep italic">
+                    <h3 className="text-xl font-black text-text-main italic">
                       კბილი #{selectedTooth}
                     </h3>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                    <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">
                       სტატუსი და შენიშვნები
                     </p>
                   </div>
                   <button
                     onClick={() => setIsStatusModalOpen(false)}
-                    className="text-gray-400 hover:text-brand-deep cursor-pointer"
+                    className="text-text-muted hover:text-text-main cursor-pointer"
                   >
                     <X size={20} />
                   </button>
@@ -475,27 +475,27 @@ const PatientProfile = () => {
                       {
                         id: "healthy",
                         label: "ჯანმრთელი",
-                        color: "bg-emerald-50 text-emerald-600",
+                        color: "bg-emerald-500/10 text-emerald-600",
                       },
                       {
                         id: "caries",
                         label: "კარიესი",
-                        color: "bg-amber-50 text-amber-600",
+                        color: "bg-amber-500/10 text-amber-600",
                       },
                       {
                         id: "pulpitis",
                         label: "პულპიტი",
-                        color: "bg-red-50 text-red-600",
+                        color: "bg-red-500/10 text-red-600",
                       },
                       {
                         id: "implant",
                         label: "იმპლანტი",
-                        color: "bg-blue-50 text-blue-600",
+                        color: "bg-blue-500/10 text-blue-600",
                       },
                       {
                         id: "missing",
                         label: "ამოღებული",
-                        color: "bg-slate-100 text-slate-500",
+                        color: "bg-surface-soft text-text-muted",
                       },
                     ].map((s) => (
                       <button
@@ -507,7 +507,7 @@ const PatientProfile = () => {
                           patientData.teethStatus?.[selectedTooth]?.status ===
                           s.id
                             ? `${s.color} ring-2 ring-offset-1 ring-current`
-                            : "bg-slate-50 text-slate-400"
+                            : "bg-surface-soft text-text-muted"
                         }`}
                       >
                         {s.label}
@@ -518,14 +518,14 @@ const PatientProfile = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 italic flex items-center gap-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1 italic flex items-center gap-2">
                       <Edit3 size={12} /> ექიმის შენიშვნა
                     </label>
                     <textarea
                       value={toothComment}
                       onChange={(e) => setToothComment(e.target.value)}
                       placeholder="მაგ: არხები დასაბჟენია..."
-                      className="w-full h-32 bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-2xl p-4 outline-none font-bold text-sm text-brand-deep resize-none transition-all"
+                      className="w-full h-32 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl p-4 outline-none font-bold text-sm text-text-main resize-none transition-all"
                     />
                   </div>
 
@@ -560,12 +560,12 @@ const InfoBlock = ({
   type = "text",
   options = [],
 }) => (
-  <div className="bg-white p-6 rounded-[28px] border border-gray-50 shadow-sm group">
-    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-3 block italic">
+  <div className="bg-surface p-6 rounded-[28px] border border-border-main shadow-sm group">
+    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-3 block italic">
       {label}
     </label>
     <div className="flex items-center gap-3">
-      <div className="p-2.5 bg-gray-50 rounded-xl text-gray-400 group-focus-within:text-brand-purple transition-colors">
+      <div className="p-2.5 bg-surface-soft rounded-xl text-text-muted group-focus-within:text-brand-purple transition-colors">
         <Icon size={18} />
       </div>
       {editable ? (
@@ -573,7 +573,7 @@ const InfoBlock = ({
           <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-brand-deep text-sm cursor-pointer"
+            className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm cursor-pointer"
           >
             <option value="">აირჩიე...</option>
             {options.map((opt) => (
@@ -587,11 +587,11 @@ const InfoBlock = ({
             type={type}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-slate-50 border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-brand-deep text-sm"
+            className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm"
           />
         )
       ) : (
-        <p className="font-black text-brand-deep tracking-tight text-sm italic">
+        <p className="font-black text-text-main tracking-tight text-sm italic">
           {value || "—"}
         </p>
       )}

@@ -222,7 +222,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   if (!isOpen) return null;
 
   const inputClasses =
-    "w-full px-5 py-4 bg-gray-50 rounded-2xl outline-none font-bold text-sm text-slate-900 focus:bg-white border-2 border-transparent focus:border-brand-purple transition-all autofill-fix";
+    "w-full px-5 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm text-text-main focus:bg-surface border-2 border-transparent focus:border-brand-purple transition-all autofill-fix";
 
   const showDropdown = searchTerm.length >= 2 && searchTerm !== selectedPatient?.fullName;
 
@@ -242,27 +242,27 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
       {/* Toast Notification */}
       {toast.show && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="bg-red-50 border border-red-100 text-red-600 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-600 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md">
             <AlertCircle size={18} className="text-red-500" />
             <span className="text-[11px] font-black uppercase tracking-widest">{toast.message}</span>
           </div>
         </div>
       )}
 
-      <div className="app-sheet bg-white rounded-t-[28px] md:rounded-[40px] w-full max-w-lg shadow-2xl relative z-10 overflow-visible font-nino animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
-        <div className="p-5 md:p-8 border-b border-gray-50 flex justify-between items-center bg-slate-50/50 rounded-t-[28px] md:rounded-t-[40px]">
+      <div className="app-sheet bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-lg shadow-2xl relative z-10 overflow-visible font-nino animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
+        <div className="p-5 md:p-8 border-b border-border-main flex justify-between items-center bg-surface-soft/50 rounded-t-[28px] md:rounded-t-[40px]">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${isExternal ? "bg-slate-500 text-white shadow-slate-500/20" : "bg-brand-purple text-white shadow-brand-purple/20"}`}>
               {isExternal ? <Building2 size={24} /> : <CalendarDays size={24} />}
             </div>
             <div>
-              <h2 className="text-xl font-black text-brand-deep italic tracking-tight">ვიზიტის ჩანიშვნა</h2>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
+              <h2 className="text-xl font-black text-text-main italic tracking-tight">ვიზიტის ჩანიშვნა</h2>
+              <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-0.5">
                 {isExternal ? "პირადი განრიგი" : "კლინიკის ბაზა"}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2.5 text-gray-400 hover:text-sale-red hover:bg-red-50 rounded-xl transition-colors">
+          <button onClick={onClose} className="p-2.5 text-text-muted hover:text-sale-red hover:bg-red-500/10 rounded-xl transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -270,9 +270,9 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         <form onSubmit={handleSubmit} className="p-5 md:p-8 space-y-6 overflow-y-auto max-h-[80vh] md:max-h-[70vh] custom-scrollbar">
           {/* მხოლოდ ექიმებს შეუძლიათ სხვა კლინიკის ჯავშნები */}
           {!isReceptionist && (
-            <div className="flex p-1 bg-gray-100 rounded-2xl">
-                <button type="button" onClick={() => { setIsExternal(false); setSelectedPatient(null); setSearchTerm(""); }} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isExternal ? "bg-white text-brand-purple shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>ჩემი კლინიკა</button>
-                <button type="button" onClick={() => setIsExternal(true)} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isExternal ? "bg-slate-500 text-white shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>სხვა კლინიკა</button>
+            <div className="flex p-1 bg-surface-soft rounded-2xl">
+                <button type="button" onClick={() => { setIsExternal(false); setSelectedPatient(null); setSearchTerm(""); }} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isExternal ? "bg-surface text-brand-purple shadow-sm" : "text-text-muted hover:text-gray-600"}`}>ჩემი კლინიკა</button>
+                <button type="button" onClick={() => setIsExternal(true)} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isExternal ? "bg-slate-500 text-white shadow-sm" : "text-text-muted hover:text-gray-600"}`}>სხვა კლინიკა</button>
             </div>
           )}
 
@@ -291,14 +291,14 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
               />
 
               {showDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl max-h-48 overflow-y-auto shadow-2xl p-2 space-y-1 z-50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-surface border border-border-main rounded-2xl max-h-48 overflow-y-auto shadow-2xl p-2 space-y-1 z-50">
                   {searchResults.map((p) => (
                     <div key={p.id} onClick={() => { setSelectedPatient(p); setSearchTerm(p.fullName); }} className="p-3 hover:bg-brand-purple/5 rounded-xl cursor-pointer flex items-center justify-between group transition-all">
                       <div>
-                        <span className="font-bold text-sm text-brand-deep block">{p.fullName}</span>
+                        <span className="font-bold text-sm text-text-main block">{p.fullName}</span>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">ID: {p.personalId || "არ აქვს"}</span>
-                          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">ტელ: {p.phone || "-"}</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-text-muted bg-surface-soft px-2 py-0.5 rounded-md">ID: {p.personalId || "არ აქვს"}</span>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-text-muted">ტელ: {p.phone || "-"}</span>
                         </div>
                       </div>
                       <PlusCircle size={16} className="opacity-0 group-hover:opacity-100 text-brand-purple" />
@@ -337,7 +337,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
           {/* ექიმის არჩევა (ადმინისთვის და რეგისტრატორისთვის) */}
           {canSelectDoctor && !isExternal && (
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 italic">აირჩიეთ ექიმი</label>
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">აირჩიეთ ექიმი</label>
               <select
                 required
                 value={formData.doctorId}
@@ -376,7 +376,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2 relative">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 italic">ხანგრძლივობა</label>
+              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">ხანგრძლივობა</label>
               <select value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} className={`${inputClasses} appearance-none cursor-pointer`}>
                 <option value="30">30 წუთი</option>
                 <option value="60">1 საათი</option>

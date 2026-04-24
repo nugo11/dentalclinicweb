@@ -95,37 +95,37 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[150] overflow-hidden font-nino text-slate-900">
+    <div className="fixed inset-0 z-[150] overflow-hidden font-nino text-text-main">
       <div className="absolute inset-0 bg-brand-deep/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
       
       <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-md animate-in slide-in-from-right duration-300">
-          <div className="h-full flex flex-col bg-white shadow-2xl rounded-l-[40px] overflow-hidden border-l border-gray-100">
+          <div className="h-full flex flex-col bg-surface shadow-2xl rounded-l-[40px] overflow-hidden border-l border-border-main">
             
             {/* Header */}
-            <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-slate-50/50">
+            <div className="p-8 border-b border-border-main flex items-center justify-between bg-surface-soft/50">
               <div>
-                <h2 className="text-xl font-black text-brand-deep italic tracking-tighter">სერვისების მართვა</h2>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">ფასები და მასალების ხარჯი</p>
+                <h2 className="text-xl font-black text-text-main italic tracking-tighter">სერვისების მართვა</h2>
+                <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">ფასები და მასალების ხარჯი</p>
               </div>
-              <button onClick={onClose} className="p-2.5 text-gray-400 hover:bg-white rounded-xl shadow-sm transition-all cursor-pointer">
+              <button onClick={onClose} className="p-2.5 text-text-muted hover:bg-surface rounded-xl shadow-sm transition-all cursor-pointer">
                 <X size={20} />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {/* Form Section */}
-              <div className="p-8 space-y-6 bg-white">
+              <div className="p-8 space-y-6 bg-surface">
                 <form onSubmit={handleAddService} className="space-y-5">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 italic">მომსახურების დასახელება</label>
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">მომსახურების დასახელება</label>
                     <div className="relative">
-                      <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                      <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                       <input 
                         type="text" 
                         required
                         placeholder="მაგ: კბილის დაბჟენა"
-                        className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl outline-none font-bold text-sm border-2 border-transparent focus:border-brand-purple transition-all"
+                        className="w-full pl-12 pr-4 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm border-2 border-transparent focus:border-brand-purple transition-all"
                         value={newService.name}
                         onChange={(e) => setNewService({...newService, name: e.target.value})}
                       />
@@ -133,14 +133,14 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 italic">სტანდარტული ფასი (₾)</label>
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">სტანდარტული ფასი (₾)</label>
                     <div className="relative">
-                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                       <input 
                         type="number" 
                         required
                         placeholder="0.00"
-                        className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-2xl outline-none font-bold text-sm border-2 border-transparent focus:border-brand-purple transition-all"
+                        className="w-full pl-12 pr-4 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm border-2 border-transparent focus:border-brand-purple transition-all"
                         value={newService.price}
                         onChange={(e) => setNewService({...newService, price: e.target.value})}
                       />
@@ -155,25 +155,25 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
                     
                     {/* Search Inventory */}
                     <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                       <input 
                         type="text" 
                         placeholder="მოძებნე საწყობში..."
-                        className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-xl outline-none font-bold text-[12px] border border-gray-100 focus:border-brand-purple"
+                        className="w-full pl-12 pr-4 py-3 bg-surface-soft rounded-xl outline-none font-bold text-[12px] border border-border-main focus:border-brand-purple"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
                       {searchTerm && (
-                        <div className="absolute top-full left-0 w-full bg-white border border-gray-100 shadow-xl rounded-xl mt-1 z-50 max-h-48 overflow-y-auto">
+                        <div className="absolute top-full left-0 w-full bg-surface border border-border-main shadow-xl rounded-xl mt-1 z-50 max-h-48 overflow-y-auto">
                           {inventory.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase())).map(item => (
                             <button
                               key={item.id}
                               type="button"
                               onClick={() => addMaterialToService(item)}
-                              className="w-full px-4 py-3 text-left hover:bg-slate-50 flex justify-between items-center border-b border-gray-50 last:border-0"
+                              className="w-full px-4 py-3 text-left hover:bg-surface-soft flex justify-between items-center border-b border-border-main last:border-0"
                             >
                               <span className="text-[12px] font-bold">{item.name}</span>
-                              <span className="text-[10px] text-gray-400 uppercase">{item.unit}</span>
+                              <span className="text-[10px] text-text-muted uppercase">{item.unit}</span>
                             </button>
                           ))}
                         </div>
@@ -184,14 +184,14 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
                     <div className="space-y-2">
                       {newService.materials.map(mat => (
                         <div key={mat.id} className="flex items-center justify-between p-3 bg-brand-purple/5 rounded-xl border border-brand-purple/10">
-                          <span className="text-[12px] font-black text-brand-deep">{mat.name}</span>
+                          <span className="text-[12px] font-black text-text-main">{mat.name}</span>
                           <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-white rounded-lg px-2 py-1 shadow-sm border border-gray-100">
-                              <button type="button" onClick={() => updateMaterialAmount(mat.id, -1)} className="text-gray-400 hover:text-red-500"><Minus size={14}/></button>
+                            <div className="flex items-center gap-2 bg-surface rounded-lg px-2 py-1 shadow-sm border border-border-main">
+                              <button type="button" onClick={() => updateMaterialAmount(mat.id, -1)} className="text-text-muted hover:text-red-500"><Minus size={14}/></button>
                               <span className="text-[11px] font-black w-8 text-center">{mat.amount}</span>
-                              <button type="button" onClick={() => updateMaterialAmount(mat.id, 1)} className="text-gray-400 hover:text-emerald-500"><Plus size={14}/></button>
+                              <button type="button" onClick={() => updateMaterialAmount(mat.id, 1)} className="text-text-muted hover:text-emerald-500"><Plus size={14}/></button>
                             </div>
-                            <span className="text-[9px] font-bold text-gray-400 uppercase w-8">{mat.unit}</span>
+                            <span className="text-[9px] font-bold text-text-muted uppercase w-8">{mat.unit}</span>
                             <button type="button" onClick={() => removeMaterial(mat.id)} className="text-red-300 hover:text-red-500 transition-colors"><Trash2 size={14}/></button>
                           </div>
                         </div>
@@ -211,27 +211,27 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
 
               {/* List of Services */}
               <div className="p-8 space-y-3">
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 italic flex items-center gap-2">
-                   არსებული კატალოგი <span className="w-1.5 h-1.5 bg-gray-200 rounded-full"/> {services.length} სერვისი
+                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-4 italic flex items-center gap-2">
+                   არსებული კატალოგი <span className="w-1.5 h-1.5 bg-surface-soft rounded-full"/> {services.length} სერვისი
                 </h4>
                 {services.map((s) => (
-                  <div key={s.id} className="group p-5 bg-slate-50 rounded-[28px] border border-transparent hover:border-brand-purple/10 hover:bg-white hover:shadow-xl transition-all duration-300">
+                  <div key={s.id} className="group p-5 bg-surface-soft rounded-[28px] border border-transparent hover:border-brand-purple/10 hover:bg-surface hover:shadow-xl transition-all duration-300">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <p className="font-black text-brand-deep text-sm tracking-tighter uppercase">{s.name}</p>
+                        <p className="font-black text-text-main text-sm tracking-tighter uppercase">{s.name}</p>
                         <p className="text-[12px] font-black text-brand-purple italic">{s.price} ₾</p>
                       </div>
                       <button 
                         onClick={() => handleDelete(s.id)}
-                        className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                        className="p-2.5 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
                     {s.materials?.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 border-t border-gray-100 pt-3 mt-2">
+                      <div className="flex flex-wrap gap-1.5 border-t border-border-main pt-3 mt-2">
                         {s.materials.map((m, idx) => (
-                          <span key={idx} className="text-[8px] font-black uppercase tracking-tighter bg-gray-100 text-gray-500 px-2 py-1 rounded-md">
+                          <span key={idx} className="text-[8px] font-black uppercase tracking-tighter bg-surface-soft text-text-muted px-2 py-1 rounded-md">
                             {m.name}: {m.amount} {m.unit}
                           </span>
                         ))}

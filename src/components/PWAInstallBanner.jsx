@@ -98,7 +98,7 @@ const PWAInstallBanner = () => {
       <div className="fixed bottom-6 left-4 right-4 z-[60] md:hidden animate-in slide-in-from-bottom-10 duration-500">
         <div className="bg-brand-deep/95 backdrop-blur-xl border border-white/10 rounded-[28px] p-4 shadow-2xl shadow-brand-deep/40 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 bg-surface/10 rounded-2xl flex items-center justify-center shrink-0">
               <Download className="text-white" size={24} />
             </div>
             <div className="min-w-0">
@@ -110,7 +110,7 @@ const PWAInstallBanner = () => {
           <div className="flex items-center gap-2 shrink-0">
             <button 
               onClick={handleInstallClick}
-              className="px-4 py-2.5 bg-brand-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-brand-deep transition-all active:scale-95 shadow-lg shadow-brand-purple/20 whitespace-nowrap"
+              className="px-4 py-2.5 bg-brand-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-surface hover:text-text-main transition-all active:scale-95 shadow-lg shadow-brand-purple/20 whitespace-nowrap"
             >
               ინსტალაცია
             </button>
@@ -128,15 +128,15 @@ const PWAInstallBanner = () => {
       {showIOSModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowIOSModal(false)} />
-          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="relative bg-surface w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Header with close button inside */}
             <div className="p-6 pb-0 shrink-0">
               <div className="flex justify-between items-center mb-6">
                 <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center"><Smartphone size={24} /></div>
-                <button onClick={() => setShowIOSModal(false)} className="w-10 h-10 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
+                <button onClick={() => setShowIOSModal(false)} className="w-10 h-10 bg-surface-soft text-text-muted hover:text-text-muted rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
               </div>
-              <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-2 italic">ინსტალაცია iPhone-ზე</h3>
-              <p className="text-slate-500 text-sm font-medium mb-6">მიჰყევით ამ ნაბიჯებს DentalHub-ის დასამატებლად:</p>
+              <h3 className="text-2xl font-black text-text-main tracking-tighter mb-2 italic">ინსტალაცია iPhone-ზე</h3>
+              <p className="text-text-muted text-sm font-medium mb-6">მიჰყევით ამ ნაბიჯებს DentalHub-ის დასამატებლად:</p>
             </div>
 
             {/* Scrollable content */}
@@ -151,9 +151,9 @@ const PWAInstallBanner = () => {
                   <div key={idx} className="space-y-3">
                     <div className="flex items-center gap-3">
                       <span className="w-6 h-6 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">{item.step}</span>
-                      <p className="text-[12px] font-black text-brand-deep uppercase tracking-tight">{item.text}</p>
+                      <p className="text-[12px] font-black text-text-main uppercase tracking-tight">{item.text}</p>
                     </div>
-                    <div className="rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                    <div className="rounded-2xl border border-border-main overflow-hidden shadow-sm">
                       <img src={item.img} alt={`Step ${item.step}`} className="w-full h-auto" />
                     </div>
                   </div>
@@ -169,22 +169,22 @@ const PWAInstallBanner = () => {
       {showAndroidModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowAndroidModal(false)} />
-          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
+          <div className="relative bg-surface w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
             <div className="p-8">
               <div className="flex justify-between items-center mb-6">
                 <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center"><Smartphone size={24} /></div>
-                <button onClick={() => setShowAndroidModal(false)} className="w-10 h-10 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
+                <button onClick={() => setShowAndroidModal(false)} className="w-10 h-10 bg-surface-soft text-text-muted hover:text-text-muted rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
               </div>
-              <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-2 italic">ინსტალაცია Android-ზე</h3>
-              <p className="text-slate-500 text-sm font-medium mb-6">თუ ინსტალაციის ფანჯარა არ გამოჩნდა ავტომატურად:</p>
+              <h3 className="text-2xl font-black text-text-main tracking-tighter mb-2 italic">ინსტალაცია Android-ზე</h3>
+              <p className="text-text-muted text-sm font-medium mb-6">თუ ინსტალაციის ფანჯარა არ გამოჩნდა ავტომატურად:</p>
               <div className="space-y-4">
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
+                <div className="p-4 bg-surface-soft rounded-2xl border border-border-main flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">1</div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase">დააჭირეთ Chrome-ის მენიუს <span className="text-brand-purple">(⋮ სამ წერტილს ზედა მარჯვენა კუთხეში)</span></p>
+                  <p className="text-[12px] font-bold text-text-main uppercase">დააჭირეთ Chrome-ის მენიუს <span className="text-brand-purple">(⋮ სამ წერტილს ზედა მარჯვენა კუთხეში)</span></p>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-start gap-4">
+                <div className="p-4 bg-surface-soft rounded-2xl border border-border-main flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-brand-purple text-white text-[10px] font-black flex items-center justify-center shrink-0">2</div>
-                  <p className="text-[12px] font-bold text-brand-deep uppercase">აირჩიეთ <span className="text-brand-purple">"მთავარ ეკრანზე დამატება"</span> ან <span className="text-brand-purple text-sm">"Add to Home Screen"</span></p>
+                  <p className="text-[12px] font-bold text-text-main uppercase">აირჩიეთ <span className="text-brand-purple">"მთავარ ეკრანზე დამატება"</span> ან <span className="text-brand-purple text-sm">"Add to Home Screen"</span></p>
                 </div>
               </div>
               <button onClick={() => setShowAndroidModal(false)} className="w-full mt-8 py-4 bg-brand-deep text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl">გასაგებია</button>
@@ -197,43 +197,43 @@ const PWAInstallBanner = () => {
       {showChromeRequiredModal && (
         <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowChromeRequiredModal(false)} />
-          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
+          <div className="relative bg-surface w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
             <div className="p-8">
               <div className="flex justify-between items-center mb-6">
-                <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center">
                   <AlertTriangle size={24} />
                 </div>
-                <button onClick={() => setShowChromeRequiredModal(false)} className="w-10 h-10 bg-slate-50 text-slate-400 hover:text-slate-600 rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
+                <button onClick={() => setShowChromeRequiredModal(false)} className="w-10 h-10 bg-surface-soft text-text-muted hover:text-text-muted rounded-full flex items-center justify-center transition-colors"><X size={18} /></button>
               </div>
               
-              <h3 className="text-2xl font-black text-brand-deep tracking-tighter mb-2 italic">საჭიროა Google Chrome</h3>
-              <p className="text-slate-500 text-sm font-medium mb-6">
-                აპის დაინსტალირებისთვის საჭიროა <strong className="text-brand-deep">Google Chrome</strong> ბრაუზერის გამოყენება.
+              <h3 className="text-2xl font-black text-text-main tracking-tighter mb-2 italic">საჭიროა Google Chrome</h3>
+              <p className="text-text-muted text-sm font-medium mb-6">
+                აპის დაინსტალირებისთვის საჭიროა <strong className="text-text-main">Google Chrome</strong> ბრაუზერის გამოყენება.
                 {browserName && <span className="text-amber-600"> ({browserName} ბრაუზერი ამ ფუნქციას არ უჭერს მხარს)</span>}
               </p>
 
               <div className="space-y-4 mb-8">
-                <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100">
+                <div className="p-5 bg-blue-500/10 rounded-2xl border border-blue-500/20">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                    <div className="w-10 h-10 bg-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                       <Globe size={22} className="text-blue-500" />
                     </div>
                     <div>
-                      <p className="text-[12px] font-black text-brand-deep uppercase mb-1">ნაბიჯი 1</p>
-                      <p className="text-[11px] font-bold text-slate-600">გახსენით ეს ბმული Google Chrome-ში:</p>
-                      <p className="text-[11px] font-black text-brand-purple mt-2 bg-white px-3 py-2 rounded-xl border border-blue-100 break-all select-all">dentalclinicweb.vercel.app</p>
+                      <p className="text-[12px] font-black text-text-main uppercase mb-1">ნაბიჯი 1</p>
+                      <p className="text-[11px] font-bold text-text-muted">გახსენით ეს ბმული Google Chrome-ში:</p>
+                      <p className="text-[11px] font-black text-brand-purple mt-2 bg-surface px-3 py-2 rounded-xl border border-blue-500/20 break-all select-all">dentalclinicweb.vercel.app</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="p-5 bg-surface-soft rounded-2xl border border-border-main">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                    <div className="w-10 h-10 bg-surface rounded-xl flex items-center justify-center shrink-0 shadow-sm">
                       <Download size={22} className="text-brand-purple" />
                     </div>
                     <div>
-                      <p className="text-[12px] font-black text-brand-deep uppercase mb-1">ნაბიჯი 2</p>
-                      <p className="text-[11px] font-bold text-slate-600">Chrome-ში დააჭირეთ <span className="text-brand-purple font-black">⋮ მენიუს</span> და აირჩიეთ <span className="text-brand-purple font-black">"მთავარ ეკრანზე დამატება"</span></p>
+                      <p className="text-[12px] font-black text-text-main uppercase mb-1">ნაბიჯი 2</p>
+                      <p className="text-[11px] font-bold text-text-muted">Chrome-ში დააჭირეთ <span className="text-brand-purple font-black">⋮ მენიუს</span> და აირჩიეთ <span className="text-brand-purple font-black">"მთავარ ეკრანზე დამატება"</span></p>
                     </div>
                   </div>
                 </div>
