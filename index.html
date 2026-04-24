@@ -33,7 +33,62 @@
     <meta name="mobile-web-app-capable" content="yes" />
 </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <style>
+        :root {
+          --init-bg: #ffffff;
+          --init-text: #111827;
+        }
+        @media (prefers-color-scheme: dark) {
+          :root {
+            --init-bg: #030712;
+            --init-text: #ffffff;
+          }
+        }
+        .initial-loader-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          width: 100vw;
+          background-color: var(--init-bg);
+          font-family: system-ui, -apple-system, sans-serif;
+          margin: 0;
+          padding: 0;
+        }
+        .initial-spinner {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          border: 3px solid transparent;
+          border-top-color: #6366f1;
+          border-right-color: rgba(99, 102, 241, 0.4);
+          animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          margin-bottom: 24px;
+        }
+        .initial-loader-text {
+          color: var(--init-text);
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.3em;
+          text-transform: uppercase;
+          opacity: 0.8;
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 0.8; }
+          50% { opacity: 0.3; }
+        }
+      </style>
+      <div class="initial-loader-wrapper">
+        <div class="initial-spinner"></div>
+        <div class="initial-loader-text">DentalHub იტვირთება...</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
