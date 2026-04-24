@@ -55,15 +55,18 @@ const PWAInstallBanner = () => {
       setShowBanner(true);
     }
 
-    // Show banner for Android after 3s as fallback
+    // Show banner for Android
     if (isAndroidDevice && !isStandalone) {
-      const timer = setTimeout(() => {
-        setShowBanner(true);
-      }, 3000);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('beforeinstallprompt', handler);
-      };
+      // Non-Chrome browsers don't support beforeinstallprompt natively in the same way,
+      // so we show the banner after 3 seconds to give them manual instructions.
+      // For Chrome, we only want to show the banner when beforeinstallprompt is fired
+      // to guarantee a 100% automatic native install experience.
+      if (!isChromeDetected) {
+        const timer = setTimeout(() => {
+          setShowBanner(true);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
     }
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
