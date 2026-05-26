@@ -10,6 +10,11 @@ export default defineConfig({
         target: 'https://api.ubill.dev',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/ubill/, '')
+      },
+      '/api/ehr': {
+        target: 'https://ehrsvc.moh.gov.ge',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/ehr/, '')
       }
     }
   }

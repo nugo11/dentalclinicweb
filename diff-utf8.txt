@@ -1,0 +1,733 @@
+﻿diff --git a/src/components/Finance/OrderCompletionModal.jsx b/src/components/Finance/OrderCompletionModal.jsx
+index 4567564..3867088 100644
+--- a/src/components/Finance/OrderCompletionModal.jsx
++++ b/src/components/Finance/OrderCompletionModal.jsx
+@@ -1,5 +1,5 @@
+ import React, { useState, useEffect } from "react";
+-import { db, auth } from "../../firebase"; // ßâôßâÉßâòßâÉßâ¢ßâÉßâóßâößâù auth
++import { db, auth } from "../../firebase"; // ├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇó├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇö auth
+ import {
+   doc,
+   updateDoc,
+@@ -9,7 +9,7 @@ import {
+   where,
+   onSnapshot,
+   deleteDoc,
+-  increment, // ßâÉßâúßâ¬ßâÿßâÜßâößâæßâößâÜßâÿßâÉ ßâÉßâóßâ¥ßâ¢ßâúßâáßâÿ ßâ⌐ßâÉßâ¢ßâ¥ßâÖßâÜßâößâæßâÿßâíßâùßâòßâÿßâí
++  increment, // ├í╞Æ┬É├í╞Æ┬ú├í╞Æ┬¬├í╞Æ╦£├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞ÆΓÇ¥├í╞Æ┼í├í╞Æ╦£├í╞Æ┬É ├í╞Æ┬É├í╞Æ┬ó├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬ú├í╞Æ┬á├í╞Æ╦£ ├í╞Æ┬⌐├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬¥├í╞ÆΓäó├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í├í╞ÆΓÇö├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í
+ } from "firebase/firestore";
+ import { useAuth } from "../../context/AuthContext";
+ import {
+@@ -25,16 +25,19 @@ import {
+   Users,
+   Briefcase,
+   FileText,
+-  Activity
++  Activity,
++  HeartPulse
+ } from "lucide-react";
+ import { logActivity } from "../../utils/activityLogger";
++import { sendPlannedAmbulatory, replacePlannedAmbulatory, sendCalculation } from "../../ehr-integration/ehrSoapClient";
++import { validateForEHR, EHRValidationError } from "../../ehr-integration/ehrValidationGuard";
+ 
+ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+   const { role, activeStaff, userData } = useAuth();
+   
+-  // ßâ⌐ßâÉßâ«ßâúßâáßâòßâÿßâí ßâúßâñßâÜßâößâæßâÉ: ßâÉßâôßâ¢ßâÿßâ£ßâí, ßâ¢ßâößâ£ßâößâ»ßâößâáßâí ßâôßâÉ ßâáßâößâÆßâÿßâíßâóßâáßâÉßâóßâ¥ßâáßâí ßâ¿ßâößâúßâ½ßâÜßâÿßâÉßâù ßâºßâòßâößâÜßâÉßâíßâÿ. 
+-  // ßâößâÑßâÿßâ¢ßâí ßâ¿ßâößâúßâ½ßâÜßâÿßâÉ ßâ¢ßâ«ßâ¥ßâÜßâ¥ßâô ßâùßâÉßâòßâÿßâíßâÿ ßâ¿ßâößâÖßâòßâößâùßâÿßâí ßâ⌐ßâÉßâ«ßâúßâáßâòßâÉ.
+-  // ßâæßâúßâªßâÉßâÜßâóßâößâáßâÿ ßâáßâ⌐ßâößâæßâÉ ßâ¢ßâ«ßâ¥ßâÜßâ¥ßâô ßâ£ßâÉßâ«ßâòßâÿßâí ßâáßâößâƒßâÿßâ¢ßâ¿ßâÿ.
++  // ├í╞Æ┬⌐├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í ├í╞Æ┬ú├í╞Æ┬ñ├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ┬É: ├í╞Æ┬É├í╞ÆΓÇ£├í╞ÆΓÇ║├í╞Æ╦£├í╞Æ┼ô├í╞Æ┬í, ├í╞ÆΓÇ║├í╞ÆΓÇ¥├í╞Æ┼ô├í╞ÆΓÇ¥├í╞Æ┬»├í╞ÆΓÇ¥├í╞Æ┬á├í╞Æ┬í ├í╞ÆΓÇ£├í╞Æ┬É ├í╞Æ┬á├í╞ÆΓÇ¥├í╞ÆΓÇÖ├í╞Æ╦£├í╞Æ┬í├í╞Æ┬ó├í╞Æ┬á├í╞Æ┬É├í╞Æ┬ó├í╞Æ┬¥├í╞Æ┬á├í╞Æ┬í ├í╞Æ┬¿├í╞ÆΓÇ¥├í╞Æ┬ú├í╞Æ┬½├í╞Æ┼í├í╞Æ╦£├í╞Æ┬É├í╞ÆΓÇö ├í╞Æ┬º├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞Æ┼í├í╞Æ┬É├í╞Æ┬í├í╞Æ╦£. 
++  // ├í╞ÆΓÇ¥├í╞Æ┬Ñ├í╞Æ╦£├í╞ÆΓÇ║├í╞Æ┬í ├í╞Æ┬¿├í╞ÆΓÇ¥├í╞Æ┬ú├í╞Æ┬½├í╞Æ┼í├í╞Æ╦£├í╞Æ┬É ├í╞ÆΓÇ║├í╞Æ┬«├í╞Æ┬¥├í╞Æ┼í├í╞Æ┬¥├í╞ÆΓÇ£ ├í╞ÆΓÇö├í╞Æ┬É├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í├í╞Æ╦£ ├í╞Æ┬¿├í╞ÆΓÇ¥├í╞ÆΓäó├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞ÆΓÇö├í╞Æ╦£├í╞Æ┬í ├í╞Æ┬⌐├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇó├í╞Æ┬É.
++  // ├í╞ÆΓÇÿ├í╞Æ┬ú├í╞Æ┬ª├í╞Æ┬É├í╞Æ┼í├í╞Æ┬ó├í╞ÆΓÇ¥├í╞Æ┬á├í╞Æ╦£ ├í╞Æ┬á├í╞Æ┬⌐├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ┬É ├í╞ÆΓÇ║├í╞Æ┬«├í╞Æ┬¥├í╞Æ┼í├í╞Æ┬¥├í╞ÆΓÇ£ ├í╞Æ┼ô├í╞Æ┬É├í╞Æ┬«├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í ├í╞Æ┬á├í╞ÆΓÇ¥├í╞Æ┼╕├í╞Æ╦£├í╞ÆΓÇ║├í╞Æ┬¿├í╞Æ╦£.
+   const canFinalize = 
+     role === 'admin' || 
+     role === 'manager' || 
+@@ -44,24 +47,37 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+   const isReadOnly = !canFinalize;
+   const [availableServices, setAvailableServices] = useState([]);
+   const [selectedServices, setSelectedServices] = useState([]);
+-  const [customService, setCustomService] = useState({ name: "", price: "" });
++  const [customService, setCustomService] = useState({ name: "", price: "", ncsp: "" });
+   const [paidAmount, setPaidAmount] = useState(0);
+   const [loading, setLoading] = useState(false);
+-  const [error, setError] = useState(null); // ßâ¿ßâößâ¬ßâôßâ¥ßâ¢ßâÿßâí state
++  const [error, setError] = useState(null); // ├í╞Æ┬¿├í╞ÆΓÇ¥├í╞Æ┬¬├í╞ÆΓÇ£├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ╦£├í╞Æ┬í state
+   const [paymentMethod, setPaymentMethod] = useState("cash"); // cash, card, transfer
+   const [payerType, setPayerType] = useState("personal"); // personal, insurance, corporate
+   const [insuranceInfo, setInsuranceInfo] = useState({ company: "", policyNum: "", approvalCode: "" });
+   const [customServiceErrors, setCustomServiceErrors] = useState({ name: false, price: false });
+   
+-  // ßâôßâÉßâ¢ßâÉßâóßâößâæßâÿßâùßâÿ ßâ¢ßâÉßâíßâÉßâÜßâößâæßâÿßâí State
++  // ├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇö├í╞Æ╦£ ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬í├í╞Æ┬É├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í State
+   const [availableMaterials, setAvailableMaterials] = useState([]);
+   const [selectedExtraMaterials, setSelectedExtraMaterials] = useState([]);
+   const [materialSearch, setMaterialSearch] = useState("");
+ 
+-  // 1. ßâ¼ßâÉßâ¢ßâ¥ßâòßâÿßâªßâ¥ßâù ßâíßâößâáßâòßâÿßâíßâößâæßâÿßâí ßâÖßâÉßâóßâÉßâÜßâ¥ßâÆßâÿ
++  // Common ICD-10 codes for dentistry
++  const COMMON_DIAGNOSES = [
++    { code: "K02.1", name: "├í╞ÆΓäó├í╞Æ┬É├í╞Æ┬á├í╞Æ╦£├í╞ÆΓÇ¥├í╞Æ┬í├í╞Æ╦£ (Caries of dentine)" },
++    { code: "K05.3", name: "├í╞Æ┬Ñ├í╞Æ┬á├í╞Æ┬¥├í╞Æ┼ô├í╞Æ╦£├í╞ÆΓäó├í╞Æ┬ú├í╞Æ┼í├í╞Æ╦£ ├í╞Æ┼╛├í╞ÆΓÇ¥├í╞Æ┬á├í╞Æ╦£├í╞Æ┬¥├í╞ÆΓÇ£├í╞Æ┬¥├í╞Æ┼ô├í╞Æ┬ó├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£" },
++    { code: "K04.0", name: "├í╞Æ┼╛├í╞Æ┬ú├í╞Æ┼í├í╞Æ┼╛├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£ (Pulpitis)" },
++    { code: "K00.6", name: "├í╞ÆΓäó├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬¥├í╞Æ┬¡├í╞Æ┬á├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬á├í╞Æ┬ª├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£" },
++    { code: "K08.1", name: "├í╞ÆΓäó├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓäó├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇÖ├í╞ÆΓÇó├í╞Æ┬É ├í╞Æ┬ó├í╞Æ┬á├í╞Æ┬É├í╞ÆΓÇó├í╞ÆΓÇ║├í╞Æ╦£├í╞Æ┬í/├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬¥├í╞Æ┬ª├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇÖ├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬¥" },
++  ];
++
++  // EHR Data
++  const [primaryIcd10, setPrimaryIcd10] = useState("");
++  const [syncEHR, setSyncEHR] = useState(true);
++
++  // 1. ├í╞Æ┬¼├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬¥├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬ª├í╞Æ┬¥├í╞ÆΓÇö ├í╞Æ┬í├í╞ÆΓÇ¥├í╞Æ┬á├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓäó├í╞Æ┬É├í╞Æ┬ó├í╞Æ┬É├í╞Æ┼í├í╞Æ┬¥├í╞ÆΓÇÖ├í╞Æ╦£
+   useEffect(() => {
+     if (isOpen && orderData?.clinicId) {
+-      // ßâíßâößâáßâòßâÿßâíßâößâæßâÿ
++      // ├í╞Æ┬í├í╞ÆΓÇ¥├í╞Æ┬á├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£
+       const qServices = query(
+         collection(db, "services"),
+         where("clinicId", "==", orderData.clinicId),
+@@ -72,7 +88,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+         );
+       });
+ 
+-      // ßâÿßâ£ßâòßâößâ£ßâóßâÉßâáßâÿ
++      // ├í╞Æ╦£├í╞Æ┼ô├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞Æ┼ô├í╞Æ┬ó├í╞Æ┬É├í╞Æ┬á├í╞Æ╦£
+       const qInventory = query(
+         collection(db, "inventory"),
+         where("clinicId", "==", orderData.clinicId)
+@@ -90,7 +106,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+     }
+   }, [isOpen, orderData]);
+ 
+-  // 2. ßâíßâößâáßâòßâÿßâíßâößâæßâÿßâí ßâ¢ßâÉßâáßâùßâòßâÉ
++  // 2. ├í╞Æ┬í├í╞ÆΓÇ¥├í╞Æ┬á├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇö├í╞ÆΓÇó├í╞Æ┬É
+   const addService = (service) => {
+     const newService = { ...service, uniqueId: Date.now() };
+     setSelectedServices([...selectedServices, newService]);
+@@ -105,7 +121,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+ 
+     if (errors.name || errors.price) {
+       setCustomServiceErrors(errors);
+-      // ßâ¼ßâÉßâòßâ¿ßâÉßâÜßâ¥ßâù ßâößâáßâ¥ßâáßâößâæßâÿ 1 ßâ¼ßâÉßâ¢ßâ¿ßâÿ
++      // ├í╞Æ┬¼├í╞Æ┬É├í╞ÆΓÇó├í╞Æ┬¿├í╞Æ┬É├í╞Æ┼í├í╞Æ┬¥├í╞ÆΓÇö ├í╞ÆΓÇ¥├í╞Æ┬á├í╞Æ┬¥├í╞Æ┬á├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£ 1 ├í╞Æ┬¼├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬¿├í╞Æ╦£
+       setTimeout(() => setCustomServiceErrors({ name: false, price: false }), 1000);
+       return;
+     }
+@@ -113,8 +129,9 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+     addService({
+       name: customService.name,
+       price: Number(customService.price),
++      ncsp: customService.ncsp
+     });
+-    setCustomService({ name: "", price: "" });
++    setCustomService({ name: "", price: "", ncsp: "" });
+     setCustomServiceErrors({ name: false, price: false });
+   };
+ 
+@@ -132,7 +149,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+     );
+   };
+ 
+-  // ßâ¢ßâÉßâíßâÉßâÜßâößâæßâÿßâí ßâ¢ßâÉßâáßâùßâòßâÉ
++  // ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬í├í╞Æ┬É├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇö├í╞ÆΓÇó├í╞Æ┬É
+   const addExtraMaterial = (mat) => {
+     const existing = selectedExtraMaterials.find(m => m.id === mat.id);
+     if (existing) {
+@@ -185,18 +202,32 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+     }
+   };
+ 
+-  // 3. ßâ¿ßâößâÖßâòßâößâùßâÿßâí ßâôßâÉßâíßâáßâúßâÜßâößâæßâÉ ßâôßâÉ ßâíßâÉßâ¼ßâºßâ¥ßâæßâÿßâí ßâ⌐ßâÉßâ¢ßâ¥ßâ¡ßâáßâÉ
+   const handleFinalize = async () => {
+     setLoading(true);
+     setError(null);
+ 
++    if (syncEHR) {
++      if (!primaryIcd10) {
++        setError("EHR ßâíßâÿßâ£ßâÑßâáßâ¥ßâ£ßâÿßâûßâÉßâ¬ßâÿßâÿßâíßâùßâòßâÿßâí ßâÉßâúßâ¬ßâÿßâÜßâößâæßâößâÜßâÿßâÉ ßâ½ßâÿßâáßâÿßâùßâÉßâôßâÿ ßâôßâÿßâÉßâÆßâ£ßâ¥ßâûßâÿßâí (ICD-10) ßâ¢ßâÿßâùßâÿßâùßâößâæßâÉ.");
++        setLoading(false);
++        return;
++      }
++      
++      const missingNcsp = selectedServices.some(s => !s.ncsp);
++      if (missingNcsp) {
++        setError("ßâûßâ¥ßâÆßâÿßâößâáßâù ßâíßâößâáßâòßâÿßâíßâí ßâÉßâÖßâÜßâÿßâÉ NCSP ßâÖßâ¥ßâôßâÿ. ßâÆßâùßâ«ßâ¥ßâòßâù ßâ¿ßâößâÉßâòßâíßâ¥ßâù ßâíßâÿßâ£ßâÑßâáßâ¥ßâ£ßâÿßâûßâÉßâ¬ßâÿßâÿßâíßâùßâòßâÿßâí.");
++        setLoading(false);
++        return;
++      }
++    }
++
+     try {
+       const user = auth.currentUser;
+       if (!user) throw new Error("ßâÉßâòßâóßâ¥ßâáßâÿßâûßâÉßâ¬ßâÿßâÉ ßâíßâÉßâ¡ßâÿßâáßâ¥ßâÉ");
+ 
+       let totalMaterialCost = 0;
+ 
+-      // 1. ßâ»ßâößâá ßâÉßâ¢ßâ¥ßâòßâÿßâªßâ¥ßâù ßâºßâòßâößâÜßâÉ ßâ¢ßâÉßâíßâÉßâÜßâÿßâí ßâñßâÉßâíßâÿ ßâíßâÉßâ¼ßâºßâ¥ßâæßâÿßâôßâÉßâ£ ßâôßâÉ ßâôßâÉßâòßâùßâòßâÉßâÜßâ¥ßâù ßâ«ßâÉßâáßâ»ßâÿ
++      // 1. Calculate costs
+       for (const service of selectedServices) {
+         if (service.materials && Array.isArray(service.materials)) {
+           for (const mat of service.materials) {
+@@ -209,7 +240,6 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+         }
+       }
+ 
+-      // 1.1 ßâôßâÉßâòßâÉßâ¢ßâÉßâóßâ¥ßâù ßâößâÑßâíßâóßâáßâÉ ßâ¢ßâÉßâíßâÉßâÜßâößâæßâÿßâí ßâ«ßâÉßâáßâ»ßâÿ
+       for (const mat of selectedExtraMaterials) {
+         const matDoc = await getDoc(doc(db, "inventory", mat.id));
+         if (matDoc.exists()) {
+@@ -218,7 +248,105 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+         }
+       }
+ 
+-      // 2. ßâ»ßâÉßâòßâ¿ßâ£ßâÿßâí ßâÆßâÉßâ£ßâÉßâ«ßâÜßâößâæßâÉ
++      // 2. EHR Sychronization (The 2-Step Pipeline) - BLOCKING STEP
++      let newEhrId = orderData.ehrId;
++
++      if (syncEHR) {
++        // Fetch Patient and Doctor data
++        const patientDoc = await getDoc(doc(db, "patients", orderData.patientId));
++        const doctorDoc = await getDoc(doc(db, "users", orderData.doctorId || user.uid));
++        
++        if (!patientDoc.exists() || !doctorDoc.exists()) {
++          throw new Error("ßâ₧ßâÉßâ¬ßâÿßâößâ£ßâóßâÿßâí ßâÉßâ£ ßâößâÑßâÿßâ¢ßâÿßâí ßâ¢ßâ¥ßâ£ßâÉßâ¬ßâößâ¢ßâößâæßâÿ ßâòßâößâá ßâ¢ßâ¥ßâÿßâ½ßâößâæßâ£ßâÉ EHR ßâíßâÿßâ£ßâÑßâáßâ¥ßâ£ßâÿßâûßâÉßâ¬ßâÿßâÿßâíßâùßâòßâÿßâí.");
++        }
++
++        const patientData = patientDoc.data();
++        const doctorData = doctorDoc.data();
++
++        const patientPayload = {
++          patientId: patientDoc.id,
++          personalId: patientData.personalId || "",
++          birthDate: patientData.birthDate || "",
++          bloodGroupRhFactor: Number(patientData.bloodGroup) || 1,
++          actualRegion: patientData.actualRegion || "ßâùßâæßâÿßâÜßâÿßâíßâÿ",
++          actualResidenceAddress: patientData.actualResidenceAddress || "ßâùßâæßâÿßâÜßâÿßâíßâÿ",
++          phone: patientData.phone || "",
++          email: patientData.email || ""
++        };
++
++        const doctorPayload = {
++          userId: doctorDoc.id,
++          personalId: doctorData.personalId || "",
++          birthDate: doctorData.birthDate || ""
++        };
++
++        const rawStartDate = orderData.createdAt?.toDate ? orderData.createdAt.toDate() : (orderData.date ? new Date(orderData.date) : new Date());
++        const startDate = (isNaN(rawStartDate.getTime()) ? new Date() : rawStartDate).toISOString().split('.')[0];
++        const endDate = new Date().toISOString().split('.')[0];
++
++        const proceduresPayload = selectedServices.map(s => ({
++          ncsp: s.ncsp || "JDE002",
++          icd10: primaryIcd10 || "K02.1",
++          procedureEndDate: endDate,
++          procedureResult: "ßâ¼ßâÉßâáßâ¢ßâÉßâóßâößâæßâúßâÜßâÿ",
++          price: Number(s.price)
++        }));
++
++        const usedMedicalItems = selectedExtraMaterials.map(m => ({
++          section: "1",
++          itemId: m.itemId || "",
++          itemGroupId: m.itemGroupId || "G1",
++          itemDescription: m.name || "ßâ¢ßâÉßâíßâÉßâÜßâÉ",
++          itemQuantity: Number(m.amount),
++          itemPrice: Number(m.pricePerUnit || 0)
++        }));
++
++        const visitPayload = {
++          visitId: orderData.id,
++          ehrId: orderData.ehrId,
++          ehrNo: orderData.id.slice(0, 8),
++          patientId: patientDoc.id,
++          doctorId: doctorDoc.id,
++          startDate: startDate,
++          endDate: endDate,
++          status: "completed",
++          diagnoses: [{ icd10: primaryIcd10 || "K02.1", isPrimary: true }],
++          procedures: proceduresPayload,
++          prescriptions: selectedServices.filter(s => s.wasUsed === 2).map(s => ({
++             drugId: s.id,
++             icd10: primaryIcd10 || "K02.1",
++             drugCount: 1,
++             ds: "ßâÉßâ£ßâößâíßâùßâößâûßâÿßâÉ",
++             wasUsed: 2,
++             price: Number(s.price)
++          })),
++          calculations: {
++            directCosts: {
++              salary: [{ section: "1", persId: doctorData.personalId || "", amount: totalAmount * 0.4 }],
++              usedMedicalItems: usedMedicalItems
++            }
++          }
++        };
++
++        // Validate
++        validateForEHR(patientPayload, doctorPayload, visitPayload, !!orderData.ehrId);
++
++        // Step 1: Main EHR Service
++        if (!orderData.ehrId) {
++           await sendPlannedAmbulatory(patientPayload, doctorPayload, visitPayload);
++           newEhrId = "EHR_" + orderData.id; 
++           visitPayload.ehrId = newEhrId;
++        } else {
++           await replacePlannedAmbulatory(patientPayload, doctorPayload, visitPayload);
++        }
++
++        // Step 2: Calculation Service
++        if (newEhrId) {
++           await sendCalculation(visitPayload);
++        }
++      }
++
++      // 3. ßâ»ßâÉßâòßâ¿ßâ£ßâÿßâí ßâÆßâÉßâ£ßâÉßâ«ßâÜßâößâæßâÉ - ONLY RUNS IF EHR SUCCEEDS
+       const appointmentRef = doc(db, "appointments", orderData.id);
+         await updateDoc(appointmentRef, {
+           status: "completed_and_billed",
+@@ -232,51 +360,91 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+           payerType: payerType,
+           insuranceInfo: payerType === 'insurance' ? insuranceInfo : null,
+           finalizedAt: new Date().toISOString(),
++          ehrId: newEhrId || null,
+         });
+ 
+-      // 3. ßâíßâÉßâ¼ßâºßâ¥ßâæßâÿßâí ßâÆßâÉßâ£ßâÉßâ«ßâÜßâößâæßâÉ - ßâÉßâÑ ßâÉßâáßâÿßâí ßâÖßâáßâÿßâóßâÿßâÖßâúßâÜßâÿ ßâ£ßâÉßâ¼ßâÿßâÜßâÿ!
++      // 4. ßâíßâÉßâ¼ßâºßâ¥ßâæßâÿßâí ßâÆßâÉßâ£ßâÉßâ«ßâÜßâößâæßâÉ
+       const inventoryUpdates = [];
+-      
+-      // ßâíßâößâáßâòßâÿßâíßâößâæßâÿßâí ßâ¢ßâÉßâíßâÉßâÜßâößâæßâÿ
+       for (const service of selectedServices) {
+         if (service.materials && Array.isArray(service.materials)) {
+           for (const mat of service.materials) {
+             if (mat.id) {
+               const materialRef = doc(db, "inventory", mat.id);
+-              inventoryUpdates.push(
+-                updateDoc(materialRef, {
+-                  quantity: increment(-(Number(mat.amount) || 0)),
+-                }),
+-              );
++              inventoryUpdates.push(updateDoc(materialRef, { quantity: increment(-(Number(mat.amount) || 0)) }));
+             }
+           }
+         }
+       }
+-
+-      // ßâößâÑßâíßâóßâáßâÉ ßâ¢ßâÉßâíßâÉßâÜßâößâæßâÿ
+       for (const mat of selectedExtraMaterials) {
+         if (mat.id) {
+           const materialRef = doc(db, "inventory", mat.id);
+-          inventoryUpdates.push(
+-            updateDoc(materialRef, {
+-              quantity: increment(-(Number(mat.amount) || 0)),
+-            }),
+-          );
++          inventoryUpdates.push(updateDoc(materialRef, { quantity: increment(-(Number(mat.amount) || 0)) }));
+         }
+       }
+-
+-      // ßâòßâößâÜßâ¥ßâôßâößâæßâÿßâù ßâºßâòßâößâÜßâÉ ßâ¢ßâ¥ßâùßâ«ßâ¥ßâòßâ£ßâÿßâí ßâôßâÉßâíßâáßâúßâÜßâößâæßâÉßâí
+       if (inventoryUpdates.length > 0) {
+         await Promise.all(inventoryUpdates);
+       }
+ 
+       // LOG ACTIVITY
+-      await logActivity(orderData.clinicId, userData || { uid: auth.currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'appointment_finalize', `ßâôßâÉßâÿßâ«ßâúßâáßâÉ ßâòßâÿßâûßâÿßâóßâÿ: ${orderData.patientName} (ßâùßâÉßâ£ßâ«ßâÉ: ${totalAmount}Γé╛)`, { patientId: orderData.patientId, patientName: orderData.patientName, amount: totalAmount });
++      await logActivity(orderData.clinicId, userData || { uid: auth.currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'appointment_finalize', `├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ╦£├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞Æ┬É ├í╞ÆΓÇó├í╞Æ╦£├í╞ÆΓÇô├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£: ${orderData.patientName} (├í╞ÆΓÇö├í╞Æ┬É├í╞Æ┼ô├í╞Æ┬«├í╞Æ┬É: ${totalAmount}├óΓÇÜ┬╛)`, { patientId: orderData.patientId, patientName: orderData.patientName, amount: totalAmount });
++
++      if (syncEHR) {
++        alert("├í╞ÆΓÇó├í╞Æ╦£├í╞ÆΓÇô├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£ ├í╞Æ┬¼├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇö ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ╦£├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞Æ┬É ├í╞ÆΓÇ£├í╞Æ┬É ├í╞Æ┬í├í╞Æ╦£├í╞Æ┼ô├í╞Æ┬Ñ├í╞Æ┬á├í╞Æ┬¥├í╞Æ┼ô├í╞Æ╦£├í╞ÆΓÇô├í╞ÆΓÇ£├í╞Æ┬É EHR-├í╞ÆΓÇö├í╞Æ┬É├í╞Æ┼ô!");
++      } else {
++        alert("├í╞ÆΓÇó├í╞Æ╦£├í╞ÆΓÇô├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£ ├í╞Æ┬¼├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇö ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ╦£├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞Æ┬É (EHR ├í╞Æ┬í├í╞Æ╦£├í╞Æ┼ô├í╞Æ┬Ñ├í╞Æ┬á├í╞Æ┬¥├í╞Æ┼ô├í╞Æ╦£├í╞ÆΓÇô├í╞Æ┬É├í╞Æ┬¬├í╞Æ╦£├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇÖ├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇ¥├í╞Æ┬¿├í╞ÆΓÇ¥).");
++      }
+ 
+       onClose();
+     } catch (err) {
+       console.error("Finalize error details:", err);
+-      setError("ßâíßâÉßâ¼ßâºßâ¥ßâæßâÿßâí ßâÆßâÉßâ£ßâÉßâ«ßâÜßâößâæßâÿßâíßâÉßâí ßâ¢ßâ¥ßâ«ßâôßâÉ ßâ¿ßâößâ¬ßâôßâ¥ßâ¢ßâÉ.");
++      if (err instanceof EHRValidationError) {
++        setError(`EHR ├í╞Æ┬¿├í╞ÆΓÇ¥├í╞Æ┬¬├í╞ÆΓÇ£├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬É: ${err.message}`);
++      } else {
++        setError(err.message || "├í╞Æ┬¿├í╞ÆΓÇ¥├í╞ÆΓäó├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞ÆΓÇö├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í├í╞Æ┬É├í╞Æ┬í ├í╞ÆΓÇ║├í╞Æ┬¥├í╞Æ┬«├í╞ÆΓÇ£├í╞Æ┬É ├í╞Æ┬¿├í╞ÆΓÇ¥├í╞Æ┬¬├í╞ÆΓÇ£├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬É.");
++      }
++    } finally {
++      setLoading(false);
++    }
++  };enario
++             // For now, we simulate extraction or assume it returned success
++             // newEhrId = extractEhrId(ehrResponse);
++             // newEhrId = "MOCK_EHR_ID"; // Mock since we don't have real SOAP response structure
++             newEhrId = "EHR_" + orderData.id;
++             await updateDoc(appointmentRef, { ehrId: newEhrId });
++             visitPayload.ehrId = newEhrId;
++          } else {
++             ehrResponse = await replacePlannedAmbulatory(patientPayload, doctorPayload, visitPayload);
++          }
++
++          // Step 2: Calculation Service
++          if (newEhrId) {
++             await sendCalculation(visitPayload);
++          }
++
++        } catch (ehrErr) {
++          console.error("EHR Sync Failed:", ehrErr);
++          if (ehrErr instanceof EHRValidationError) {
++             setError(`EHR ├í╞Æ┬¿├í╞ÆΓÇ¥├í╞Æ┬¬├í╞ÆΓÇ£├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬É: ${ehrErr.message}`);
++          } else {
++             setError(`EHR ├í╞Æ┬í├í╞Æ╦£├í╞Æ┼ô├í╞Æ┬Ñ├í╞Æ┬á├í╞Æ┬¥├í╞Æ┼ô├í╞Æ╦£├í╞ÆΓÇô├í╞Æ┬É├í╞Æ┬¬├í╞Æ╦£├í╞Æ┬É ├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞Æ┬á ├í╞ÆΓÇ║├í╞Æ┬¥├í╞Æ┬«├í╞ÆΓÇ¥├í╞Æ┬á├í╞Æ┬«├í╞ÆΓÇ£├í╞Æ┬É: ${ehrErr.message}`);
++          }
++          throw ehrErr; // Stop if EHR fails
++        }
++      }
++
++      // LOG ACTIVITY
++      await logActivity(orderData.clinicId, userData || { uid: auth.currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'appointment_finalize', `├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ╦£├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞Æ┬É ├í╞ÆΓÇó├í╞Æ╦£├í╞ÆΓÇô├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£: ${orderData.patientName} (├í╞ÆΓÇö├í╞Æ┬É├í╞Æ┼ô├í╞Æ┬«├í╞Æ┬É: ${totalAmount}├óΓÇÜ┬╛)`, { patientId: orderData.patientId, patientName: orderData.patientName, amount: totalAmount });
++
++      if (syncEHR) {
++        alert("├í╞ÆΓÇó├í╞Æ╦£├í╞ÆΓÇô├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£ ├í╞Æ┬¼├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇö ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ╦£├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞Æ┬É ├í╞ÆΓÇ£├í╞Æ┬É ├í╞Æ┬í├í╞Æ╦£├í╞Æ┼ô├í╞Æ┬Ñ├í╞Æ┬á├í╞Æ┬¥├í╞Æ┼ô├í╞Æ╦£├í╞ÆΓÇô├í╞ÆΓÇ£├í╞Æ┬É EHR-├í╞ÆΓÇö├í╞Æ┬É├í╞Æ┼ô!");
++      } else {
++        alert("├í╞ÆΓÇó├í╞Æ╦£├í╞ÆΓÇô├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£ ├í╞Æ┬¼├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇö ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ╦£├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞Æ┬É (EHR ├í╞Æ┬í├í╞Æ╦£├í╞Æ┼ô├í╞Æ┬Ñ├í╞Æ┬á├í╞Æ┬¥├í╞Æ┼ô├í╞Æ╦£├í╞ÆΓÇô├í╞Æ┬É├í╞Æ┬¬├í╞Æ╦£├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇÖ├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇ¥├í╞Æ┬¿├í╞ÆΓÇ¥).");
++      }
++
++      onClose();
++    } catch (err) {
++      console.error("Finalize error details:", err);
++      if (!error) setError(err.message || "├í╞Æ┬¿├í╞ÆΓÇ¥├í╞ÆΓäó├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞ÆΓÇö├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í├í╞Æ┬É├í╞Æ┬í ├í╞ÆΓÇ║├í╞Æ┬¥├í╞Æ┬«├í╞ÆΓÇ£├í╞Æ┬É ├í╞Æ┬¿├í╞ÆΓÇ¥├í╞Æ┬¬├í╞ÆΓÇ£├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬É.");
+     } finally {
+       setLoading(false);
+     }
+@@ -300,10 +468,10 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+             </div>
+             <div>
+               <h3 className="text-xl font-black text-text-main italic">
+-                ßâÉßâ£ßâÆßâÉßâáßâÿßâ¿ßâíßâ¼ßâ¥ßâáßâößâæßâÉ
++                ├í╞Æ┬É├í╞Æ┼ô├í╞ÆΓÇÖ├í╞Æ┬É├í╞Æ┬á├í╞Æ╦£├í╞Æ┬¿├í╞Æ┬í├í╞Æ┬¼├í╞Æ┬¥├í╞Æ┬á├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ┬É
+               </h3>
+               <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">
+-                ßâ₧ßâÉßâ¬ßâÿßâößâ£ßâóßâÿ: {orderData.patientName}
++                ├í╞Æ┼╛├í╞Æ┬É├í╞Æ┬¬├í╞Æ╦£├í╞ÆΓÇ¥├í╞Æ┼ô├í╞Æ┬ó├í╞Æ╦£: {orderData.patientName}
+               </p>
+             </div>
+           </div>
+@@ -316,11 +484,44 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+         </div>
+ 
+         <div className="p-5 md:p-8 flex-1 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+-          {/* ßâ¢ßâÉßâáßâ¬ßâ«ßâößâ£ßâÉ ßâ¢ßâ«ßâÉßâáßâö: ßâíßâößâáßâòßâÿßâíßâößâæßâÿßâí ßâÉßâáßâ⌐ßâößâòßâÉ */}
++          {/* ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬á├í╞Æ┬¬├í╞Æ┬«├í╞ÆΓÇ¥├í╞Æ┼ô├í╞Æ┬É ├í╞ÆΓÇ║├í╞Æ┬«├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇ¥: ├í╞Æ┬í├í╞ÆΓÇ¥├í╞Æ┬á├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞Æ┬É├í╞Æ┬á├í╞Æ┬⌐├í╞ÆΓÇ¥├í╞ÆΓÇó├í╞Æ┬É */}
+           <div className="space-y-6">
++            <div className="p-6 bg-blue-500/10 rounded-[32px] space-y-4 border border-blue-500/10 mb-6">
++              <div className="flex justify-between items-center">
++                <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-2 italic flex items-center gap-2">
++                  <HeartPulse size={14} /> EHR ├í╞Æ┬í├í╞Æ╦£├í╞Æ┼ô├í╞Æ┬Ñ├í╞Æ┬á├í╞Æ┬¥├í╞Æ┼ô├í╞Æ╦£├í╞ÆΓÇô├í╞Æ┬É├í╞Æ┬¬├í╞Æ╦£├í╞Æ┬É
++                </label>
++                <label className="flex items-center gap-2 cursor-pointer">
++                  <input type="checkbox" checked={syncEHR} onChange={e => setSyncEHR(e.target.checked)} className="accent-blue-500" />
++                  <span className="text-[10px] font-bold text-text-muted">├í╞Æ┬⌐├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇö├í╞ÆΓÇó├í╞Æ┬É</span>
++                </label>
++              </div>
++              {syncEHR && (
++                <div className="space-y-3 animate-in slide-in-from-top-2">
++                  <div className="relative group">
++                    <Activity className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={16} />
++                    <select
++                      disabled={isReadOnly}
++                      value={primaryIcd10}
++                      onChange={(e) => setPrimaryIcd10(e.target.value)}
++                      className={`w-full pl-12 pr-4 py-4 bg-surface rounded-2xl outline-none text-sm font-bold border-2 transition-all appearance-none ${!primaryIcd10 ? 'border-red-500 bg-red-50' : 'border-blue-500/20'}`}
++                    >
++                      <option value="">-- ├í╞Æ┬É├í╞Æ╦£├í╞Æ┬á├í╞Æ┬⌐├í╞Æ╦£├í╞ÆΓÇ¥ ├í╞ÆΓÇ£├í╞Æ╦£├í╞Æ┬É├í╞ÆΓÇÖ├í╞Æ┼ô├í╞Æ┬¥├í╞ÆΓÇô├í╞Æ╦£ (ICD-10) --</option>
++                      {COMMON_DIAGNOSES.map(d => (
++                        <option key={d.code} value={d.code}>{d.code} - {d.name}</option>
++                      ))}
++                    </select>
++                    {!primaryIcd10 && (
++                      <p className="text-[9px] text-red-500 font-black uppercase mt-1 ml-2">├í╞Æ┬É├í╞Æ┬ú├í╞Æ┬¬├í╞Æ╦£├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞ÆΓÇ¥├í╞Æ┼í├í╞Æ╦£ ├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞Æ┼í├í╞Æ╦£├í╞Æ┬É!</p>
++                    )}
++                  </div>
++                </div>
++              )}
++            </div>
++
+             <div className="space-y-3">
+               <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+-                ßâÉßâÿßâáßâ⌐ßâÿßâö ßâÖßâÉßâóßâÉßâÜßâ¥ßâÆßâÿßâôßâÉßâ£
++                ├í╞Æ┬É├í╞Æ╦£├í╞Æ┬á├í╞Æ┬⌐├í╞Æ╦£├í╞ÆΓÇ¥ ├í╞ÆΓäó├í╞Æ┬É├í╞Æ┬ó├í╞Æ┬É├í╞Æ┼í├í╞Æ┬¥├í╞ÆΓÇÖ├í╞Æ╦£├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┼ô
+               </label>
+               <select
+                 disabled={isReadOnly}
+@@ -333,10 +534,10 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+                   e.target.value = ""; // Reset select
+                 }}
+               >
+-                <option value="">+ ßâ¢ßâ¥ßâ¢ßâíßâÉßâ«ßâúßâáßâößâæßâÿßâí ßâôßâÉßâ¢ßâÉßâóßâößâæßâÉ</option>
++                <option value="">+ ├í╞ÆΓÇ║├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬í├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ┬É</option>
+                 {availableServices.map((s) => (
+                   <option key={s.id} value={s.id}>
+-                    {s.name} ΓÇö {s.price}Γé╛
++                    {s.name} ├óΓé¼ΓÇ¥ {s.price}├óΓÇÜ┬╛
+                   </option>
+                 ))}
+               </select>
+@@ -344,11 +545,11 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+ 
+             <div className="p-6 bg-surface-soft rounded-[32px] space-y-4">
+               <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+-                ßâíßâ«ßâòßâÉ ßâ¢ßâ¥ßâ¢ßâíßâÉßâ«ßâúßâáßâößâæßâÉ (ßâ«ßâößâÜßâÿßâù)
++                ├í╞Æ┬í├í╞Æ┬«├í╞ÆΓÇó├í╞Æ┬É ├í╞ÆΓÇ║├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬í├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ┬É (├í╞Æ┬«├í╞ÆΓÇ¥├í╞Æ┼í├í╞Æ╦£├í╞ÆΓÇö)
+               </label>
+               <input
+                 type="text"
+-                placeholder="ßâôßâÉßâíßâÉßâ«ßâößâÜßâößâæßâÉ (ßâ¢ßâÉßâÆ: ßâôßâÉßâ¢ßâÉßâóßâößâæßâÿßâùßâÿ ßâÖßâ¥ßâ£ßâíßâúßâÜßâóßâÉßâ¬ßâÿßâÉ)"
++                placeholder="├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬í├í╞Æ┬É├í╞Æ┬«├í╞ÆΓÇ¥├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ┬É (├í╞ÆΓÇ║├í╞Æ┬É├í╞ÆΓÇÖ: ├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇö├í╞Æ╦£ ├í╞ÆΓäó├í╞Æ┬¥├í╞Æ┼ô├í╞Æ┬í├í╞Æ┬ú├í╞Æ┼í├í╞Æ┬ó├í╞Æ┬É├í╞Æ┬¬├í╞Æ╦£├í╞Æ┬É)"
+                 disabled={isReadOnly}
+                 value={customService.name}
+                 onChange={(e) =>
+@@ -358,10 +559,17 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+               />
+               {!isReadOnly && (
+                 <div className="flex gap-2">
+-                  <input
+-                    type="number"
+-                    placeholder="ßâñßâÉßâíßâÿ"
+-                    value={customService.price}
++                    <input
++                      type="text"
++                      placeholder="NCSP"
++                      value={customService.ncsp || ""}
++                      onChange={(e) => setCustomService({ ...customService, ncsp: e.target.value })}
++                      className="w-24 px-4 py-3 bg-surface rounded-xl outline-none text-sm font-bold border border-border-main"
++                    />
++                    <input
++                      type="number"
++                      placeholder="├í╞Æ┬ñ├í╞Æ┬É├í╞Æ┬í├í╞Æ╦£"
++                      value={customService.price}
+                     onChange={(e) =>
+                       setCustomService({
+                         ...customService,
+@@ -382,7 +590,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+ 
+             <div className="p-6 bg-amber-500/10 rounded-[32px] space-y-4 border border-amber-500/10">
+               <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest ml-2 italic">
+-                ßâôßâÉßâ¢ßâÉßâóßâößâæßâÿßâùßâÿ ßâ¢ßâÉßâíßâÉßâÜßâößâæßâÿ ßâíßâÉßâ¼ßâºßâ¥ßâæßâÿßâôßâÉßâ£
++                ├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇö├í╞Æ╦£ ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬í├í╞Æ┬É├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£ ├í╞Æ┬í├í╞Æ┬É├í╞Æ┬¼├í╞Æ┬º├í╞Æ┬¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┼ô
+               </label>
+               <select
+                 disabled={isReadOnly}
+@@ -393,9 +601,9 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+                   e.target.value = "";
+                 }}
+               >
+-                <option value="">+ ßâ¢ßâÉßâíßâÉßâÜßâÿßâí ßâôßâÉßâ¢ßâÉßâóßâößâæßâÉ</option>
++                <option value="">+ ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬í├í╞Æ┬É├í╞Æ┼í├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ┬É</option>
+                 {availableMaterials.filter(m => m.quantity > 0).map(m => (
+-                  <option key={m.id} value={m.id}>{m.name} (ßâ£ßâÉßâ¿ßâùßâÿ: {m.quantity} {m.unit})</option>
++                  <option key={m.id} value={m.id}>{m.name} (├í╞Æ┼ô├í╞Æ┬É├í╞Æ┬¿├í╞ÆΓÇö├í╞Æ╦£: {m.quantity} {m.unit})</option>
+                 ))}
+               </select>
+ 
+@@ -404,7 +612,14 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+                   <div key={m.id} className="flex items-center justify-between gap-3 p-3 bg-surface rounded-xl border border-amber-500/10">
+                     <span className="text-[10px] font-bold text-text-main flex-1">{m.name}</span>
+                     <div className="flex items-center gap-3">
+-                      <span className="text-[9px] font-black text-amber-600">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)}Γé╛</span>
++                      <input
++                        type="text"
++                        placeholder="Group ID"
++                        value={m.itemGroupId || ""}
++                        onChange={(e) => setSelectedExtraMaterials(selectedExtraMaterials.map(mat => mat.id === m.id ? { ...mat, itemGroupId: e.target.value } : mat))}
++                        className="w-20 py-1 px-2 bg-surface-soft rounded-lg text-[9px] font-bold text-center outline-none border border-border-main"
++                      />
++                      <span className="text-[9px] font-black text-amber-600">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)}├óΓÇÜ┬╛</span>
+                       <div className="flex items-center gap-2">
+                         <input 
+                           type="number" 
+@@ -422,10 +637,10 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+             </div>
+           </div>
+ 
+-          {/* ßâ¢ßâÉßâáßâ»ßâòßâößâ£ßâÉ ßâ¢ßâ«ßâÉßâáßâö: ßâÖßâÉßâÜßâÉßâùßâÉ */}
++          {/* ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬á├í╞Æ┬»├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞Æ┼ô├í╞Æ┬É ├í╞ÆΓÇ║├í╞Æ┬«├í╞Æ┬É├í╞Æ┬á├í╞ÆΓÇ¥: ├í╞ÆΓäó├í╞Æ┬É├í╞Æ┼í├í╞Æ┬É├í╞ÆΓÇö├í╞Æ┬É */}
+           <div className="flex flex-col h-full min-h-[300px]">
+             <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 mb-3 italic block">
+-              ßâÉßâáßâ⌐ßâößâúßâÜßâÿ ßâ¢ßâ¥ßâ¢ßâíßâÉßâ«ßâúßâáßâößâæßâößâæßâÿ
++              ├í╞Æ┬É├í╞Æ┬á├í╞Æ┬⌐├í╞ÆΓÇ¥├í╞Æ┬ú├í╞Æ┼í├í╞Æ╦£ ├í╞ÆΓÇ║├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬í├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£
+             </label>
+             <div className="flex-1 space-y-2 mb-6">
+               {selectedServices.map((s) => (
+@@ -436,24 +651,46 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+                   <span className="text-xs font-bold text-text-main">
+                     {s.name}
+                   </span>
+-                  <div className="flex items-center gap-3">
+-                    <span className="text-xs font-black text-brand-purple">
+-                      {s.price}Γé╛
+-                    </span>
+-                    {!isReadOnly && (
+-                      <button
+-                        onClick={() => removeService(s.uniqueId)}
+-                        className="text-text-muted hover:text-red-500 transition-colors"
+-                      >
+-                        <Trash2 size={14} />
+-                      </button>
++                  <div className="flex flex-col items-end gap-2">
++                    <div className="flex items-center gap-3">
++                      <span className="text-xs font-black text-brand-purple">
++                        {s.price}├óΓÇÜ┬╛
++                      </span>
++                      {!isReadOnly && (
++                        <button
++                          onClick={() => removeService(s.uniqueId)}
++                          className="text-text-muted hover:text-red-500 transition-colors"
++                        >
++                          <Trash2 size={14} />
++                        </button>
++                      )}
++                    </div>
++                    {syncEHR && !isReadOnly && (
++                       <div className="flex items-center gap-2 mt-1">
++                          <input 
++                            type="text" 
++                            placeholder="NCSP ├í╞ÆΓäó├í╞Æ┬¥├í╞ÆΓÇ£├í╞Æ╦£" 
++                            value={s.ncsp || ""} 
++                            onChange={(e) => setSelectedServices(selectedServices.map(ser => ser.uniqueId === s.uniqueId ? {...ser, ncsp: e.target.value} : ser))}
++                            className={`w-24 py-1 px-2 rounded-lg text-[9px] font-bold text-center outline-none border-2 transition-all ${!s.ncsp ? 'border-red-400 bg-red-50' : 'bg-surface-soft border-border-main'}`}
++                          />
++                          <label className="flex items-center gap-1 cursor-pointer">
++                            <input 
++                              type="checkbox" 
++                              checked={s.wasUsed === 2} 
++                              onChange={(e) => setSelectedServices(selectedServices.map(ser => ser.uniqueId === s.uniqueId ? {...ser, wasUsed: e.target.checked ? 2 : 1} : ser))}
++                              className="accent-brand-purple"
++                            />
++                            <span className="text-[8px] font-bold text-text-muted">├í╞Æ┬É├í╞Æ┼ô├í╞ÆΓÇ¥├í╞Æ┬í├í╞ÆΓÇö├í╞ÆΓÇ¥├í╞ÆΓÇô├í╞Æ╦£├í╞Æ┬É</span>
++                          </label>
++                       </div>
+                     )}
+                   </div>
+                 </div>
+               ))}
+               {selectedServices.length === 0 && (
+                 <p className="text-center py-10 text-text-muted text-[10px] uppercase font-bold italic tracking-widest">
+-                  ßâ»ßâößâá ßâÉßâáßâÉßâñßâößâáßâÿßâÉ ßâÉßâáßâ⌐ßâößâúßâÜßâÿ
++                  ├í╞Æ┬»├í╞ÆΓÇ¥├í╞Æ┬á ├í╞Æ┬É├í╞Æ┬á├í╞Æ┬É├í╞Æ┬ñ├í╞ÆΓÇ¥├í╞Æ┬á├í╞Æ╦£├í╞Æ┬É ├í╞Æ┬É├í╞Æ┬á├í╞Æ┬⌐├í╞ÆΓÇ¥├í╞Æ┬ú├í╞Æ┼í├í╞Æ╦£
+                 </p>
+               )}
+             </div>
+@@ -461,31 +698,31 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+             <div className="mt-auto bg-brand-deep p-6 rounded-[32px] text-white shadow-xl">
+               <div className="space-y-2 mb-4">
+                 <div className="flex justify-between items-center opacity-60">
+-                  <span className="text-[9px] font-black uppercase tracking-widest">ßâ¢ßâ¥ßâ¢ßâíßâÉßâ«ßâúßâáßâößâæßâÿßâí ßâ»ßâÉßâ¢ßâÿ:</span>
+-                  <span className="text-sm font-black">{totalAmount - (selectedExtraMaterials.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0))} Γé╛</span>
++                  <span className="text-[9px] font-black uppercase tracking-widest">├í╞ÆΓÇ║├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┬í├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞Æ┬í ├í╞Æ┬»├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ╦£:</span>
++                  <span className="text-sm font-black">{totalAmount - (selectedExtraMaterials.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0))} ├óΓÇÜ┬╛</span>
+                 </div>
+                 <div className="flex justify-between items-center opacity-60">
+-                  <span className="text-[9px] font-black uppercase tracking-widest">ßâôßâÉßâ¢ßâÉßâóßâößâæßâÿßâùßâÿ ßâ¢ßâÉßâíßâÉßâÜßâößâæßâÿ:</span>
+-                  <span className="text-sm font-black">{selectedExtraMaterials.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0)} Γé╛</span>
++                  <span className="text-[9px] font-black uppercase tracking-widest">├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬ó├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£├í╞ÆΓÇö├í╞Æ╦£ ├í╞ÆΓÇ║├í╞Æ┬É├í╞Æ┬í├í╞Æ┬É├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£:</span>
++                  <span className="text-sm font-black">{selectedExtraMaterials.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0)} ├óΓÇÜ┬╛</span>
+                 </div>
+                 <div className="flex justify-between items-center text-emerald-400">
+-                  <span className="text-[9px] font-black uppercase tracking-widest">ßâôßâªßâÆ (18%):</span>
+-                  <span className="text-sm font-black">{vatAmount.toFixed(2)} Γé╛</span>
++                  <span className="text-[9px] font-black uppercase tracking-widest">├í╞ÆΓÇ£├í╞Æ┬ª├í╞ÆΓÇÖ (18%):</span>
++                  <span className="text-sm font-black">{vatAmount.toFixed(2)} ├óΓÇÜ┬╛</span>
+                 </div>
+                 <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-2">
+-                  <span className="text-[10px] font-black uppercase opacity-60">ßâíßâúßâÜ ßâÆßâÉßâôßâÉßâíßâÉßâ«ßâôßâößâÜßâÿ:</span>
+-                  <span className="text-xl font-black">{totalAmount.toFixed(2)} Γé╛</span>
++                  <span className="text-[10px] font-black uppercase opacity-60">├í╞Æ┬í├í╞Æ┬ú├í╞Æ┼í ├í╞ÆΓÇÖ├í╞Æ┬É├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬í├í╞Æ┬É├í╞Æ┬«├í╞ÆΓÇ£├í╞ÆΓÇ¥├í╞Æ┼í├í╞Æ╦£:</span>
++                  <span className="text-xl font-black">{totalAmount.toFixed(2)} ├óΓÇÜ┬╛</span>
+                 </div>
+               </div>
+               <div className="space-y-4 pt-4 border-t border-white/10">
+               <label className="text-[10px] font-black uppercase opacity-60 block mb-2">
+-                ßâÆßâÉßâôßâÉßâ«ßâôßâÿßâí ßâ¢ßâößâùßâ¥ßâôßâÿ:
++                ├í╞ÆΓÇÖ├í╞Æ┬É├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬«├í╞ÆΓÇ£├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ║├í╞ÆΓÇ¥├í╞ÆΓÇö├í╞Æ┬¥├í╞ÆΓÇ£├í╞Æ╦£:
+               </label>
+               <div className="grid grid-cols-3 gap-2">
+                 {[
+-                  { id: 'cash', label: 'ßâ£ßâÉßâªßâôßâÿ', icon: DollarSign },
+-                  { id: 'card', label: 'ßâæßâÉßâáßâÉßâùßâÿ', icon: CreditCard },
+-                  { id: 'transfer', label: 'ßâÆßâÉßâôßâ¢ßâ¥ßâáßâÿßâ¬ßâ«ßâòßâÉ', icon: FileText }
++                  { id: 'cash', label: '├í╞Æ┼ô├í╞Æ┬É├í╞Æ┬ª├í╞ÆΓÇ£├í╞Æ╦£', icon: DollarSign },
++                  { id: 'card', label: '├í╞ÆΓÇÿ├í╞Æ┬É├í╞Æ┬á├í╞Æ┬É├í╞ÆΓÇö├í╞Æ╦£', icon: CreditCard },
++                  { id: 'transfer', label: '├í╞ÆΓÇÖ├í╞Æ┬É├í╞ÆΓÇ£├í╞ÆΓÇ║├í╞Æ┬¥├í╞Æ┬á├í╞Æ╦£├í╞Æ┬¬├í╞Æ┬«├í╞ÆΓÇó├í╞Æ┬É', icon: FileText }
+                 ].map(m => (
+                   <button
+                     key={m.id}
+@@ -500,13 +737,13 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+               </div>
+ 
+               <label className="text-[10px] font-black uppercase opacity-60 block mb-2 mt-4">
+-                ßâÆßâÉßâôßâÉßâ¢ßâ«ßâôßâößâÜßâÿ:
++                ├í╞ÆΓÇÖ├í╞Æ┬É├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇ║├í╞Æ┬«├í╞ÆΓÇ£├í╞ÆΓÇ¥├í╞Æ┼í├í╞Æ╦£:
+               </label>
+               <div className="grid grid-cols-3 gap-2">
+                 {[
+-                  { id: 'personal', label: 'ßâ₧ßâÿßâáßâÉßâôßâÿ', icon: Users },
+-                  { id: 'insurance', label: 'ßâíßâÉßâôßâÉßâûßâªßâòßâößâòßâ¥', icon: Activity },
+-                  { id: 'corporate', label: 'ßâ¿ßâ₧ßâí / ßâÖßâ¥ßâáßâ₧.', icon: Briefcase }
++                  { id: 'personal', label: '├í╞Æ┼╛├í╞Æ╦£├í╞Æ┬á├í╞Æ┬É├í╞ÆΓÇ£├í╞Æ╦£', icon: Users },
++                  { id: 'insurance', label: '├í╞Æ┬í├í╞Æ┬É├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇô├í╞Æ┬ª├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞ÆΓÇó├í╞Æ┬¥', icon: Activity },
++                  { id: 'corporate', label: '├í╞Æ┬¿├í╞Æ┼╛├í╞Æ┬í / ├í╞ÆΓäó├í╞Æ┬¥├í╞Æ┬á├í╞Æ┼╛.', icon: Briefcase }
+                 ].map(p => (
+                   <button
+                     key={p.id}
+@@ -522,10 +759,10 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+ 
+               {payerType === 'insurance' && (
+                 <div className="space-y-3 pt-4 border-t border-white/10 animate-in slide-in-from-top-2">
+-                  <label className="text-[10px] font-black uppercase opacity-60 block mb-2">ßâôßâÉßâûßâªßâòßâößâòßâÿßâí ßâôßâößâóßâÉßâÜßâößâæßâÿ:</label>
++                  <label className="text-[10px] font-black uppercase opacity-60 block mb-2">├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇô├í╞Æ┬ª├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞ÆΓÇó├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ£├í╞ÆΓÇ¥├í╞Æ┬ó├í╞Æ┬É├í╞Æ┼í├í╞ÆΓÇ¥├í╞ÆΓÇÿ├í╞Æ╦£:</label>
+                   <input 
+                     type="text" 
+-                    placeholder="ßâíßâÉßâôßâÉßâûßâªßâòßâößâòßâ¥ ßâÖßâ¥ßâ¢ßâ₧ßâÉßâ£ßâÿßâÉ" 
++                    placeholder="├í╞Æ┬í├í╞Æ┬É├í╞ÆΓÇ£├í╞Æ┬É├í╞ÆΓÇô├í╞Æ┬ª├í╞ÆΓÇó├í╞ÆΓÇ¥├í╞ÆΓÇó├í╞Æ┬¥ ├í╞ÆΓäó├í╞Æ┬¥├í╞ÆΓÇ║├í╞Æ┼╛├í╞Æ┬É├í╞Æ┼ô├í╞Æ╦£├í╞Æ┬É" 
+                     disabled={isReadOnly}
+                     value={insuranceInfo.company} 
+                     onChange={e => setInsuranceInfo({...insuranceInfo, company: e.target.value})}
+@@ -534,7 +771,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+                   <div className="grid grid-cols-2 gap-3">
+                     <input 
+                       type="text" 
+-                      placeholder="ßâ₧ßâ¥ßâÜßâÿßâíßâÿßâí Γäû" 
++                      placeholder="├í╞Æ┼╛├í╞Æ┬¥├í╞Æ┼í├í╞Æ╦£├í╞Æ┬í├í╞Æ╦£├í╞Æ┬í ├óΓÇ₧ΓÇô" 
+                       disabled={isReadOnly}
+                       value={insuranceInfo.policyNum} 
+                       onChange={e => setInsuranceInfo({...insuranceInfo, policyNum: e.target.value})}
+@@ -542,7 +779,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+                     />
+                     <input 
+                       type="text" 
+-                      placeholder="ßâôßâÉßâíßâóßâúßâáßâÿßâí ßâÖßâ¥ßâôßâÿ" 
++                      placeholder="├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬í├í╞Æ┬ó├í╞Æ┬ú├í╞Æ┬á├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓäó├í╞Æ┬¥├í╞ÆΓÇ£├í╞Æ╦£" 
+                       disabled={isReadOnly}
+                       value={insuranceInfo.approvalCode} 
+                       onChange={e => setInsuranceInfo({...insuranceInfo, approvalCode: e.target.value})}
+@@ -554,7 +791,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+ 
+               <div className="space-y-2 pt-4 border-t border-white/10">
+                 <label className="text-[10px] font-black uppercase opacity-60 block">
+-                  ßâÆßâÉßâôßâÉßâ«ßâôßâÿßâÜßâÿ ßâùßâÉßâ£ßâ«ßâÉ:
++                  ├í╞ÆΓÇÖ├í╞Æ┬É├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬«├í╞ÆΓÇ£├í╞Æ╦£├í╞Æ┼í├í╞Æ╦£ ├í╞ÆΓÇö├í╞Æ┬É├í╞Æ┼ô├í╞Æ┬«├í╞Æ┬É:
+                 </label>
+                 <div className="relative">
+                   <CreditCard
+@@ -605,7 +842,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+                     <Loader2 className="animate-spin" />
+                   ) : (
+                     <>
+-                      <Calculator size={18} /> ßâòßâÿßâûßâÿßâóßâÿßâí ßâôßâÉßâ«ßâúßâáßâòßâÉ
++                      <Calculator size={18} /> ├í╞ÆΓÇó├í╞Æ╦£├í╞ÆΓÇô├í╞Æ╦£├í╞Æ┬ó├í╞Æ╦£├í╞Æ┬í ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇó├í╞Æ┬É
+                     </>
+                   )}
+                 </button>
+@@ -615,7 +852,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+                 onClick={onClose}
+                 className="flex-1 py-5 bg-surface-soft text-text-muted rounded-[24px] font-black text-[11px] uppercase tracking-widest hover:bg-surface-soft transition-all"
+               >
+-                ßâôßâÉßâ«ßâúßâáßâòßâÉ
++                ├í╞ÆΓÇ£├í╞Æ┬É├í╞Æ┬«├í╞Æ┬ú├í╞Æ┬á├í╞ÆΓÇó├í╞Æ┬É
+               </button>
+             )}
+           </div>

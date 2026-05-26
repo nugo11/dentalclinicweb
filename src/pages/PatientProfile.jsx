@@ -21,6 +21,8 @@ import {
   AlertTriangle,
   X,
   ShieldAlert,
+  MapPin,
+  Map
 } from "lucide-react";
 import Sidebar from "../components/Dashboard/Sidebar";
 import TopNav from "../components/Dashboard/TopNav";
@@ -148,7 +150,7 @@ const PatientProfile = () => {
   return (
     <>
       <Helmet>
-        <title>{patientData?.fullName || "პაციენტი"} — AiDent</title>
+        <title>{isEditing ? `რედაქტირება: ${patientData?.fullName || "პაციენტი"}` : `${patientData?.fullName || "პაციენტი"} — AiDent`}</title>
       </Helmet>
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
@@ -329,6 +331,26 @@ const PatientProfile = () => {
                   type="email"
                   onChange={(val) =>
                     setPatientData({ ...patientData, email: val })
+                  }
+                />
+
+                <InfoBlock
+                  label="მისამართი (რეგიონი ან ქალაქი)"
+                  icon={MapPin}
+                  value={patientData.actualRegion}
+                  editable={isEditing}
+                  onChange={(val) =>
+                    setPatientData({ ...patientData, actualRegion: val })
+                  }
+                />
+
+                <InfoBlock
+                  label="ფაქტობრივი მისამართი (რაიონი ან ქუჩა)"
+                  icon={Map}
+                  value={patientData.actualResidenceAddress}
+                  editable={isEditing}
+                  onChange={(val) =>
+                    setPatientData({ ...patientData, actualResidenceAddress: val })
                   }
                 />
 

@@ -179,7 +179,8 @@ const LandingPage = ({ user }) => {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
-                to="/auth"
+                to="/auth?register"
+                state={{ mode: "register" }}
                 className="bg-brand-purple text-white px-10 py-6 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-brand-purple/20 hover:brightness-110 hover:shadow-brand-purple/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group"
               >
                 დაიწყე უფასოდ <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
@@ -784,7 +785,8 @@ const LandingPage = ({ user }) => {
 
               <div className="flex flex-col gap-4">
                 <Link
-                  to="/auth"
+                  to="/auth?register"
+                  state={{ mode: "register" }}
                   className="w-full bg-brand-purple text-white py-6 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all flex items-center justify-center gap-3"
                 >
                   უფასო რეგისტრაცია <ArrowRight size={20} />
@@ -973,7 +975,7 @@ const PricingTable = ({ onSelectPlan }) => {
             </div>
             <div className="mt-4">
               {c.key === "free" ? (
-                <a href="/auth" className="block text-center py-3 rounded-xl bg-brand-deep text-white text-[10px] font-black uppercase tracking-widest">დაიწყე</a>
+                <Link to="/auth?register" state={{ mode: "register" }} className="block text-center py-3 rounded-xl bg-brand-deep text-white text-[10px] font-black uppercase tracking-widest">დაიწყე</Link>
               ) : (
                 <a href="mailto:upgrade@AiDent.ge" className={`block text-center py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${c.highlight ? "bg-brand-purple text-white" : "bg-surface-soft text-text-main"}`}>კონტაქტი</a>
               )}
@@ -1051,11 +1053,11 @@ const PricingTable = ({ onSelectPlan }) => {
           <div key={c.key} style={{padding:'16px 12px',display:'flex',alignItems:'center',justifyContent:'center',
             background: c.highlight ? 'rgba(124,58,237,0.06)' : 'transparent'}}>
             {c.key === 'free' ? (
-              <a href="/auth" style={{display:'block',width:'100%',textAlign:'center',
+              <Link to="/auth?register" state={{ mode: "register" }} style={{display:'block',width:'100%',textAlign:'center',
                 padding:'10px 0',background:'var(--brand-deep)',color:'white',borderRadius:16,
                 fontSize:10,fontWeight:900,textTransform:'uppercase',letterSpacing:'0.15em',textDecoration:'none'}}>
                 დაიწყე
-              </a>
+              </Link>
             ) : (
               <a href="mailto:upgrade@AiDent.ge" style={{display:'block',width:'100%',textAlign:'center',
                 padding:'10px 0',

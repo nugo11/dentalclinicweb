@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { auth, db } from "../firebase";
 import {
   createUserWithEmailAndPassword,
@@ -12,11 +12,16 @@ import { useAuth } from "../context/AuthContext";
 import { 
   Activity, Mail, Lock, ArrowRight, Loader2, Eye, EyeOff, 
   Building2, ShieldCheck, ChevronLeft, User, 
-  Phone, Sparkles, Rocket, Shield, Users
+  Phone, Sparkles, Rocket, Shield, Users,
+  Copy, Check
 } from "lucide-react";
 
 const AuthPage = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(
+    location.state?.mode !== 'register' && 
+    !new URLSearchParams(location.search).has('register')
+  );
   const [authStep, setAuthStep] = useState("credentials"); 
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -56,6 +61,8 @@ const AuthPage = () => {
   const [staffList, setStaffList] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [resendTimer, setResendTimer] = useState(0);
+  const [recoveredLoginName, setRecoveredLoginName] = useState("");
+  const [copied, setCopied] = useState(false);
   React.useEffect(() => {
     // შემოწმება localStorage-დან
     const lastSent = localStorage.getItem(`sms_cooldown_${phone}`);
@@ -93,6 +100,20 @@ const AuthPage = () => {
     setConfirmPin("");
     setFormErrors({});
   }, [authStep]);
+
+  // დინამიური სათაურის (document.title) განახლება
+  React.useEffect(() => {
+    let titleStr = "";
+    if (authStep.startsWith("forgot_password")) {
+      titleStr = "პაროლის აღდგენა";
+    } else if (isLogin) {
+      titleStr = "ავტორიზაცია";
+    } else {
+      titleStr = "რეგისტრაცია";
+    }
+    document.title = `${titleStr} — AiDent`;
+  }, [authStep, isLogin]);
+
 
   const handleCredentialsSubmit = async (e) => {
     e.preventDefault();
@@ -461,7 +482,14 @@ const AuthPage = () => {
   return (
     <>
       <Helmet>
-        <title>{isLogin ? "ავტორიზაცია" : "რეგისტრაცია"} — AiDent</title>
+        <title>
+          {authStep.startsWith("forgot_password")
+            ? "პაროლის აღდგენა"
+            : isLogin
+            ? "ავტორიზაცია"
+            : "რეგისტრაცია"}{" "}
+          — AiDent
+        </title>
       </Helmet>
       <div className="min-h-screen lg:h-screen w-full bg-surface-soft font-nino flex overflow-hidden">
       
@@ -481,11 +509,17 @@ const AuthPage = () => {
           </Link>
 
           <div className="mt-32 space-y-8">
-            <h1 className="text-[90px] font-black leading-[0.85] italic uppercase tracking-tighter animate-in slide-in-from-left-10 duration-1000">
-              {isLogin ? "Digital \nClinic" : "Future \nReady"}
+            <h1 className="whitespace-pre-line text-[90px] font-black leading-[0.85] italic uppercase tracking-tighter animate-in slide-in-from-left-10 duration-1000">
+              {authStep.startsWith("forgot_password")
+                ? "Restore \nAccess"
+                : isLogin
+                ? "Digital \nClinic"
+                : "Future \nReady"}
             </h1>
             <p className="text-xl text-white/50 font-medium max-w-sm leading-relaxed italic">
-              მართეთ თქვენი კლინიკა ყველაზე თანამედროვე ხელოვნური ინტელექტის მხარდაჭერით.
+              {authStep.startsWith("forgot_password")
+                ? "აღადგინეთ წვდომა თქვენს კლინიკასთან უსაფრთხო SMS კოდის მეშვეობით."
+                : "მართეთ თქვენი კლინიკა ყველაზე თანამედროვე ხელოვნური ინტელექტის მხარდაჭერით."}
             </p>
           </div>
         </div>
@@ -527,52 +561,56 @@ const AuthPage = () => {
 
               <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                 {!isLogin && (
-                  <div className="grid grid-cols-1 gap-4">
-                    <InputField icon={Building2} placeholder="კლინიკის დასახელება" value={clinicName} onChange={setClinicName} error={formErrors.clinicName} />
-                    <InputField 
-                        icon={ShieldCheck} 
-                        placeholder="კლინიკის ლოგინი (მაგ: myclinic)" 
-                        value={loginName} 
-                        onChange={(val) => {
-                            setLoginName(val.toLowerCase());
-                            if (val && !/^[a-zA-Z0-9-]*$/.test(val)) {
-                                setFormErrors(prev => ({ ...prev, loginName: "გამოიყენეთ მხოლოდ ლათინური ასოები" }));
-                            } else {
-                                setFormErrors(prev => ({ ...prev, loginName: null }));
-                            }
-                        }} 
-                        onBlur={() => checkLoginNameUniqueness(loginName)}
-                        error={formErrors.loginName} 
-                    />
-                    <div className="flex flex-col gap-4">
-                        <InputField icon={User} placeholder="სახელი და გვარი" value={fullName} onChange={setFullName} error={formErrors.fullName} />
-                        <InputField 
-                            icon={Phone} 
-                            placeholder="ტელეფონი (მაგ: 555123456)" 
-                            value={phone} 
-                            onChange={(v) => { 
-                                const cleaned = v.replace(/\D/g, '').slice(0, 9);
-                                setPhone(cleaned);
-                                setSmsStatus("idle");
-                                setUserOtp("");
-                                
-                                if (cleaned.length > 0 && cleaned[0] !== '5') {
-                                    setFormErrors(prev => ({...prev, phone: "ნომერი უნდა იწყებოდეს 5-ით"}));
-                                } else if (cleaned.length === 9) {
-                                    setFormErrors(prev => ({...prev, phone: undefined}));
-                                } else if (formErrors.phone === "ნომერი უნდა იწყებოდეს 5-ით" && (cleaned.length === 0 || cleaned[0] === '5')) {
-                                    setFormErrors(prev => ({...prev, phone: undefined}));
-                                }
-                            }} 
-                            onBlur={() => {
-                                if (phone.length > 0 && phone.length < 9) {
-                                    setFormErrors(prev => ({...prev, phone: "ნომერი არასწორია (უნდა შეიცავდეს 9 ციფრს)"}));
-                                } else if (phone.length === 9) {
-                                    checkPhoneUniqueness(phone);
-                                }
-                            }}
-                            error={formErrors.phone} 
-                        />
+                  <div className="space-y-4 animate-in fade-in duration-500">
+                    {/* Clinic Details - Side by Side */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <InputField icon={Building2} placeholder="კლინიკის დასახელება" value={clinicName} onChange={setClinicName} error={formErrors.clinicName} />
+                      <InputField 
+                          icon={ShieldCheck} 
+                          placeholder="კლინიკის ლოგინი (მაგ: myclinic)" 
+                          value={loginName} 
+                          onChange={(val) => {
+                              setLoginName(val.toLowerCase());
+                              if (val && !/^[a-zA-Z0-9-]*$/.test(val)) {
+                                  setFormErrors(prev => ({ ...prev, loginName: "გამოიყენეთ მხოლოდ ლათინური ასოები" }));
+                              } else {
+                                  setFormErrors(prev => ({ ...prev, loginName: null }));
+                              }
+                          }} 
+                          onBlur={() => checkLoginNameUniqueness(loginName)}
+                          error={formErrors.loginName} 
+                      />
+                    </div>
+                    {/* User Details - Side by Side */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <InputField icon={User} placeholder="სახელი და გვარი" value={fullName} onChange={setFullName} error={formErrors.fullName} />
+                      <InputField 
+                          icon={Phone} 
+                          placeholder="ტელეფონი (მაგ: 555123456)" 
+                          value={phone} 
+                          onChange={(v) => { 
+                              const cleaned = v.replace(/\D/g, '').slice(0, 9);
+                              setPhone(cleaned);
+                              setSmsStatus("idle");
+                              setUserOtp("");
+                              
+                              if (cleaned.length > 0 && cleaned[0] !== '5') {
+                                  setFormErrors(prev => ({...prev, phone: "ნომერი უნდა იწყებოდეს 5-ით"}));
+                              } else if (cleaned.length === 9) {
+                                  setFormErrors(prev => ({...prev, phone: undefined}));
+                              } else if (formErrors.phone === "ნომერი უნდა იწყებოდეს 5-ით" && (cleaned.length === 0 || cleaned[0] === '5')) {
+                                  setFormErrors(prev => ({...prev, phone: undefined}));
+                              }
+                          }} 
+                          onBlur={() => {
+                              if (phone.length > 0 && phone.length < 9) {
+                                  setFormErrors(prev => ({...prev, phone: "ნომერი არასწორია (უნდა შეიცავდეს 9 ციფრს)"}));
+                              } else if (phone.length === 9) {
+                                  checkPhoneUniqueness(phone);
+                              }
+                          }}
+                          error={formErrors.phone} 
+                      />
                     </div>
                   </div>
                 )}
@@ -594,32 +632,44 @@ const AuthPage = () => {
                     />
                 )}
 
-                <div className="relative">
-                  <InputField icon={Lock} type={showPassword ? "text" : "password"} placeholder="პაროლი" value={password} onChange={setPassword} error={formErrors.password} />
-                  <button type="button" tabIndex="-1" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-[26px] text-text-muted hover:text-brand-purple transition-colors outline-none">
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-                {!isLogin && (
-                  <div className="flex flex-wrap gap-x-4 gap-y-2 px-2 mt-1 mb-4">
-                    <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${password.length >= 8 ? 'text-emerald-500' : 'text-text-muted'}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full transition-colors ${password.length >= 8 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> 8+ სიმბოლო
-                    </span>
-                    <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'text-emerald-500' : 'text-text-muted'}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full transition-colors ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> სპეც. სიმბოლო
-                    </span>
-                    <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${/\d/.test(password) ? 'text-emerald-500' : 'text-text-muted'}`}>
-                      <div className={`w-1.5 h-1.5 rounded-full transition-colors ${/\d/.test(password) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> ციფრი
-                    </span>
+                {/* Password Fields - Side by Side on Register */}
+                {!isLogin ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="relative">
+                        <InputField icon={Lock} type={showPassword ? "text" : "password"} placeholder="პაროლი" value={password} onChange={setPassword} error={formErrors.password} />
+                        <button type="button" tabIndex="-1" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-text-muted hover:text-brand-purple transition-colors outline-none z-10">
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      <InputField icon={Lock} type={showPassword ? "text" : "password"} placeholder="გაიმეორეთ პაროლი" value={confirmPassword} onChange={setConfirmPassword} error={formErrors.confirmPassword} />
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-2 px-2 mt-1">
+                      <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${password.length >= 8 ? 'text-emerald-500' : 'text-text-muted'}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${password.length >= 8 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> 8+ სიმბოლო
+                      </span>
+                      <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'text-emerald-500' : 'text-text-muted'}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${/[!@#$%^&*(),.?":{}|<>]/.test(password) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> სპეც. სიმბოლო
+                      </span>
+                      <span className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors ${/\d/.test(password) ? 'text-emerald-500' : 'text-text-muted'}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full transition-colors ${/\d/.test(password) ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-text-muted/30'}`} /> ციფრი
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <InputField icon={Lock} type={showPassword ? "text" : "password"} placeholder="პაროლი" value={password} onChange={setPassword} error={formErrors.password} />
+                    <button type="button" tabIndex="-1" onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-text-muted hover:text-brand-purple transition-colors outline-none z-10">
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                 )}
-                {!isLogin && <InputField icon={Lock} type={showPassword ? "text" : "password"} placeholder="გაიმეორეთ პაროლი" value={confirmPassword} onChange={setConfirmPassword} error={formErrors.confirmPassword} />}
 
                 {isLogin && (
                   <div className="flex justify-end pt-1">
                     <button
                       type="button"
-                      onClick={handlePasswordReset}
+                      onClick={() => { setAuthStep("forgot_password"); setPhone(""); setUserOtp(""); setRecoveredLoginName(""); setFormErrors({}); }}
                       disabled={isLoading}
                       className="text-[10px] font-black uppercase tracking-widest text-brand-purple hover:text-text-main transition-colors disabled:opacity-50"
                     >
@@ -767,6 +817,242 @@ const AuthPage = () => {
               </button>
             </div>
           )}
+
+          {authStep === "forgot_password" && (
+            <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+              <button 
+                onClick={() => setAuthStep("credentials")} 
+                className="mb-10 flex items-center gap-2 text-[10px] font-black uppercase text-text-muted hover:text-text-main"
+              >
+                <ChevronLeft size={16} /> უკან
+              </button>
+              
+              <div className="text-center mb-10">
+                <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6">
+                   <Phone size={36} />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black italic tracking-tighter text-text-main mb-4 leading-tight">
+                   პაროლის აღდგენა
+                </h3>
+                <p className="text-text-muted text-sm font-medium leading-relaxed italic max-w-md mx-auto">
+                   მიუთითეთ თქვენი რეგისტრირებული ტელეფონის ნომერი კოდის მისაღებად.
+                </p>
+              </div>
+
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (!phone || phone.length < 9) {
+                  setFormErrors({ phone: "შეიყვანეთ სწორი ტელეფონის ნომერი" });
+                  return;
+                }
+                setIsLoading(true);
+                try {
+                  // ვეძებთ ადმინისტრატორს ამ ტელეფონით
+                  let q = query(collection(db, "users"), where("phone", "==", phone), where("role", "==", "admin"));
+                  let snap = await getDocs(q);
+                  
+                  // თუ ადმინისტრატორი არ მოიძებნა, ვეძებთ ნებისმიერ მომხმარებელს ამ ტელეფონით
+                  if (snap.empty) {
+                    q = query(collection(db, "users"), where("phone", "==", phone));
+                    snap = await getDocs(q);
+                  }
+                  
+                  if (snap.empty) {
+                    setFormErrors({ phone: "ამ ნომრით მომხმარებელი არ მოიძებნა" });
+                    setIsLoading(false);
+                    return;
+                  }
+                  
+                  const uDoc = snap.docs[0].data();
+                  let userEmail = uDoc.email;
+                  let clinicLogin = "";
+                  
+                  // ყოველთვის ვიღებთ კლინიკის მონაცემებს (მათ შორის ლოგინსაც)
+                  if (uDoc.clinicId) {
+                    const clinicRef = doc(db, "clinics", uDoc.clinicId);
+                    const clinicSnap = await getDoc(clinicRef);
+                    if (clinicSnap.exists()) {
+                      const clinicData = clinicSnap.data();
+                      clinicLogin = clinicData.loginName || "";
+                      if (!userEmail) {
+                        userEmail = clinicData.ownerEmail;
+                      }
+                    }
+                  }
+                  
+                  if (!userEmail) {
+                    setFormErrors({ phone: "ამ მომხმარებლისთვის ელ-ფოსტა ვერ მოიძებნა" });
+                    setIsLoading(false);
+                    return;
+                  }
+                  
+                  setEmail(userEmail); // ვინახავთ მეილს პაროლის აღსადგენად
+                  setRecoveredLoginName(clinicLogin); // ვინახავთ ლოგინს საჩვენებლად
+                  
+                  // Generate OTP
+                  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                  setGeneratedOtp(otp);
+                  
+                  // Send SMS via UBill API
+                  const finalPhone = "995" + phone;
+                  const apiKey = import.meta.env.VITE_UBILL_API_KEY;
+                  const response = await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      brandID: 2,
+                      numbers: [finalPhone],
+                      text: `AiDent recovery code: ${otp}`,
+                      otp: true
+                    })
+                  });
+
+                  if (!response.ok) {
+                    throw new Error("SMS-ის გაგზავნა ვერ მოხერხდა");
+                  }
+                  
+                  setFormErrors({});
+                  setAuthStep("forgot_password_otp");
+                } catch (err) {
+                  console.error(err);
+                  setFormErrors({ general: "SMS-ის გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით." });
+                } finally {
+                  setIsLoading(false);
+                }
+              }} className="space-y-6">
+                <InputField 
+                    icon={Phone} 
+                    placeholder="ტელეფონი (მაგ: 555123456)" 
+                    value={phone} 
+                    onChange={(v) => setPhone(v.replace(/\D/g, '').slice(0, 9))}
+                    error={formErrors.phone} 
+                />
+
+                {formErrors.general && (
+                   <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20">
+                      <p className="text-[11px] text-red-500 font-black text-center uppercase tracking-tight">{formErrors.general}</p>
+                   </div>
+                )}
+
+                <button 
+                  disabled={isLoading}
+                  className="w-full bg-brand-purple text-white py-5 rounded-[20px] font-black text-xs uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer"
+                >
+                  {isLoading ? <Loader2 className="animate-spin" size={20} /> : <>კოდის გაგზავნა <ArrowRight size={18} /></>}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {authStep === "forgot_password_otp" && (
+            <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+              <button 
+                onClick={() => setAuthStep("forgot_password")} 
+                className="mb-10 flex items-center gap-2 text-[10px] font-black uppercase text-text-muted hover:text-text-main"
+              >
+                <ChevronLeft size={16} /> უკან
+              </button>
+              
+              <div className="text-center mb-10">
+                <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6">
+                   <ShieldCheck size={36} />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black italic tracking-tighter text-text-main mb-4 leading-tight">
+                   შეიყვანეთ კოდი
+                </h3>
+                <p className="text-text-muted text-sm font-medium leading-relaxed italic max-w-md mx-auto">
+                   თქვენს ნომერზე ({phone}) გამოგზავნილია 6-ნიშნა კოდი.
+                </p>
+              </div>
+
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                if (userOtp !== generatedOtp) {
+                  setFormErrors({ otp: "კოდი არასწორია" });
+                  return;
+                }
+                
+                setIsLoading(true);
+                try {
+                  // Trigger Firebase Password Reset Email automatically
+                  await sendPasswordResetEmail(auth, email);
+                  setFormErrors({});
+                  setAuthStep("forgot_password_success");
+                } catch (err) {
+                  console.error(err);
+                  setFormErrors({ general: "ლინკის გამოგზავნა ვერ მოხერხდა: " + err.message });
+                } finally {
+                  setIsLoading(false);
+                }
+              }} className="space-y-6">
+                <InputField 
+                    icon={Lock} 
+                    placeholder="6-ნიშნა კოდი" 
+                    value={userOtp} 
+                    onChange={(v) => setUserOtp(v.replace(/\D/g, '').slice(0, 6))}
+                    error={formErrors.otp} 
+                    maxLength={6}
+                    autoFocus
+                    inputMode="numeric"
+                />
+
+                {formErrors.general && (
+                   <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20">
+                      <p className="text-[11px] text-red-500 font-black text-center uppercase tracking-tight">{formErrors.general}</p>
+                   </div>
+                )}
+
+                <button 
+                  disabled={isLoading}
+                  className="w-full bg-brand-purple text-white py-5 rounded-[20px] font-black text-xs uppercase tracking-[0.2em] hover:brightness-110 transition-all flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer"
+                >
+                  {isLoading ? <Loader2 className="animate-spin" size={20} /> : <>კოდის დადასტურება <ArrowRight size={18} /></>}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {authStep === "forgot_password_success" && (
+            <div className="animate-in zoom-in-95 duration-500 text-center py-6">
+              <div className="w-24 h-24 bg-emerald-500 text-white rounded-[38px] flex items-center justify-center mx-auto mb-8 shadow-xl shadow-emerald-500/20 animate-bounce">
+                <Rocket size={44} />
+              </div>
+              <h3 className="text-3xl font-black text-text-main tracking-tighter italic mb-4">წვდომა აღდგენილია!</h3>
+              
+              {recoveredLoginName && (
+                <div className="mb-8 p-6 bg-surface-soft border border-border-main rounded-[28px] max-w-sm mx-auto text-left relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-brand-purple/5 blur-2xl rounded-full" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-2 block">კლინიკის ლოგინი (LOGIN NAME)</span>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-2xl font-black tracking-tight text-brand-purple font-mono selection:bg-brand-purple/20">
+                      {recoveredLoginName}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(recoveredLoginName);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="p-3 bg-surface hover:bg-brand-purple hover:text-white border border-border-main hover:border-brand-purple text-text-muted rounded-2xl transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                      title="ლოგინის კოპირება"
+                    >
+                      {copied ? <Check size={16} className="text-emerald-500 hover:text-white" /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-text-muted font-bold text-sm leading-relaxed mb-10 max-w-xs mx-auto">
+                იდენტურობა წარმატებით დადასტურდა. პაროლის აღდგენის ბმული გამოგზავნილია თქვენს ელ-ფოსტაზე: <br />
+                <span className="text-brand-purple font-black block mt-2 break-all">{email}</span>
+              </p>
+              
+              <button onClick={() => { setIsLogin(true); setAuthStep("credentials"); }} className="w-full bg-brand-deep text-white py-5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] hover:bg-brand-purple transition-all shadow-xl active:scale-[0.98] cursor-pointer">
+                ავტორიზაციაზე გადასვლა
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -876,23 +1162,23 @@ const AuthPage = () => {
 // --- დამხმარე კომპონენტები ---
 
 const InputField = ({ icon: Icon, error, value, onChange, onBlur, ...props }) => (
-  <div className="space-y-1 w-full group">
-    <div className={`relative border-2 rounded-[26px] transition-all duration-300 ${
-      error ? "border-red-500 bg-red-500/10 animate-shake" : "border-transparent bg-surface-soft focus-within:border-brand-purple focus-within:bg-surface focus-within:shadow-lg focus-within:shadow-brand-purple/5"
+  <div className="space-y-0.5 w-full group">
+    <div className={`relative border-2 rounded-[20px] transition-all duration-300 ${
+      error ? "border-red-500 bg-red-500/10 animate-shake" : "border-transparent bg-surface-soft focus-within:border-brand-purple focus-within:bg-surface focus-within:shadow-md focus-within:shadow-brand-purple/5"
     }`}>
-      <Icon className={`absolute left-7 top-1/2 -translate-y-1/2 transition-colors ${
+      <Icon className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors ${
         error ? "text-red-500" : "text-text-muted group-focus-within:text-brand-purple"
-      }`} size={20} />
+      }`} size={16} />
       <input 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onBlur}
         {...props} 
-        className="w-full pl-16 pr-8 py-5 sm:py-6 bg-transparent outline-none font-bold text-base sm:text-sm text-text-main placeholder:text-text-muted transition-all" 
+        className="w-full pl-12 pr-6 py-3.5 bg-transparent outline-none font-bold text-sm text-text-main placeholder:text-text-muted transition-all" 
       />
     </div>
     {error && (
-      <p className="text-[10px] text-red-600 font-black ml-7 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
+      <p className="text-[9px] text-red-600 font-black ml-5 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
         {error}
       </p>
     )}

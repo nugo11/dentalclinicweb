@@ -32,14 +32,14 @@ import AboutPage from "./pages/AboutPage";
 import Pricing from "./pages/Pricing";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import ScrollToTop from "./components/Common/ScrollToTop";
-import GlobalLoader from "./components/Common/GlobalLoader";
+
 
 // დამხმარე კომპონენტი დაცული როუტებისთვის (RBAC)
 const PrivateRoute = ({ children, title, allowedRoles = [] }) => {
   const { currentUser, activeStaff, clinicData, loading, role } = useAuth();
   const { pathname } = useLocation();
 
-  if (loading) return <GlobalLoader />; 
+  if (loading) return null; 
 
   if (!currentUser || !activeStaff) {
     return <Navigate to="/auth" replace />;
@@ -65,12 +65,11 @@ const PrivateRoute = ({ children, title, allowedRoles = [] }) => {
     </>
   );
 };
-
 function AppContent() {
   const { currentUser, activeStaff, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) return <GlobalLoader />;
+  if (loading) return null;
 
   return (
     <div className="app-route-enter">

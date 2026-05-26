@@ -23,7 +23,9 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
     bloodGroup: '',
     allergies: '',
     chronicDiseases: '',
-    importantNote: ''
+    importantNote: '',
+    actualRegion: '',
+    actualResidenceAddress: ''
   });
   const [formErrors, setFormErrors] = useState({});
 
@@ -76,7 +78,8 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
       setFormData({ 
         fullName: '', personalId: '', phone: '', email: '', 
         birthDate: '', gender: 'not_specified', bloodGroup: '', 
-        allergies: '', chronicDiseases: '', importantNote: '' 
+        allergies: '', chronicDiseases: '', importantNote: '',
+        actualRegion: '', actualResidenceAddress: ''
       });
     } catch (error) {
       console.error("Error adding patient:", error);
@@ -177,6 +180,24 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                   onChange={val => setFormData({...formData, email: val})}
                 />
               </div>
+              <div className="grid grid-cols-2 gap-5">
+                <FormInput 
+                  label="რეგიონი / ქალაქი" 
+                  required 
+                  icon={FileText} 
+                  placeholder="მაგ: თბილისი"
+                  value={formData.actualRegion}
+                  onChange={val => setFormData({...formData, actualRegion: val})}
+                />
+                <FormInput 
+                  label="ფაქტობრივი მისამართი" 
+                  required
+                  icon={FileText} 
+                  placeholder="მაგ: ე. ამაშუკელის N16"
+                  value={formData.actualResidenceAddress}
+                  onChange={val => setFormData({...formData, actualResidenceAddress: val})}
+                />
+              </div>
             </div>
 
             {/* სექცია 3: სამედიცინო ანამნეზი */}
@@ -194,10 +215,10 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                   onChange={val => setFormData({...formData, bloodGroup: val})}
                 >
                   <option value="">შეარჩიეთ</option>
-                  <option value="A+">A+</option> <option value="A-">A-</option>
-                  <option value="B+">B+</option> <option value="B-">B-</option>
-                  <option value="O+">O+</option> <option value="O-">O-</option>
-                  <option value="AB+">AB+</option> <option value="AB-">AB-</option>
+                  <option value="1">O (I)</option>
+                  <option value="2">A (II)</option>
+                  <option value="3">B (III)</option>
+                  <option value="4">AB (IV)</option>
                 </FormInput>
                 <FormInput 
                   type="select"

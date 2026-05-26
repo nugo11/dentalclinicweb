@@ -1,0 +1,97 @@
+{
+  "patients": {
+    "__doc__": {
+      "patientId": "string",
+      "personalId": "string (11 digits, Required: PatientIDnumber)",
+      "firstName": "string",
+      "lastName": "string",
+      "birthDate": "string (YYYY-MM-DD, Required: PatientDateOfBirth)",
+      "bloodGroupRhFactor": "number (1, 2, 3, or 4 - Required for EHR)",
+      "actualRegion": "string (Required)",
+      "actualResidenceAddress": "string (Required)",
+      "phone": "string",
+      "email": "string",
+      "anamnesisVitae": {
+        "diseaseHistory": [
+          { "year": "number", "icd10": "string", "clinicalDiagnosis": "string" }
+        ],
+        "surgicalInterventions": [
+          { "year": "number", "ncsp": "string", "doctorComment": "string" }
+        ],
+        "chronicalDiseases": [
+          { "icd10": "string", "clinicalDiagnosis": "string" }
+        ],
+        "allergies": [
+          { "drugId": "string", "comment": "string" }
+        ]
+      }
+    }
+  },
+  "users": {
+    "__doc__": {
+      "userId": "string",
+      "role": "string (e.g., 'doctor')",
+      "firstName": "string",
+      "lastName": "string",
+      "personalId": "string (11 digits, Required: ResponsiblePersonID)",
+      "birthDate": "string (YYYY-MM-DD, Required: ResponsiblePersonBDate)"
+    }
+  },
+  "visits": {
+    "__doc__": {
+      "visitId": "string",
+      "ehrId": "string (Optional, populated after successful EHR Create)",
+      "ehrNo": "string (Clinic's internal Case/Order No)",
+      "patientId": "string (Reference to patients)",
+      "doctorId": "string (Reference to users)",
+      "startDate": "string (YYYY-MM-DDTHH:mm:ss, Required: EHRStartDate)",
+      "endDate": "string (YYYY-MM-DDTHH:mm:ss, Required: EHREndDate)",
+      "status": "string ('completed', 'in_progress', etc.)",
+      "anamnesisMorbi": {
+        "symptoms": "string"
+      },
+      "diagnoses": [
+        { "icd10": "string", "isPrimary": "boolean" }
+      ],
+      "procedures": [
+        {
+          "ncsp": "string",
+          "icd10": "string",
+          "procedureEndDate": "string (YYYY-MM-DDTHH:mm:ss)",
+          "procedureResult": "string",
+          "price": "number"
+        }
+      ],
+      "prescriptions": [
+        {
+          "drugId": "string",
+          "icd10": "string",
+          "drugCount": "number",
+          "ds": "string (dosage instructions)",
+          "wasUsed": "number (1 = Treatment, 2 = Anesthesia - Required!)",
+          "price": "number"
+        }
+      ],
+      "calculations": {
+        "directCosts": {
+          "salary": [
+            { "persId": "string", "section": "string", "amount": "number" }
+          ],
+          "usedMedicalItems": [
+            {
+              "section": "string",
+              "itemId": "string (Optional if itemGroupId is set)",
+              "itemGroupId": "string (Required if itemId is missing)",
+              "itemDescription": "string (Required if itemId is missing)",
+              "itemQuantity": "number",
+              "itemPrice": "number"
+            }
+          ]
+        },
+        "addition": {
+          "amount": "number"
+        }
+      }
+    }
+  }
+}

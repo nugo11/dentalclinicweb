@@ -25,12 +25,16 @@ import {
   Users,
   Briefcase,
   FileText,
-  Activity
+  Activity,
+  CheckCircle2
 } from "lucide-react";
 import { logActivity } from "../../utils/activityLogger";
+import { sendPlannedAmbulatory, replacePlannedAmbulatory, sendCalculation } from "../../ehr-integration/ehrSoapClient";
+import { validateForEHR, EHRValidationError } from "../../ehr-integration/ehrValidationGuard";
+import { HeartPulse } from "lucide-react"; // HeartPulse for UI
 
 const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
-  const { role, activeStaff, userData } = useAuth();
+  const { role, activeStaff, userData, clinicData } = useAuth();
   
   // ჩახურვის უფლება: ადმინს, მენეჯერს და რეგისტრატორს შეუძლიათ ყველასი. 
   // ექიმს შეუძლია მხოლოდ თავისი შეკვეთის ჩახურვა.
@@ -48,6 +52,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   const [paidAmount, setPaidAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null); // შეცდომის state
+  const [successMsg, setSuccessMsg] = useState(null); // წარმატების შეტყობინების state
   const [paymentMethod, setPaymentMethod] = useState("cash"); // cash, card, transfer
   const [payerType, setPayerType] = useState("personal"); // personal, insurance, corporate
   const [insuranceInfo, setInsuranceInfo] = useState({ company: "", policyNum: "", approvalCode: "" });
@@ -57,6 +62,20 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   const [availableMaterials, setAvailableMaterials] = useState([]);
   const [selectedExtraMaterials, setSelectedExtraMaterials] = useState([]);
   const [materialSearch, setMaterialSearch] = useState("");
+
+  // Common ICD-10 codes for dentistry
+  const COMMON_DIAGNOSES = [
+    { code: "K02.1", name: "კარიესი (Caries of dentine)" },
+    { code: "K05.3", name: "ქრონიკული პერიოდონტიტი" },
+    { code: "K04.0", name: "პულპიტი (Pulpitis)" },
+    { code: "K00.6", name: "კბილების ამოჭრის დარღვევები" },
+    { code: "K08.1", name: "კბილების დაკარგვა ტრავმის/ამოღების გამო" },
+  ];
+
+  // EHR Data
+  const hasEhrCredentials = !!(clinicData?.ehrUsername && clinicData?.ehrPassword);
+  const [primaryIcd10, setPrimaryIcd10] = useState("");
+  const [syncEHR, setSyncEHR] = useState(hasEhrCredentials);
 
   // 1. წამოვიღოთ სერვისების კატალოგი
   useEffect(() => {
@@ -113,8 +132,9 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
     addService({
       name: customService.name,
       price: Number(customService.price),
+      ncsp: customService.ncsp
     });
-    setCustomService({ name: "", price: "" });
+    setCustomService({ name: "", price: "", ncsp: "" });
     setCustomServiceErrors({ name: false, price: false });
   };
 
@@ -190,13 +210,33 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
     setLoading(true);
     setError(null);
 
+    if (syncEHR) {
+      if (!primaryIcd10) {
+        setError("EHR სინქრონიზაციისთვის აუცილებელია ძირითადი დიაგნოზის (ICD-10) მითითება.");
+        setLoading(false);
+        return;
+      }
+      
+      const missingNcsp = selectedServices.some(s => !s.ncsp);
+      if (missingNcsp) {
+        setError("ზოგიერთ სერვისს აკლია NCSP კოდი. გთხოვთ შეავსოთ სინქრონიზაციისთვის.");
+        setLoading(false);
+        return;
+      }
+
+      if (!clinicData?.ehrUsername || !clinicData?.ehrPassword) {
+        setError("EHR ავტორიზაციის მონაცემები არ არის მითითებული პარამეტრებში.");
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const user = auth.currentUser;
       if (!user) throw new Error("ავტორიზაცია საჭიროა");
 
       let totalMaterialCost = 0;
 
-      // 1. ჯერ ამოვიღოთ ყველა მასალის ფასი საწყობიდან და დავთვალოთ ხარჯი
       for (const service of selectedServices) {
         if (service.materials && Array.isArray(service.materials)) {
           for (const mat of service.materials) {
@@ -209,7 +249,6 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
         }
       }
 
-      // 1.1 დავამატოთ ექსტრა მასალების ხარჯი
       for (const mat of selectedExtraMaterials) {
         const matDoc = await getDoc(doc(db, "inventory", mat.id));
         if (matDoc.exists()) {
@@ -218,7 +257,163 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
         }
       }
 
-      // 2. ჯავშნის განახლება
+      // EHR Sychronization (The 2-Step Pipeline) - BLOCKING STEP
+      let newEhrId = orderData.ehrId;
+
+      if (syncEHR) {
+        // Blood Group Mapper (EHR expects 1-4 for Rh+, and -1 to -4 for Rh-)
+        const mapBloodGroupToEHR = (bg) => {
+          if (!bg) return 1;
+          const map = {
+            "O+": 1, "O-": -1,
+            "A+": 2, "A-": -2,
+            "B+": 3, "B-": -3,
+            "AB+": 4, "AB-": -4,
+            "1": 1, "2": 2, "3": 3, "4": 4 // Fallback for old AddPatient format
+          };
+          return map[bg] || 1;
+        };
+
+        // Fetch Patient and Doctor data
+        const patientDoc = await getDoc(doc(db, "patients", orderData.patientId));
+        
+        const doctorIdToUse = orderData.doctorId || (role === 'doctor' ? user.uid : null);
+        if (!doctorIdToUse) {
+          throw new Error("ამ ვიზიტს არ ჰყავს ექიმი მიმაგრებული. გთხოვთ ჯერ მიაბათ ექიმი ჯავშანს.");
+        }
+        const doctorDoc = await getDoc(doc(db, "users", doctorIdToUse));
+        
+        if (!patientDoc.exists() || !doctorDoc.exists()) {
+          throw new Error("პაციენტის ან ექიმის მონაცემები ვერ მოიძებნა EHR სინქრონიზაციისთვის.");
+        }
+
+        const patientData = patientDoc.data();
+        const doctorData = doctorDoc.data();
+
+        const formatEHRDate = (d) => {
+           if (!d) return "";
+           if (typeof d === 'string' && d.includes("-") && d.length === 10) return d;
+           try {
+             const dt = new Date(d);
+             if (!isNaN(dt.getTime())) {
+                const y = dt.getFullYear();
+                const m = String(dt.getMonth() + 1).padStart(2, '0');
+                const day = String(dt.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+             }
+           } catch(e){}
+           return String(d);
+        };
+
+        const patientPayload = {
+          patientId: patientDoc.id,
+          personalId: patientData.personalId || "",
+          birthDate: formatEHRDate(patientData.birthDate),
+          bloodGroupRhFactor: mapBloodGroupToEHR(patientData.bloodGroup),
+          actualRegion: patientData.actualRegion || "თბილისი",
+          actualResidenceAddress: patientData.actualResidenceAddress || "თბილისი",
+          phone: patientData.phone || "",
+          email: patientData.email || "",
+          gender: patientData.gender
+        };
+
+        const doctorPayload = {
+          userId: doctorDoc.id,
+          personalId: doctorData.personalId || "",
+          birthDate: formatEHRDate(doctorData.birthDate)
+        };
+
+        const endDateObj = new Date();
+        // Default start date to 30 mins ago if not present, to ensure an interval
+        let rawStartDate = orderData.createdAt?.toDate ? orderData.createdAt.toDate() : (orderData.date ? new Date(orderData.date) : new Date(endDateObj.getTime() - 30 * 60000));
+        
+        // Ensure start is strictly before end
+        if (isNaN(rawStartDate.getTime()) || rawStartDate.getTime() >= endDateObj.getTime()) {
+           rawStartDate = new Date(endDateObj.getTime() - 30 * 60000);
+        }
+
+        const startDate = rawStartDate.toISOString().split('.')[0];
+        const endDate = endDateObj.toISOString().split('.')[0];
+        
+        // Procedure end date must be strictly between start and end (so 1 second before end)
+        const procEndDateObj = new Date(endDateObj.getTime() - 1000);
+        const procedureEndDateStr = procEndDateObj.toISOString().split('.')[0];
+
+        const proceduresPayload = selectedServices.map(s => ({
+          ncsp: s.ncsp || "JDE002",
+          icd10: primaryIcd10 || "K02.1",
+          procedureEndDate: procedureEndDateStr,
+          procedureResult: "წარმატებული",
+          price: Number(s.price)
+        }));
+
+        const usedMedicalItems = selectedExtraMaterials.map(m => ({
+          section: "1",
+          itemId: m.itemId || "",
+          itemGroupId: m.itemGroupId || "G1",
+          itemDescription: m.name || "მასალა",
+          itemQuantity: Number(m.amount),
+          itemPrice: Number(m.pricePerUnit || 0)
+        }));
+
+        const visitPayload = {
+          visitId: orderData.id,
+          ehrId: orderData.ehrId,
+          ehrNo: orderData.id.slice(0, 8),
+          patientId: patientDoc.id,
+          doctorId: doctorDoc.id,
+          startDate: startDate,
+          endDate: endDate,
+          status: "completed",
+          diagnoses: [{ icd10: primaryIcd10 || "K02.1", isPrimary: true }],
+          procedures: proceduresPayload,
+          prescriptions: selectedServices.filter(s => s.wasUsed === 2).map(s => ({
+             drugId: s.ncsp || "0000-0000", // NCSP ველში ჩაწერილი წამლის კოდი
+             icd10: primaryIcd10 || "K02.1",
+             drugCount: 1,
+             ds: "ანესთეზია",
+             wasUsed: 2,
+             price: Number(s.price)
+          })),
+          calculations: {
+            directCosts: {
+              salary: [{ section: "1", persId: doctorData.personalId || "", amount: totalAmount * 0.4 }],
+              usedMedicalItems: usedMedicalItems
+            }
+          }
+        };
+
+        // Validate
+        validateForEHR(patientPayload, doctorPayload, visitPayload, !!orderData.ehrId);
+
+        try {
+          const ehrCreds = {
+            username: clinicData.ehrUsername,
+            password: clinicData.ehrPassword
+          };
+
+          // Step 1: Main EHR Service
+          if (!orderData.ehrId) {
+             const response = await sendPlannedAmbulatory(patientPayload, doctorPayload, visitPayload, ehrCreds);
+             newEhrId = response.ehrId || "EHR_" + orderData.id; 
+             visitPayload.ehrId = newEhrId;
+          } else {
+             await replacePlannedAmbulatory(patientPayload, doctorPayload, visitPayload, ehrCreds);
+          }
+
+          // Step 2: Calculation Service
+          if (newEhrId) {
+             await sendCalculation(visitPayload, ehrCreds);
+          }
+        } catch (ehrErr) {
+          const contextMsg = `გაგზავნილი მონაცემები:
+ექიმი: პ/ნ ${doctorPayload.personalId}, დაბ. თარიღი: ${doctorPayload.birthDate}
+პაციენტი: პ/ნ ${patientPayload.personalId}, დაბ. თარიღი: ${patientPayload.birthDate}`;
+          throw new Error(`${ehrErr.message}\n\n${contextMsg}`);
+        }
+      }
+
+      // 3. ჯავშნის განახლება - ONLY RUNS IF EHR SUCCEEDS
       const appointmentRef = doc(db, "appointments", orderData.id);
         await updateDoc(appointmentRef, {
           status: "completed_and_billed",
@@ -232,9 +427,10 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
           payerType: payerType,
           insuranceInfo: payerType === 'insurance' ? insuranceInfo : null,
           finalizedAt: new Date().toISOString(),
+          ehrId: newEhrId || null,
         });
 
-      // 3. საწყობის განახლება - აქ არის კრიტიკული ნაწილი!
+      // 4. საწყობის განახლება - აქ არის კრიტიკული ნაწილი!
       const inventoryUpdates = [];
       
       // სერვისების მასალები
@@ -273,10 +469,23 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
       // LOG ACTIVITY
       await logActivity(orderData.clinicId, userData || { uid: auth.currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'appointment_finalize', `დაიხურა ვიზიტი: ${orderData.patientName} (თანხა: ${totalAmount}₾)`, { patientId: orderData.patientId, patientName: orderData.patientName, amount: totalAmount });
 
-      onClose();
+      if (syncEHR) {
+        setSuccessMsg("ვიზიტი წარმატებით დაიხურა და სინქრონიზდა EHR-თან!");
+      } else {
+        setSuccessMsg("ვიზიტი წარმატებით დაიხურა (EHR სინქრონიზაციის გარეშე).");
+      }
+
+      setTimeout(() => {
+        onClose();
+        setSuccessMsg(null);
+      }, 2500);
     } catch (err) {
       console.error("Finalize error details:", err);
-      setError("საწყობის განახლებისას მოხდა შეცდომა.");
+      if (err instanceof EHRValidationError) {
+        setError(`EHR შეცდომა: ${err.message}`);
+      } else {
+        setError(err.message || "შეკვეთის დახურვისას მოხდა შეცდომა.");
+      }
     } finally {
       setLoading(false);
     }
@@ -292,6 +501,18 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
       />
 
       <div className="app-sheet bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-4xl shadow-2xl relative z-10 overflow-hidden font-nino flex flex-col max-h-[92vh] md:max-h-[90vh] animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
+        
+        {successMsg && (
+          <div className="absolute inset-0 bg-surface/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300">
+            <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/30 animate-bounce">
+              <CheckCircle2 size={48} className="text-white" />
+            </div>
+            <h2 className="text-2xl font-black text-text-main text-center px-6">
+              {successMsg}
+            </h2>
+          </div>
+        )}
+
         {/* Header */}
         <div className="p-5 md:p-8 border-b border-border-main flex items-center justify-between bg-surface-soft/50">
           <div className="flex items-center gap-4">
@@ -318,6 +539,49 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
         <div className="p-5 md:p-8 flex-1 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {/* მარცხენა მხარე: სერვისების არჩევა */}
           <div className="space-y-6">
+            <div className={`p-6 rounded-[32px] space-y-4 border mb-6 ${hasEhrCredentials ? 'bg-blue-500/10 border-blue-500/10' : 'bg-surface-soft border-border-main opacity-80'}`}>
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                  <label className={`text-[10px] font-black uppercase tracking-widest ml-2 italic flex items-center gap-2 ${hasEhrCredentials ? 'text-blue-600' : 'text-text-muted'}`}>
+                    <HeartPulse size={14} /> EHR სინქრონიზაცია
+                  </label>
+                  {!hasEhrCredentials && (
+                    <span className="text-[10px] font-black text-red-500 ml-2 mt-1 uppercase">სინქრონიზაციისთვის დაამატეთ მონაცემები</span>
+                  )}
+                </div>
+                <label className={`flex items-center gap-2 ${hasEhrCredentials ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                  <input 
+                    type="checkbox" 
+                    checked={hasEhrCredentials && syncEHR} 
+                    onChange={e => setSyncEHR(e.target.checked)} 
+                    disabled={!hasEhrCredentials}
+                    className="accent-blue-500" 
+                  />
+                  <span className="text-[10px] font-bold text-text-muted">ჩართვა</span>
+                </label>
+              </div>
+              {syncEHR && (
+                <div className="space-y-3 animate-in slide-in-from-top-2">
+                  <div className="relative group">
+                    <Activity className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500" size={16} />
+                    <select
+                      disabled={isReadOnly}
+                      value={primaryIcd10}
+                      onChange={(e) => setPrimaryIcd10(e.target.value)}
+                      className={`w-full pl-12 pr-4 py-4 bg-surface rounded-2xl outline-none text-sm font-bold border-2 transition-all appearance-none ${!primaryIcd10 ? 'border-red-500 bg-red-50' : 'border-blue-500/20'}`}
+                    >
+                      <option value="">-- აირჩიე დიაგნოზი (ICD-10) --</option>
+                      {COMMON_DIAGNOSES.map(d => (
+                        <option key={d.code} value={d.code}>{d.code} - {d.name}</option>
+                      ))}
+                    </select>
+                    {!primaryIcd10 && (
+                      <p className="text-[9px] text-red-500 font-black uppercase mt-1 ml-2">აუცილებელია გაგზავნისთვის!</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="space-y-3">
               <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
                 აირჩიე კატალოგიდან
@@ -358,6 +622,13 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
               />
               {!isReadOnly && (
                 <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="NCSP"
+                    value={customService.ncsp || ""}
+                    onChange={(e) => setCustomService({ ...customService, ncsp: e.target.value })}
+                    className="w-24 px-4 py-3 bg-surface rounded-xl outline-none text-sm font-bold border border-border-main"
+                  />
                   <input
                     type="number"
                     placeholder="ფასი"
@@ -404,6 +675,13 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                   <div key={m.id} className="flex items-center justify-between gap-3 p-3 bg-surface rounded-xl border border-amber-500/10">
                     <span className="text-[10px] font-bold text-text-main flex-1">{m.name}</span>
                     <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        placeholder="Group ID"
+                        value={m.itemGroupId || ""}
+                        onChange={(e) => setSelectedExtraMaterials(selectedExtraMaterials.map(mat => mat.id === m.id ? { ...mat, itemGroupId: e.target.value } : mat))}
+                        className="w-20 py-1 px-2 bg-surface-soft rounded-lg text-[9px] font-bold text-center outline-none border border-border-main"
+                      />
                       <span className="text-[9px] font-black text-amber-600">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)}₾</span>
                       <div className="flex items-center gap-2">
                         <input 
@@ -436,17 +714,39 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                   <span className="text-xs font-bold text-text-main">
                     {s.name}
                   </span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-black text-brand-purple">
-                      {s.price}₾
-                    </span>
-                    {!isReadOnly && (
-                      <button
-                        onClick={() => removeService(s.uniqueId)}
-                        className="text-text-muted hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-black text-brand-purple">
+                        {s.price}₾
+                      </span>
+                      {!isReadOnly && (
+                        <button
+                          onClick={() => removeService(s.uniqueId)}
+                          className="text-text-muted hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                    {syncEHR && !isReadOnly && (
+                       <div className="flex items-center gap-2 mt-1">
+                          <input 
+                            type="text" 
+                            placeholder="NCSP კოდი" 
+                            value={s.ncsp || ""} 
+                            onChange={(e) => setSelectedServices(selectedServices.map(ser => ser.uniqueId === s.uniqueId ? {...ser, ncsp: e.target.value} : ser))}
+                            className={`w-24 py-1 px-2 rounded-lg text-[9px] font-bold text-center outline-none border-2 transition-all ${!s.ncsp ? 'border-red-400 bg-red-50' : 'bg-surface-soft border-border-main'}`}
+                          />
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={s.wasUsed === 2} 
+                              onChange={(e) => setSelectedServices(selectedServices.map(ser => ser.uniqueId === s.uniqueId ? {...ser, wasUsed: e.target.checked ? 2 : 1} : ser))}
+                              className="accent-brand-purple"
+                            />
+                            <span className="text-[8px] font-bold text-text-muted">ანესთეზია</span>
+                          </label>
+                       </div>
                     )}
                   </div>
                 </div>

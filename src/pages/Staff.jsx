@@ -36,7 +36,9 @@ const Staff = () => {
     role: "doctor",
     salaryAmount: "",
     salaryPayDay: "",
-    salaryType: "fixed"
+    salaryType: "fixed",
+    personalId: "",
+    birthDate: ""
   });
 
   const [editTarget, setEditTarget] = useState(null);
@@ -48,7 +50,9 @@ const Staff = () => {
     role: "",
     salaryAmount: "",
     salaryPayDay: "",
-    salaryType: "fixed"
+    salaryType: "fixed",
+    personalId: "",
+    birthDate: ""
   });
 
   const currentPlan = PLANS[(clinicData?.plan || "free").toLowerCase()] || PLANS.free;
@@ -100,6 +104,8 @@ const Staff = () => {
         salaryAmount: newDoctor.salaryType === 'fixed' ? (Number(newDoctor.salaryAmount) || 0) : 0,
         salaryPayDay: Number(newDoctor.salaryPayDay) || 1,
         salaryType: newDoctor.salaryType || "fixed",
+        personalId: newDoctor.personalId || "",
+        birthDate: newDoctor.birthDate || "",
         clinicId: userData.clinicId,
         status: "active",
         createdAt: new Date().toISOString(),
@@ -109,7 +115,7 @@ const Staff = () => {
       await logActivity(userData.clinicId, activeStaff || userData || { uid: userData.uid, fullName: 'Unknown', role: 'unknown' }, 'staff_create', `დაემატა ახალი თანამშრომელი: ${newDoctor.fullName} (${newDoctor.role})`, { name: newDoctor.fullName, role: newDoctor.role });
 
       setShowAddModal(false);
-      setNewDoctor({ fullName: "", email: "", phone: "", pin: "", role: "doctor", salaryAmount: "", salaryPayDay: "", salaryType: "fixed" });
+      setNewDoctor({ fullName: "", email: "", phone: "", pin: "", role: "doctor", salaryAmount: "", salaryPayDay: "", salaryType: "fixed", personalId: "", birthDate: "" });
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -127,7 +133,9 @@ const Staff = () => {
       role: member.role || "doctor",
       salaryAmount: member.salaryAmount || "",
       salaryPayDay: member.salaryPayDay || "",
-      salaryType: member.salaryType || "fixed"
+      salaryType: member.salaryType || "fixed",
+      personalId: member.personalId || "",
+      birthDate: member.birthDate || ""
     });
   };
 
@@ -142,7 +150,9 @@ const Staff = () => {
         role: editFormData.role,
         salaryAmount: editFormData.salaryType === 'fixed' ? (Number(editFormData.salaryAmount) || 0) : 0,
         salaryPayDay: Number(editFormData.salaryPayDay) || 1,
-        salaryType: editFormData.salaryType || "fixed"
+        salaryType: editFormData.salaryType || "fixed",
+        personalId: editFormData.personalId || "",
+        birthDate: editFormData.birthDate || ""
       };
 
       if (editFormData.pin && editFormData.pin.length === 4) {
@@ -343,6 +353,16 @@ const Staff = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
+                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">პირადი ნომერი</label>
+                      <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" maxLength={11} value={newDoctor.personalId} onChange={e => setNewDoctor({...newDoctor, personalId: e.target.value})} placeholder="010XXXXXXXX" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
+                      <input type="date" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.birthDate} onChange={e => setNewDoctor({...newDoctor, birthDate: e.target.value})} />
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
                       <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">PIN (4 ციფრი)</label>
                       <input required maxLength={4} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm text-center tracking-[0.5em] transition-all" value={newDoctor.pin} onChange={e => setNewDoctor({...newDoctor, pin: e.target.value.replace(/\D/g, '')})} />
                     </div>
@@ -407,6 +427,16 @@ const Staff = () => {
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">სრული სახელი</label>
                 <input required className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.fullName} onChange={e => setEditFormData({...editFormData, fullName: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">პირადი ნომერი</label>
+                    <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" maxLength={11} value={editFormData.personalId} onChange={e => setEditFormData({...editFormData, personalId: e.target.value})} placeholder="010XXXXXXXX" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
+                    <input type="date" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.birthDate} onChange={e => setEditFormData({...editFormData, birthDate: e.target.value})} />
+                  </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">

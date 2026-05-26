@@ -5,6 +5,10 @@
       "destination": "https://api.ubill.dev/:path*"
     },
     {
+      "source": "/api/ehr/:path*",
+      "destination": "https://ehrsvc.moh.gov.ge/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

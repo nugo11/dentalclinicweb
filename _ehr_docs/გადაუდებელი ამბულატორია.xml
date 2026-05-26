@@ -1,0 +1,288 @@
+<EHR>
+	<EHRInfo><!-- ინფორმაცია ელ. ისტორიაზე-->  
+		<EHRNo>15_2_2</EHRNo>
+		<CaseNo></CaseNo>
+		<ResponsiblePersonID>01022005051</ResponsiblePersonID>
+		<ResponsiblePersonBDate>1980-08-15</ResponsiblePersonBDate>
+		<EHRStartDate>2019-07-10T13:15:00</EHRStartDate>
+		<EHREndDate>2019-07-10T19:15:00</EHREndDate>
+		<EHRVisibleStatus>1</EHRVisibleStatus>
+	</EHRInfo>
+	<PatientInfo><!-- ინფორმაცია პაციენტზე-->
+		<PatientIDnumber>01022005051</PatientIDnumber>
+		<PatientDateOfBirth>1980-08-15</PatientDateOfBirth>
+		<BloodGroupRhFactor>4</BloodGroupRhFactor>
+		<PatientActualRegion>თბილისი</PatientActualRegion>
+		<PatientActualResidenceAddress>ე. ამაშუკელის N16</PatientActualResidenceAddress>
+		<PatientPhone>577222844</PatientPhone>
+		<PatientEMail>mpapava@moh.gov.ge</PatientEMail>
+	</PatientInfo>
+	<AnamnesisVitae><!-- ცხოვრების ანამნეზი -->
+		<DiseaseHistoryTraumaPathologicalConditions><!-- გადატანილი დაავადებები/ტრავმები/პათოლოგიური მდგომა -->
+			<DiseaseHistory><!--გადატანილი დაავადებები-->
+				<Record>
+					<Year>1980</Year>
+					<ICD10>K76.6</ICD10>
+					<ClinicalDiagnosis>პორტული ჰიპერტენზია</ClinicalDiagnosis>
+				</Record>
+			</DiseaseHistory>
+			<SurgicalInterventions><!--გადატანილი ქირურგიული ჩარევები-->
+				<Record>
+					<Year>1985</Year>
+					<NCSP>JASB10</NCSP>
+					<DoctorComment>ოპერაციამ კარგად ჩაიარა</DoctorComment>
+				</Record>
+			</SurgicalInterventions>
+			<ChronicalDiseases><!-- ქრონიკული დაავადებები -->
+				<Record>
+					<ICD10>I10</ICD10>
+					<ClinicalDiagnosis>მენეჯირებული</ClinicalDiagnosis>
+				</Record>
+			</ChronicalDiseases>
+			<Transfusions><!--სისხლის გადასხმა-->
+				<Record>
+					<BloodComponent>2</BloodComponent>
+					<DoctorComment>კომენტარი</DoctorComment>
+					<TransfDate>1990</TransfDate>
+				</Record>
+			</Transfusions>
+		</DiseaseHistoryTraumaPathologicalConditions>
+		<AlergiesAndAdverceReactions><!-- ალერგიები და გვერდითი რეაქციები -->
+			<AlergiesDrugs><!--მედიკამენტი, რომელზეც აღენიშნება ალერგია -->
+				<Record>
+					<DrugID>12321</DrugID>
+					<DrugComponent>2</DrugComponent>
+					<Comment>კომენტარი</Comment>
+				</Record>
+			</AlergiesDrugs>
+			<OtherAllergiesAndReactions><!--სხვა ალერგია და გვერდითი რეაქცია -->
+				<Record>
+					<Comment>ალერგია მტვერზე</Comment>
+				</Record>
+				<Record>
+					<Comment>ალერგია თაფლზე</Comment>
+				</Record>
+			</OtherAllergiesAndReactions>
+		</AlergiesAndAdverceReactions>
+		<Immunization><!--იმუნიზაციის ისტორია -->
+			<Record>
+				<YAxisID>1</YAxisID>
+				<DateOfInnection>2015</DateOfInnection>
+				<VaccineName>დიფტერიის ვაქცინა.</VaccineName>
+			</Record>
+		</Immunization>
+		<Screening><!-- სკრინინგის ისტორია -->
+			<Record>
+				<ScreeningType>1</ScreeningType>
+				<ScreeningDate>2018</ScreeningDate>
+				<ScreeningResult>1</ScreeningResult>
+			</Record>
+		</Screening>
+		<Pregnancy><!--ორსულობის სტატისტიკა -->
+			<NumberOfPregnancies>5</NumberOfPregnancies>
+			<NumberOfDeliveries>4</NumberOfDeliveries>
+		</Pregnancy>
+	</AnamnesisVitae>
+	<Hospitalization><!--ამბულატორიული ეპიზოდი-->
+		<Visits><!--განხორციელებული ვიზიტები  -->
+			<Record>
+				<VisitStartDate>2015-10-01T10:10:10</VisitStartDate><!--ვიზიტის დაწყების თარიღი და დრო  -->
+				<VisitEndDate>2015-10-01T10:10:10</VisitEndDate><!--ვიზიტის დასრულების თარიღი და დრო  -->
+				<VisitComment></VisitComment><!--კომენტარი  -->
+			</Record>
+		</Visits>
+		<ResponsiblePersons>
+			<Record>
+				<ResponsiblePersonID>01022005051</ResponsiblePersonID>
+				<ResponsiblePersonBDate>1980-08-15</ResponsiblePersonBDate>
+			</Record>
+		</ResponsiblePersons>
+		<AnamnesisMorbi><!-- დაავადების  ანამნეზი -->
+			<TypeOfHospitalization>1</TypeOfHospitalization>
+			<Simptoms>უჩივის</Simptoms>
+		</AnamnesisMorbi>
+		<TreatmentProcess><!-- მკურნალობის პროცესი -->
+			<ClinicalDiagnosticExploration><!-- კლინიკურ-დიაგნოსტიკური გამოკვლევა -->
+				<Record>
+					<NCSP>BBDE1A</NCSP>
+					<ICD10>BBDE1A</ICD10>
+					<ProcedureEndDate>2017-10-18T18:00:00</ProcedureEndDate>
+					<ProcedureResult>კლინიკურ-დიაგნოსტიკური გამოკვლევა კომენტარი</ProcedureResult>
+					<Price>5.156</Price>
+				</Record>
+			</ClinicalDiagnosticExploration>
+			<OtherActivity><!-- თანმხლები  აქტივობა -->
+				<Record>
+					<NCSP>WAA8</NCSP>
+					<ICD10>K40.1</ICD10>
+					<ProcedureEndDate>2017-10-18T18:00:00</ProcedureEndDate>
+					<ProcedureResult>სხვა აქტივობა კომენტარი</ProcedureResult>
+					<Price>25.8</Price>
+				</Record>
+			</OtherActivity>
+			<LabTest><!-- ლაბორატორიული გამოკვლევები-->
+				<Record>
+					<Laboratory>CG.7</Laboratory>
+					<LaboratoryExaminationText></LaboratoryExaminationText>
+					<ProcedureStartDate>2017-10-18T18:00:00</ProcedureStartDate>
+					<ProcedureEndDate>2017-10-18T18:00:00</ProcedureEndDate>
+					<ProcedureResult>კომენტარი</ProcedureResult>
+					<Price>2.75</Price>
+				</Record>
+			</LabTest>
+			<Consultations><!-- კონსულტაციები-->
+				<Record>
+					<NCSP>FADC00</NCSP>
+					<ICD10>FADC00</ICD10>
+					<CodeOfTheMedicalSpecialty>17</CodeOfTheMedicalSpecialty>
+					<ConsultantDoctorName>სახელი გვარი</ConsultantDoctorName>
+					<ConsultationDate>სახელი გვარი</ConsultationDate>
+					<ConsultationResultsComment></ConsultationResultsComment>
+					<Price>5.56</Price>
+				</Record>
+			</Consultations>
+			<Prescription><!-- დანიშნულება -->
+				<Record>
+					<ICD10>FADC00</ICD10>
+					<DrugID>19307</DrugID>
+					<Linked>1</Linked>
+					<DrugNameGE></DrugNameGE>
+					<DrugCount>5.00</DrugCount>
+					<Price>1.25</Price>
+					<DS>1</DS>
+					<WasUsed>1</WasUsed><!-- 1 = 'მკურნალობის პროცესში' / 2 = 'ანესთეზიის ეპიზოდში' -->
+				</Record>
+			</Prescription>
+			<Transfusion><!-- სისხლის გადასხმა -->
+				<Record>
+					<ICD10>K40.1</ICD10>
+					<BloodComponent>1</BloodComponent>
+					<IndicationOfTransfusion>1</IndicationOfTransfusion>
+					<Quantity>1500</Quantity>
+					<TransfusionDoctorComment>ტრანსუზიის ანამნეზი , ექიმის კომენტარი</TransfusionDoctorComment>
+					<Price>0.256</Price>
+				</Record>
+			</Transfusion>
+			<Anesthesia><!-- ანესთეზიის ეპიზოდი -->
+				<Record>
+					<ICD10>K40.1</ICD10>
+					<ProcedureStartDate>2017-10-18T18:00:00</ProcedureStartDate>
+					<ProcedureEndDate>2017-10-18T18:00:00</ProcedureEndDate>
+					<AnesthesiaComment>ქირურგიული ჩარევა კომენტარი</AnesthesiaComment>
+				</Record>
+			</Anesthesia>
+			<SurgicalIntervention><!-- ქირურგიული ჩარევა -->
+				<Record>
+					<NCSP>WAA8</NCSP>
+					<ICD10>K40.1</ICD10>
+					<Protocol_No>1.1</Protocol_No>
+					<ProcedureStartDate>2017-10-18T18:00:00</ProcedureStartDate>
+					<ProcedureEndDate>2019-07-10T18:00:00</ProcedureEndDate>
+					<ProcedureResult>ქირურგიული ჩარევა კომენტარი</ProcedureResult>
+				</Record>
+			</SurgicalIntervention>
+			<OperationProtocol><!-- ოპერაციის ოქმი -->
+				<Record>
+					<Protocol_No>WAA8</Protocol_No>
+					<Protocol>ქირურგიული ჩარევა კომენტარი</Protocol>
+				</Record>
+			</OperationProtocol>			
+		</TreatmentProcess>
+	</Hospitalization>
+	<Discharge><!-- გაწერა-->
+			<Histomorphology><!-- ჰისტომორფოლოგია -->
+			<Record>
+				<Section>1</Section>
+				<Laboratory>CG.7</Laboratory>
+				<LaboratoryExaminationText></LaboratoryExaminationText>
+				<ProcedureStartDate>2017-10-18</ProcedureStartDate>
+				<ProcedureEndDate>2017-10-18</ProcedureEndDate>
+				<ProcedureResult>კომენტარი/შედეგი</ProcedureResult>
+				<Price>5.25</Price>
+			</Record>
+		</Histomorphology>
+		<FinalDiagnosis><!-- დასკვნითი დიაგნოზი-->
+			<PrimaryDisease><!-- ძირითადი დაავადება-->
+				<ICD10>K40.1</ICD10>
+				<Illness>1</Illness>
+				<ICD102>K40.1</ICD102>
+			</PrimaryDisease>
+			<DiseaseComplication><!-- დაავადების გართულება-->
+				<Record>
+					<ICD10>K40.1</ICD10>
+					<Illness>1</Illness>
+				</Record>
+			</DiseaseComplication>
+			<AccompanyingDisease><!-- თანმხლები დაავადება-->
+				<Record>
+					<ICD10>K40.1</ICD10>
+					<Illness>1</Illness>
+					<ICD102>K40.1</ICD102>
+				</Record>
+			</AccompanyingDisease>
+		</FinalDiagnosis>
+		<HospitalizationOutcome><!-- ჰოსპიტალიზაციის გამოსავალი-->
+			<HospitalizationResult>1</HospitalizationResult>
+			<ConditionAtTheMoment>2</ConditionAtTheMoment>
+			<DoctorComment></DoctorComment>
+			<HospitalName>ღუდუშაური კლინიკა</HospitalName>
+		</HospitalizationOutcome>
+		<RecommendationsAfterDischarge><!-- გაწერის შემდგომი რეკომენდაციები-->
+			<RecomendedSurgicalIntervention><!-- ქირურგიული ჩარევები/პროცედურები-->
+				<Record>
+					<NCSP>FADC00</NCSP>
+					<NCSPComment>კომენტარი </NCSPComment>
+					<ICD10>FADC00</ICD10>
+					<ICD10Comment>FADC00</ICD10Comment>
+				</Record>
+			</RecomendedSurgicalIntervention>			
+			<InstrumentalExplorations><!-- ინსტრუმენტული გამოკვლევები-->
+				<Record>
+					<NCSP>JDE002</NCSP>
+					<InstrumentalExplorationsDate>2018-08-14</InstrumentalExplorationsDate>
+					<DoctorComment></DoctorComment>
+				</Record>
+			</InstrumentalExplorations>
+			<RecommendationLabTest><!-- ლაბორატორიული გამოკვლევები-->
+				<Record>
+					<Laboratory>BL.1.1</Laboratory>
+					<LabExamText></LabExamText>
+					<LabExamDate>2018-08-15</LabExamDate>
+					<DoctorComment></DoctorComment>
+				</Record>
+			</RecommendationLabTest>
+			<ConsultationsInAmbulatories><!--კონსულტაციები ამბულატორიაში-->
+				<Record>
+					<NCSP>FADC00</NCSP>
+					<CodeOfTheMedicalSpecialty>12</CodeOfTheMedicalSpecialty>
+					<TheDeadlineOfRecommendation>2017-10-18</TheDeadlineOfRecommendation>
+					<DoctorComment></DoctorComment>
+				</Record>
+			</ConsultationsInAmbulatories>
+			<RecommendationOther><!--სხვა რეკომენდაციები-->
+				<Record>
+					<Recommendation>სხვა რეკომენდაციები დასახელება</Recommendation>
+				</Record>
+			</RecommendationOther>
+			<Prescriptions><!--დანიშნულება-->
+				<PrecriptionByID><!-- დანიშნულებები რომლებიც უკვე რეგისტრირებულია ელ. რეცეპტების სისტემაში-->
+					<Record>
+						<PrescriptionUN_ID>595531</PrescriptionUN_ID>
+						<RecommendDate>2018-12-01</RecommendDate>
+					</Record>
+				</PrecriptionByID>
+				<OtherPrescription><!-- დანიშნულებები რომლებიც არაა რეგისტრირებულია ელ. რეცეპტების სისტემაში-->
+					<Record>
+						<DrugID>20960</DrugID>
+						<SubscriptionForm>1</SubscriptionForm>
+						<PossibleToReplaceIt>1</PossibleToReplaceIt>
+						<DrugCount>50</DrugCount>
+						<DS>1 ტაბლეტი 1ჯერ დღეში</DS>
+						<RecipeNo>F3E10000000253</RecipeNo>
+						<RecipeDur>2018-10-15</RecipeDur>
+					</Record>
+				</OtherPrescription>
+			</Prescriptions>
+		</RecommendationsAfterDischarge>
+	</Discharge>
+</EHR>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "../context/AuthContext";
 import { AlertOctagon, Phone, Mail, LogOut, ArrowLeft } from "lucide-react";
@@ -6,6 +7,13 @@ import { auth } from "../firebase";
 
 const SuspendedPage = () => {
   const { clinicData, staffLogout } = useAuth();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (clinicData?.subscriptionStatus === "active") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [clinicData?.subscriptionStatus, navigate]);
 
   const handleLogout = async () => {
     staffLogout();

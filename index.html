@@ -33,76 +33,21 @@
     <meta name="mobile-web-app-capable" content="yes" />
 </head>
   <body>
-    <div id="root">
-      <style>
-        :root {
-          --init-bg: #ffffff;
-          --init-text: #111827;
-        }
-        @media (prefers-color-scheme: dark) {
-          :root {
-            --init-bg: #030712;
-            --init-text: #ffffff;
-          }
-        }
-        .initial-loader-wrapper {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          width: 100vw;
-          background-color: var(--init-bg);
-          font-family: system-ui, -apple-system, sans-serif;
-          margin: 0;
-          padding: 0;
-        }
-        .initial-spinner {
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          border: 3px solid transparent;
-          border-top-color: #6366f1;
-          border-right-color: rgba(99, 102, 241, 0.4);
-          animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-          margin-bottom: 24px;
-        }
-        .initial-loader-text {
-          color: var(--init-text);
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 0.3em;
-          text-transform: uppercase;
-          opacity: 0.8;
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 0.8; }
-          50% { opacity: 0.3; }
-        }
-      </style>
-      <div class="initial-loader-wrapper">
-        <div class="initial-spinner"></div>
-        <div class="initial-loader-text">AiDent იტვირთება...</div>
+    <div id="root"></div>
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+        <h1>AiDent — კლინიკის მართვის ინოვაციური პლატფორმა</h1>
+        <p>AiDent არის ყველაზე მოქნილი SaaS პლატფორმა ქართული სტომატოლოგიური კლინიკებისთვის. მართეთ პაციენტების აღრიცხვა, ფინანსური ანალიტიკა, ინვენტარი და ავტომატური ჯავშნები ერთ სივრცეში.</p>
+        <ul>
+          <li>პაციენტების CRM და ელექტრონული ბარათები</li>
+          <li>ფინანსური ანგარიშგება და ექიმების ხელფასები</li>
+          <li>ინტერაქტიული კბილების რუკა</li>
+          <li>EHR და სადაზღვეოებთან სინქრონიზაცია</li>
+          <li>Windows, Android და iOS აპლიკაციები</li>
+        </ul>
+        <p>გვეწვიეთ: <a href="https://AiDent.ge/">https://AiDent.ge</a></p>
       </div>
-      <noscript>
-        <div style="padding: 20px; text-align: center; font-family: sans-serif;">
-          <h1>AiDent — კლინიკის მართვის ინოვაციური პლატფორმა</h1>
-          <p>AiDent არის ყველაზე მოქნილი SaaS პლატფორმა ქართული სტომატოლოგიური კლინიკებისთვის. მართეთ პაციენტების აღრიცხვა, ფინანსური ანალიტიკა, ინვენტარი და ავტომატური ჯავშნები ერთ სივრცეში.</p>
-          <ul>
-            <li>პაციენტების CRM და ელექტრონული ბარათები</li>
-            <li>ფინანსური ანგარიშგება და ექიმების ხელფასები</li>
-            <li>ინტერაქტიული კბილების რუკა</li>
-            <li>EHR და სადაზღვეოებთან სინქრონიზაცია</li>
-            <li>Windows, Android და iOS აპლიკაციები</li>
-          </ul>
-          <p>გვეწვიეთ: <a href="https://AiDent.ge/">https://AiDent.ge</a></p>
-        </div>
-      </noscript>
-    </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator) {

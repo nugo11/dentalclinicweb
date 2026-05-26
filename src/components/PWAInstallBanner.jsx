@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, Smartphone, Globe, AlertTriangle } from 'lucide-react';
+import { X, Download, Smartphone, Globe, AlertTriangle, Activity } from 'lucide-react';
 
 const PWAInstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -13,6 +13,10 @@ const PWAInstallBanner = () => {
   const [browserName, setBrowserName] = useState('');
 
   useEffect(() => {
+    // --- Check if dismissed in this session ---
+    const isDismissed = sessionStorage.getItem('pwa_banner_dismissed_session') === 'true';
+    if (isDismissed) return;
+
     const ua = navigator.userAgent;
 
     // --- OS Detection ---
@@ -42,41 +46,50 @@ const PWAInstallBanner = () => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if (isStandalone) return;
 
-    // --- beforeinstallprompt (Chrome/Edge/Samsung) ---
+    let timer;
+
+    // --- beforeinstallprompt ---
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShowBanner(true);
+      // 2 seconds delay before showing the banner
+      timer = setTimeout(() => {
+        setShowBanner(true);
+      }, 2000);
     };
     window.addEventListener('beforeinstallprompt', handler);
 
-    // Show banner for iOS
+    // Show with delay for iOS
     if (isIOSDevice && !isStandalone) {
-      setShowBanner(true);
+      timer = setTimeout(() => {
+        setShowBanner(true);
+      }, 2000);
     }
 
-    // Show banner for Android immediately
+    // Show with delay for Android immediately
     if (isAndroidDevice && !isStandalone) {
-      setShowBanner(true);
+      timer = setTimeout(() => {
+        setShowBanner(true);
+      }, 2000);
     }
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const handleInstallClick = async () => {
-    // iOS — show iOS instructions
     if (isIOS) {
       setShowIOSModal(true);
       return;
     }
 
-    // Android — non-Chrome browsers: show "use Chrome" modal
     if (isAndroid && !isChrome && !deferredPrompt) {
       setShowChromeRequiredModal(true);
       return;
     }
 
-    // Chrome with native prompt available
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -85,51 +98,136 @@ const PWAInstallBanner = () => {
         setShowBanner(false);
       }
     } else if (isAndroid) {
-      // Chrome fallback if beforeinstallprompt didn't fire
       setShowAndroidModal(true);
+    } else {
+      alert("აპლიკაციის დასაინსტალირებლად დააჭირეთ ბრაუზერის მისამართების ზოლში განთავსებულ ინსტალაციის ღილაკს (Install icon).");
     }
+  };
+
+  const handleDismiss = () => {
+    setShowBanner(false);
+    sessionStorage.setItem('pwa_banner_dismissed_session', 'true');
   };
 
   if (!showBanner) return null;
 
   return (
     <>
-      {/* Mobile Banner - Sticky Bottom */}
-      <div className="fixed bottom-6 left-4 right-4 z-[60] md:hidden animate-in slide-in-from-bottom-10 duration-500">
-        <div className="bg-brand-deep/95 backdrop-blur-xl border border-white/10 rounded-[28px] p-4 shadow-2xl shadow-brand-deep/40 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 bg-surface/10 rounded-2xl flex items-center justify-center shrink-0">
-              <Download className="text-white" size={24} />
-            </div>
-            <div className="min-w-0">
-              <h4 className="text-white text-sm font-black tracking-tight leading-tight truncate">დააინსტალირე AiDent</h4>
-              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-0.5">სწრაფი წვდომისთვის</p>
-            </div>
-          </div>
+      {/* Custom Keyframe Styles to guarantee 100% smooth, hardware-accelerated slide-up transition */}
+      <style>{`
+        @keyframes slideUpBanner {
+          0% {
+            transform: translateY(120%) scale(0.95);
+            opacity: 0;
+          }
+          100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+        }
+        .animate-slide-up-custom {
+          animation: slideUpBanner 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+
+      {/* Mobile Banner - Distinct, High-Contrast Sleek Floating Card */}
+      <div className="fixed bottom-6 left-4 right-4 z-[999] md:hidden animate-slide-up-custom">
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 border-2 border-brand-purple rounded-[28px] p-5 shadow-[0_20px_50px_rgba(124,58,237,0.4)] flex flex-col gap-4">
+          {/* Subtle Glow Background Accent */}
+          <div className="absolute top-[-50%] left-[-20%] w-[130px] h-[130px] bg-brand-purple/20 rounded-full blur-[35px] pointer-events-none" />
           
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center justify-between gap-3 relative z-10">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 bg-gradient-to-tr from-brand-purple to-purple-600 rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-brand-purple/30">
+                <Activity className="text-white" size={22} />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-white text-sm font-black tracking-tight leading-tight">დააინსტალირე AiDent</h4>
+                <p className="text-brand-purple text-[9px] font-black uppercase tracking-widest mt-0.5">უფასო ინსტალაცია</p>
+              </div>
+            </div>
+            
+            <button 
+              onClick={handleDismiss}
+              className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white flex items-center justify-center transition-colors shrink-0"
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          <p className="text-white/80 text-xs font-semibold leading-relaxed relative z-10 px-1">
+            მართე შენი კლინიკა უფრო სწრაფად და კომფორტულად. დაამატე ეკრანზე წამებში!
+          </p>
+          
+          <div className="flex gap-2 relative z-10">
             <button 
               onClick={handleInstallClick}
-              className="px-4 py-2.5 bg-brand-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-surface hover:text-text-main transition-all active:scale-95 shadow-lg shadow-brand-purple/20 whitespace-nowrap"
+              className="flex-1 py-3 bg-brand-purple hover:bg-brand-purple/95 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-[0_6px_20px_rgba(124,58,237,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              ინსტალაცია
+              <Download size={12} className="animate-bounce" /> ინსტალაცია
             </button>
             <button 
-              onClick={() => setShowBanner(false)}
-              className="p-2 text-white/40 hover:text-white transition-colors shrink-0"
+              onClick={handleDismiss}
+              className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
             >
-              <X size={18} />
+              არა
             </button>
           </div>
         </div>
       </div>
 
+      {/* Desktop/Tablet Card - Premium High-Contrast Standing Card */}
+      <div className="hidden md:flex fixed bottom-8 right-8 z-[999] w-88 flex-col gap-4 animate-slide-up-custom">
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 border-2 border-brand-purple rounded-[32px] p-6 shadow-[0_25px_60px_rgba(124,58,237,0.4)] flex flex-col gap-3.5">
+           {/* Subtle Glow Background Accent */}
+           <div className="absolute top-[-30%] left-[-10%] w-[160px] h-[160px] bg-brand-purple/15 rounded-full blur-[45px] pointer-events-none" />
+
+           {/* Header with App Icon and Info */}
+           <div className="flex gap-3.5 relative z-10">
+              <div className="w-12 h-12 bg-gradient-to-tr from-brand-purple to-purple-600 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-brand-purple/35 relative">
+                 <Activity size={24} className="text-white animate-pulse" />
+              </div>
+              <div className="min-w-0 flex-1">
+                 <div className="flex justify-between items-start">
+                   <h4 className="text-white text-base font-black tracking-tight leading-none mt-1">AiDent აპლიკაცია</h4>
+                   <button 
+                     onClick={handleDismiss}
+                     className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                   >
+                     <X size={14} />
+                   </button>
+                 </div>
+                 <p className="text-white/60 text-[10px] font-semibold mt-1.5">კლინიკის მართვის ინოვაციური პლატფორმა</p>
+              </div>
+           </div>
+           
+           <div className="text-[11px] font-medium text-white/80 leading-relaxed relative z-10">
+             დააინსტალირეთ აპლიკაცია თქვენს კომპიუტერზე უფრო სწრაფი წვდომისთვის და შეტყობინებებისთვის.
+           </div>
+
+           {/* Action Buttons */}
+           <div className="flex gap-2 relative z-10">
+             <button 
+               onClick={handleInstallClick}
+               className="flex-1 py-3 bg-brand-purple hover:bg-brand-purple/90 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-[0_8px_24px_rgba(124,58,237,0.3)] flex items-center justify-center gap-1.5 cursor-pointer"
+             >
+               <Download size={12} className="animate-bounce" /> ინსტალაცია
+             </button>
+             <button 
+               onClick={handleDismiss}
+               className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+             >
+               მოგვიანებით
+             </button>
+           </div>
+        </div>
+      </div>
+
       {/* iOS Instruction Modal */}
       {showIOSModal && (
-        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowIOSModal(false)} />
           <div className="relative bg-surface w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 max-h-[90vh] flex flex-col overflow-hidden">
-            {/* Header with close button inside */}
             <div className="p-6 pb-0 shrink-0">
               <div className="flex justify-between items-center mb-6">
                 <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center"><Smartphone size={24} /></div>
@@ -139,7 +237,6 @@ const PWAInstallBanner = () => {
               <p className="text-text-muted text-sm font-medium mb-6">მიჰყევით ამ ნაბიჯებს AiDent-ის დასამატებლად:</p>
             </div>
 
-            {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar">
               <div className="space-y-8">
                 {[
@@ -167,7 +264,7 @@ const PWAInstallBanner = () => {
 
       {/* Android Chrome Manual Instruction Modal */}
       {showAndroidModal && (
-        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowAndroidModal(false)} />
           <div className="relative bg-surface w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
             <div className="p-8">
@@ -193,9 +290,9 @@ const PWAInstallBanner = () => {
         </div>
       )}
 
-      {/* Chrome Required Modal (for Samsung Internet / Firefox / Other browsers) */}
+      {/* Chrome Required Modal */}
       {showChromeRequiredModal && (
-        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-4">
           <div className="absolute inset-0 bg-brand-deep/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowChromeRequiredModal(false)} />
           <div className="relative bg-surface w-full max-w-md rounded-[32px] shadow-2xl animate-in slide-in-from-bottom-full duration-300 overflow-hidden">
             <div className="p-8">

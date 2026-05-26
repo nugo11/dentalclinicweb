@@ -8,7 +8,7 @@ import Sidebar from "../../components/Dashboard/Sidebar";
 import TopNav from "../../components/Dashboard/TopNav";
 import { 
   User, Building2, Lock, Save, Loader2, 
-  CheckCircle2, Camera, Mail, Shield, Smartphone 
+  CheckCircle2, Camera, Mail, Shield, Smartphone, Activity
 } from "lucide-react";
 
 const Settings = () => {
@@ -23,7 +23,9 @@ const Settings = () => {
     email: ""
   });
   const [clinicInfo, setClinicInfo] = useState({
-    clinicName: ""
+    clinicName: "",
+    ehrUsername: "",
+    ehrPassword: ""
   });
   const [passwords, setPasswords] = useState({
     newPassword: "",
@@ -36,12 +38,16 @@ const Settings = () => {
       setPersonalInfo({ fullName: userData.fullName || "", email: userData.email || "" });
     }
     if (clinicData) {
-      setClinicInfo({ clinicName: clinicData.clinicName || "" });
+      setClinicInfo({ 
+        clinicName: clinicData.clinicName || "",
+        ehrUsername: clinicData.ehrUsername || "",
+        ehrPassword: clinicData.ehrPassword || ""
+      });
     }
   }, [userData, clinicData]);
 
   // წვდომის შემოწმება
-  if (userData && userData.role !== 'admin') {
+  if (userData && userData.role !== 'admin' && userData.role !== 'manager') {
     return (
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
@@ -51,7 +57,7 @@ const Settings = () => {
           </div>
           <h2 className="text-3xl font-black text-text-main italic">წვდომა შეზღუდულია</h2>
           <p className="text-text-muted font-bold text-sm uppercase tracking-widest mt-4 max-w-sm text-center leading-relaxed">
-            ამ გვერდის მართვა შეუძლია მხოლოდ კლინიკის ადმინისტრატორს.
+            ამ გვერდის მართვა შეუძლია მხოლოდ კლინიკის ადმინისტრატორს ან მენეჯერს.
           </p>
         </div>
       </div>
@@ -75,11 +81,16 @@ const Settings = () => {
         fullName: personalInfo.fullName
       });
       
-      // კლინიკის მონაცემების განახლება (მხოლოდ ადმინისთვის)
-      if (userData.role === 'admin' && userData.clinicId) {
-        await updateDoc(doc(db, "clinics", userData.clinicId), {
-          clinicName: clinicInfo.clinicName
-        });
+      // კლინიკის მონაცემების განახლება (ადმინისთვის და მენეჯერისთვის)
+      if ((userData.role === 'admin' || userData.role === 'manager') && userData.clinicId) {
+        const clinicUpdates = {};
+        if (userData.role === 'admin') {
+          clinicUpdates.clinicName = clinicInfo.clinicName;
+        }
+        clinicUpdates.ehrUsername = clinicInfo.ehrUsername;
+        clinicUpdates.ehrPassword = clinicInfo.ehrPassword;
+        
+        await updateDoc(doc(db, "clinics", userData.clinicId), clinicUpdates);
       }
       
       setMessage({ type: "success", text: "მონაცემები წარმატებით განახლდა!" });
@@ -192,6 +203,37 @@ const Settings = () => {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  <div className="pt-6 border-t border-border-main space-y-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Activity className="text-brand-purple" size={20} />
+                      <h3 className="text-lg font-black text-text-main italic">EHR ინტეგრაცია</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">EHR მომხმარებელი</label>
+                        <input 
+                          type="text" 
+                          className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
+                          value={clinicInfo.ehrUsername}
+                          onChange={(e) => setClinicInfo({...clinicInfo, ehrUsername: e.target.value})}
+                          placeholder="შეიყვანეთ ლოგინი ან მეილი"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">EHR პაროლი</label>
+                        <input 
+                          type="password" 
+                          className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
+                          value={clinicInfo.ehrPassword}
+                          onChange={(e) => setClinicInfo({...clinicInfo, ehrPassword: e.target.value})}
+                          placeholder="••••••••"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <button 

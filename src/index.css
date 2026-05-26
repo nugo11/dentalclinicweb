@@ -286,3 +286,13 @@ input::-webkit-calendar-picker-indicator {
   filter: var(--calendar-filter, none);
   cursor: pointer;
 }
+
+/* Clickable elements cursor pointer reset */
+button, 
+a, 
+input[type="button"], 
+input[type="submit"], 
+[role="button"], 
+.cursor-pointer {
+  cursor: pointer !important;
+}

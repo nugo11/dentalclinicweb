@@ -176,8 +176,12 @@ const MainHeader = ({ user }) => {
                   </div>
                 </Link>
               ) : (
-                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center w-full py-6 bg-brand-deep text-white rounded-[28px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-brand-deep/30 transition-all active:scale-95">
-                  შესვლა სისტემაში
+                <Link 
+                  to="/auth" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="flex items-center justify-center gap-2.5 w-full py-5 bg-gradient-to-r from-brand-purple to-indigo-600 hover:brightness-110 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.25em] shadow-[0_10px_30px_rgba(124,58,237,0.35)] transition-all active:scale-95"
+                >
+                  <User size={16} /> შესვლა სისტემაში
                 </Link>
               )}
             </div>

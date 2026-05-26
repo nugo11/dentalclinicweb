@@ -35,6 +35,7 @@ const Services = () => {
   const [newService, setNewService] = useState({
     name: "",
     price: "",
+    ncsp: "",
     materials: []
   });
 
@@ -71,6 +72,7 @@ const Services = () => {
         clinicId: userData?.clinicId || auth.currentUser.uid,
         name: newService.name,
         price: Number(newService.price),
+        ncsp: newService.ncsp || "",
         materials: newService.materials,
         updatedAt: serverTimestamp()
       };
@@ -105,6 +107,7 @@ const Services = () => {
     setNewService({
       name: s.name,
       price: s.price,
+      ncsp: s.ncsp || "",
       materials: s.materials || []
     });
     setIsModalOpen(true);
@@ -113,7 +116,7 @@ const Services = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setNewService({ name: "", price: "", materials: [] });
+    setNewService({ name: "", price: "", ncsp: "", materials: [] });
     setSearchTerm("");
   };
 
@@ -258,6 +261,18 @@ const Services = () => {
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">ფასი (₾)</label>
                       <input required type="number" value={newService.price} onChange={e => setNewService({...newService, price: e.target.value})} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all" />
+                    </div>
+                    <div className="space-y-2 col-span-full">
+                      <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-2 italic flex items-center gap-2">
+                        <Tag size={14} /> NCSP კოდი (EHR სინქრონიზაციისთვის)
+                      </label>
+                      <input 
+                        type="text" 
+                        placeholder="მაგ: JDE002"
+                        value={newService.ncsp} 
+                        onChange={e => setNewService({...newService, ncsp: e.target.value})} 
+                        className="w-full bg-blue-50/30 border-2 border-blue-100 focus:border-blue-500 rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all placeholder:text-blue-300" 
+                      />
                     </div>
                   </div>
 

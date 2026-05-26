@@ -54,6 +54,7 @@ const Inventory = () => {
     unit: "ცალი",
     minThreshold: "",
     pricePerUnit: "",
+    itemGroupId: "G1", // Default to G1 (Consumables)
   });
 
   useEffect(() => {
@@ -109,6 +110,7 @@ const Inventory = () => {
         quantity: Number(formData.quantity),
         minThreshold: Number(formData.minThreshold || 0),
         pricePerUnit: Number(formData.pricePerUnit),
+        itemGroupId: formData.itemGroupId || "G1",
         updatedAt: new Date().toISOString(),
       });
 
@@ -157,6 +159,7 @@ const Inventory = () => {
       unit: item.unit || "ცალი",
       minThreshold: item.minThreshold || "",
       pricePerUnit: item.pricePerUnit || "",
+      itemGroupId: item.itemGroupId || "G1",
     });
     setIsModalOpen(true);
   };
@@ -213,7 +216,7 @@ const Inventory = () => {
                     onClick={() => {
                       setEditingItem(null);
                       setFormErrors({});
-                      setFormData({ name: "", category: "consumable", quantity: "", unit: "ცალი", minThreshold: "", pricePerUnit: "" });
+                      setFormData({ name: "", category: "consumable", quantity: "", unit: "ცალი", minThreshold: "", pricePerUnit: "", itemGroupId: "G1" });
                       setIsModalOpen(true);
                     }}
                     className="flex items-center gap-2 bg-brand-purple text-white px-6 py-4 rounded-2xl shadow-lg shadow-brand-purple/20 hover:bg-brand-deep transition-all font-black text-[11px] uppercase tracking-widest cursor-pointer"
@@ -342,6 +345,16 @@ const Inventory = () => {
                     <InputField icon={AlertCircle} type="number" label="მინ. ზღვარი" value={formData.minThreshold} onChange={(val) => setFormData({ ...formData, minThreshold: val })} />
                     <div className="col-span-2">
                       <InputField icon={TrendingDown} type="number" step="0.01" label="ერთეულის ფასი (₾)" value={formData.pricePerUnit} onChange={(val) => setFormData({ ...formData, pricePerUnit: val })} error={formErrors.pricePerUnit} />
+                    </div>
+                    <div className="col-span-2">
+                       <label className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] ml-5 mb-2 block flex items-center gap-2">
+                         <PackageSearch size={14} /> EHR Group ID
+                       </label>
+                       <select value={formData.itemGroupId} onChange={(e) => setFormData({ ...formData, itemGroupId: e.target.value })} className="w-full bg-amber-50/30 border-2 border-amber-100 focus:border-amber-500 rounded-[22px] px-6 py-4 outline-none font-bold text-sm text-text-main appearance-none transition-all">
+                         <option value="G1">G1 - სახარჯი მასალები</option>
+                         <option value="G2">G2 - მედიკამენტები</option>
+                         <option value="G3">G3 - სადეზინფექციო</option>
+                       </select>
                     </div>
                   </div>
                   <div className="flex gap-4 pt-6">

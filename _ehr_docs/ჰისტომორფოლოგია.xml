@@ -1,0 +1,44 @@
+﻿<EHR>
+	<Histomorphology><!-- ჰისტომორფოლოგია -->
+		<Record>
+			<New>0</New>
+			<Section>1</Section>
+			<Laboratory>CG.7</Laboratory>
+			<LaboratoryExaminationText></LaboratoryExaminationText>
+			<ProcedureStartDate>2017-10-18</ProcedureStartDate>
+			<ProcedureEndDate>2017-10-18</ProcedureEndDate>
+			<ProcedureResult>კომენტარი/შედეგი</ProcedureResult>
+			<Price>5.25</Price>
+		</Record>
+		<Record>
+			<New>1</New>
+			<Laboratory>CG.8</Laboratory>
+			<LaboratoryExaminationText></LaboratoryExaminationText>
+			<ProcedureStartDate>2017-10-18</ProcedureStartDate>
+			<ProcedureEndDate>2017-10-18</ProcedureEndDate>
+			<ProcedureResult>კომენტარი/შედეგი</ProcedureResult>
+			<Price>5.25</Price>
+		</Record>
+		<Record>
+			<New>1</New>
+			<Laboratory>CG.9</Laboratory>
+			<LaboratoryExaminationText></LaboratoryExaminationText>
+			<ProcedureStartDate>2017-10-18</ProcedureStartDate>
+			<ProcedureEndDate>2017-10-18</ProcedureEndDate>
+			<ProcedureResult>კომენტარი/შედეგი</ProcedureResult>
+			<Price>5.25</Price>
+		</Record>
+	</Histomorphology>
+	<PrimaryDisease><!-- ძირითადი დაავადება-->
+			<FromICD10>K40.1</FromICD10>
+			<ToICD10>K40.2</ToICD10>
+			<Illness>1</Illness>
+	</PrimaryDisease>
+	<AccompanyingDisease><!-- თანმხლები დაავადება-->
+		<Record>
+			<FromICD10>K40.1</FromICD10>
+			<ToICD10>K40.2</ToICD10>
+			<Illness>1</Illness>
+		</Record>
+	</AccompanyingDisease>
+</EHR>
