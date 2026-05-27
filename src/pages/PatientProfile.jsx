@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import PatientHistory from "../components/Patients/PatientHistory";
+import PatientXRays from "../components/Patients/PatientXRays";
 import {
   ArrowLeft,
   Save,
@@ -405,6 +406,7 @@ const PatientProfile = () => {
                     </p>
                   )}
                 </div>
+                <PatientHistory patientId={id} />
               </div>
 
               {/* სამედიცინო სვეტი */}
@@ -422,7 +424,7 @@ const PatientProfile = () => {
                     }}
                   />
                 </div>
-                <PatientHistory patientId={id} />
+                <PatientXRays patientId={id} patientName={patientData?.fullName} />
               </div>
             </div>
           </div>
