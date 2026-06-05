@@ -55,8 +55,16 @@ const Staff = () => {
     birthDate: ""
   });
 
-  const currentPlan = PLANS[(clinicData?.plan || "free").toLowerCase()] || PLANS.free;
-  const doctorLimitReached = staff.filter(s => s.role !== 'admin').length >= currentPlan.maxDoctors;
+  const currentPlanIdRaw = (clinicData?.plan || "free").toLowerCase();
+  const planId = (currentPlanIdRaw === "solo" || currentPlanIdRaw === "basic") ? "business" : 
+                 (currentPlanIdRaw === "pro" ? "custom" : currentPlanIdRaw);
+  const currentPlan = PLANS[planId] || PLANS.free;
+  
+  let maxDocs = currentPlan.maxDoctors;
+  if (currentPlan.id === 'custom' && clinicData?.customMaxDoctors) {
+    maxDocs = clinicData.customMaxDoctors;
+  }
+  const doctorLimitReached = staff.filter(s => s.role !== 'admin').length >= maxDocs;
 
   useEffect(() => {
     if (!userData?.clinicId) return;
@@ -333,7 +341,7 @@ const Staff = () => {
                 </div>
                 <h3 className="text-2xl font-black text-text-main italic mb-4">ლიმიტი ამოწურულია</h3>
                 <p className="text-xs text-text-muted font-bold uppercase tracking-widest leading-relaxed mb-8">
-                   თქვენი პაკეტი გათვლილია მხოლოდ {currentPlan.maxDoctors} თანამშრომელზე.
+                   თქვენი პაკეტი გათვლილია მხოლოდ {maxDocs} ექიმზე.
                 </p>
                 <button 
                   onClick={() => navigate('/settings/billing')}

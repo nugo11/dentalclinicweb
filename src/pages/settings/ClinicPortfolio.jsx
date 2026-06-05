@@ -152,7 +152,8 @@ const ClinicPortfolio = () => {
   }, [toast]);
 
   const planKey = (clinicData?.plan || "free").toLowerCase();
-  const plan = planKey === "solo" ? PLANS.basic : (PLANS[planKey] || PLANS.free);
+  const plan = (planKey === "solo" || planKey === "basic") ? PLANS.business : 
+               (planKey === "pro" ? PLANS.custom : (PLANS[planKey] || PLANS.free));
   const features = plan.portfolioFeatures;
 
   const compressImage = (file, isStamp = false) => {

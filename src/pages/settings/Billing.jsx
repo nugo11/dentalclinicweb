@@ -23,26 +23,25 @@ const DASH = () => (
 );
 
 const rows = [
-  { label: "ფასი / თვე",            free: "0 ₾",  basic: "49 ₾", pro: "99 ₾",  isPrice: true },
-  { label: "მაქს. ექიმი",           free: "3",    basic: "3",    pro: "∞" },
-  { label: "მაქს. პაციენტი",        free: "50",   basic: "∞",    pro: "∞" },
-  { label: "მაქს. ინვენტარი",       free: "10",   basic: "∞",    pro: "∞" },
-  { label: "მაქს. სერვისი",         free: "10",   basic: "∞",    pro: "∞" },
-  { label: "ინვოისი & ფ.100",       free: true,   basic: true,   pro: true },
-  { label: "კბილების რუკა",         free: true,   basic: true,   pro: true },
-  { label: "ფინანსური ანალიტიკა",   free: true,   basic: true,   pro: true },
-  { label: "EHR სინქრონიზაცია",     free: false,  basic: true,   pro: true },
-  { label: "SMS შეხსენებები",       free: false,  basic: false,  pro: true },
-  { label: "ტერმინალის დაკავშირება",   free: false,  basic: false,  pro: true },
-  { label: "სადაზღვეო სინქ.",       free: false,  basic: false,  pro: true },
-  { label: "კლინიკის კატალოგი",     free: "Basic",basic: "VIP",  pro: "VIP" },
-  { label: "ტექ. მხარდაჭერა",       free: false,  basic: true,   pro: true },
+  { label: "ფასი / თვე",            free: "0 ₾",  business: "49 ₾", custom: "შეთანხმებით",  isPrice: true },
+  { label: "მაქს. ექიმი",           free: "3",    business: "6",    custom: "∞" },
+  { label: "მაქს. პაციენტი",        free: "50",   business: "∞",    custom: "∞" },
+  { label: "მაქს. ინვენტარი",       free: "10",   business: "∞",    custom: "∞" },
+  { label: "მაქს. სერვისი",         free: "10",   business: "∞",    custom: "∞" },
+  { label: "ინვოისი & ფ.100",       free: true,   business: true,   custom: true },
+  { label: "კბილების რუკა",         free: true,   business: true,   custom: true },
+  { label: "ფინანსური ანალიტიკა",   free: true,   business: true,   custom: true },
+  { label: "EHR სინქრონიზაცია",     free: false,  business: true,   custom: true },
+  { label: "SMS შეხსენებები",       free: false,  business: true,   custom: true },
+  { label: "სადაზღვეო სინქ.",       free: false,  business: true,   custom: true },
+  { label: "კლინიკის კატალოგი",     free: "Basic",business: "VIP",  custom: "VIP" },
+  { label: "ტექ. მხარდაჭერა",       free: false,  business: true,   custom: true },
 ];
 
 const cols = [
-  { key: "free",   label: "Free"         },
-  { key: "basic",  label: "Basic"        },
-  { key: "pro",    label: "Professional" },
+  { key: "free",     label: "Free"     },
+  { key: "business", label: "Business" },
+  { key: "custom",   label: "Custom"   },
 ];
 
 const renderCell = (val) => {
@@ -57,7 +56,8 @@ const Billing = () => {
   const [selectedPlanForDetails, setSelectedPlanForDetails] = useState(null);
   
   const currentPlanIdRaw = (clinicData?.plan || "free").toLowerCase();
-  const currentPlanId = currentPlanIdRaw === "solo" ? "basic" : currentPlanIdRaw;
+  const currentPlanId = (currentPlanIdRaw === "solo" || currentPlanIdRaw === "basic") ? "business" : 
+                        (currentPlanIdRaw === "pro" ? "custom" : currentPlanIdRaw);
 
   return (
     <>

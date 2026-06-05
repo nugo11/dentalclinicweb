@@ -459,9 +459,9 @@ const LandingPage = ({ user }) => {
             desc="სრული სამედიცინო ბარათები, რენტგენის არქივი, მკურნალობის ისტორია და პერსონალური მონაცემების დაცვა."
           />
           <FeatureCard
-            icon={Zap}
-            title="ტერმინალის დაკავშირება"
-            desc="აპლიკაციიდან პირადპირ ტერმინალზე აისახება გადახდის დეტალები."
+            icon={Phone}
+            title="SMS შეხსენებები"
+            desc="ჯავშნის ავტომატური შეხსენება პაციენტებისთვის SMS-ის საშუალებით."
           />
           <FeatureCard
             icon={BarChart3}
@@ -915,26 +915,25 @@ const ContactInfo = ({ icon: Icon, title, detail }) => (
 
 const PricingTable = ({ onSelectPlan }) => {
   const rows = [
-    { label: "ფასი / თვე",       free: "0 ₾",  basic: "49 ₾", pro: "99 ₾",  isPrice: true },
-    { label: "მაქს. ექიმი",      free: "3",    basic: "3",    pro: "∞" },
-    { label: "მაქს. პაციენტი",   free: "50",   basic: "∞",    pro: "∞" },
-    { label: "მაქს. ინვენტარი",  free: "10",   basic: "∞",    pro: "∞" },
-    { label: "მაქს. სერვისი",    free: "10",   basic: "∞",    pro: "∞" },
-    { label: "ინვოისი & ფ.100",  free: true,   basic: true,   pro: true },
-    { label: "კბილების რუკა",    free: true,   basic: true,   pro: true },
-    { label: "ფინანსური ანალიტიკა", free: true, basic: true,  pro: true },
-    { label: "EHR სინქრონიზაცია",free: false,  basic: true,   pro: true },
-    { label: "SMS შეხსენებები",  free: false,  basic: false,  pro: true },
-    { label: "ტერმინალის დაკავშირება", free: false, basic: false, pro: true },
-    { label: "სადაზღვეო სინქ.",  free: false,  basic: false,  pro: true },
-    { label: "კლინიკის კატალოგი", free: "Basic", basic: "Brand", pro: "VIP" },
-    { label: "ტექ. მხარდაჭერა",  free: false,  basic: true,   pro: true },
+    { label: "ფასი / თვე",       free: "0 ₾",  business: "49 ₾", custom: "შეთანხმებით",  isPrice: true },
+    { label: "მაქს. ექიმი",      free: "3",    business: "6",    custom: "∞" },
+    { label: "მაქს. პაციენტი",   free: "50",   business: "∞",    custom: "∞" },
+    { label: "მაქს. ინვენტარი",  free: "10",   business: "∞",    custom: "∞" },
+    { label: "მაქს. სერვისი",    free: "10",   business: "∞",    custom: "∞" },
+    { label: "ინვოისი & ფ.100",  free: true,   business: true,   custom: true },
+    { label: "კბილების რუკა",    free: true,   business: true,   custom: true },
+    { label: "ფინანსური ანალიტიკა", free: true, business: true,  custom: true },
+    { label: "EHR სინქრონიზაცია",free: false,  business: true,   custom: true },
+    { label: "SMS შეხსენებები",  free: false,  business: true,   custom: true },
+    { label: "სადაზღვეო სინქ.",  free: false,  business: true,   custom: true },
+    { label: "კლინიკის კატალოგი", free: "Basic", business: "VIP", custom: "VIP" },
+    { label: "ტექ. მხარდაჭერა",  free: false,  business: true,   custom: true },
   ];
 
   const cols = [
-    { key: "free",   label: "Free",         highlight: false },
-    { key: "basic",  label: "Basic",        highlight: false },
-    { key: "pro",    label: "Professional", highlight: true  },
+    { key: "free",     label: "Free",         highlight: false },
+    { key: "business", label: "Business",     highlight: false },
+    { key: "custom",   label: "Custom",       highlight: true  },
   ];
 
   const renderCell = (val) => {

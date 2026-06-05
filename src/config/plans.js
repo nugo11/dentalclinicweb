@@ -36,11 +36,11 @@ export const PLANS = {
       { name: "ფინანსური მიმოხილვა", desc: "კლინიკის შემოსავლებისა და ხარჯების მონიტორინგის პანელი." }
     ]
   },
-  basic: {
-    id: "basic",
-    title: "Basic",
+  business: {
+    id: "business",
+    title: "Business",
     price: 49,
-    maxDoctors: 3,
+    maxDoctors: 6,
     maxPatients: Infinity,
     maxInventoryItems: Infinity,
     maxServices: Infinity,
@@ -49,38 +49,42 @@ export const PLANS = {
     hasRadiology: true,
     hasInvoice: true,
     hasForm100: true,
+    hasWhatsApp: true,
     hasPortfolio: true,
     portfolioFeatures: {
       canShowName: true,
       canShowLogo: true,
       canShowHours: true,
       canShowPhone: true,
-      canShowAbout: true, // მივეცით "Brand" უფლებები
-      canShowMap: false,
+      canShowAbout: true,
+      canShowMap: true,
       canShowDoctors: true,
       canShowServices: true,
       canShowSpecialties: true,
       canAddCustomSpecialty: true
     },
-    directoryType: "basic",
+    directoryType: "vip",
     features: [
-      { name: "3 ექიმი", desc: "სისტემის გამოყენება ინდივიდუალურად სამი ექიმისთვის." },
+      { name: "6 ექიმი", desc: "სისტემის გამოყენება ინდივიდუალურად 6 ექიმისთვის." },
       { name: "EHR სინქრონიზაცია", desc: "ჯანმრთელობის შესახებ ელექტრონული ჩანაწერების (EHR) სისტემაში მონაცემების გადაცემა ავტომატურად" },
-      { name: "ულიმიტო პაციენტი", desc: "ულიმიტო რაოდენობის პაციენტების ბაზის წარმოება." },
-      { name: "ულიმიტო ინვენტარი", desc: "საწყობის სრული მართვა ყოველგვარი რაოდენობრივი შეზღუდვის გარეშე." },
-      { name: "ულიმიტო სერვისი", desc: "მომსახურების სრული კატალოგის შექმნა შეზღუდვების გარეშე." },
+      { name: "ულიმიტო პაციენტი", desc: "პაციენტების ულიმიტო ბაზა კლინიკის სრული დატვირთვისთვის." },
+      { name: "ულიმიტო ინვენტარი", desc: "საწყობის სრული კონტროლი და მარაგების მართვა." },
+      { name: "ულიმიტო სერვისი", desc: "სერვისების სრული მართვა და ფასების კონტროლი." },
       { name: "ინვოისი და ფორმა 100", desc: "სამედიცინო ცნობისა (ფორმა 100) და ფინანსური ინვოისების PDF გენერაცია." },
       { name: "კბილების რუკა", desc: "კბილების ვიზუალური ისტორია, რომელიც წლების მერეც ზუსტად გაჩვენებს ყველა კბილის არსებულ სიტუაციას და კლინიკაში ჩატარებულ პროცესებს." },
       { name: "ფინანსური მიმოხილვა", desc: "კლინიკის შემოსავლებისა და ხარჯების მონიტორინგის პანელი." },
-      { name: "კლინიკის გვერდი (Brand)", desc: "კლინიკის პორტფოლიო ვებგვერდზე სრული ინფორმაციით, ექიმებით და სერვისებით." },
+      { name: "კლინიკის გვერდი (VIP)", desc: "კლინიკის პორტფოლიო ვებგვერდზე VIP სტატუსით, რუკით და სრული ინფორმაციით." },
       { name: "ტექნიკური მხარდაჭერა", desc: "სისტემის გამოყენების დროს ტექნიკური მხარდაჭერის წვდომა." },
-      { name: "რენტგენის შენახვა", desc: "სამედიცინო რენტგენის კაბინეტის მართვა და მონაცემების პაციენტის ისტორიაში ჩანიშვნა." }
+      { name: "რენტგენის შენახვა", desc: "სამედიცინო რენტგენის კაბინეტის მართვა და მონაცემების პაციენტის ისტორიაში ჩანიშვნა." },
+      { name: "SMS შეხსენებები", desc: "მომხმარებლისთვის ჯავშნის შეხსენების ავტომატური SMS გზავნილი." },
+      { name: "სადაზღვეო კომპანიებთან სინქრონიზაცია", desc: "სადაზღვეოებთან მონაცემების ავტომატური გაცვლა." },
+      { name: "VIP პოზიცია კატალოგში", desc: "კლინიკის პორტფოლიო იქნება მთავარ გვერდზე და კატალოგში მოწინავე პოზიციაზე." }
     ]
   },
-  pro: {
-    id: "pro",
-    title: "Professional",
-    price: 99,
+  custom: {
+    id: "custom",
+    title: "Custom",
+    price: "შეთანხმებით",
     maxDoctors: Infinity,
     maxPatients: Infinity,
     maxInventoryItems: Infinity,
@@ -98,15 +102,15 @@ export const PLANS = {
       canShowHours: true,
       canShowPhone: true,
       canShowAbout: true,
-      canShowMap: true, // PRO-ს დავუბრუნეთ რუკა რადგან ის გახდა ტოპ პაკეტი
+      canShowMap: true,
       canShowDoctors: true,
       canShowServices: true,
       canShowSpecialties: true,
       canAddCustomSpecialty: true
     },
-    directoryType: "vip", // Brand შეიცვალა VIP-ზე
+    directoryType: "vip",
     features: [
-      { name: "ულიმიტო ექიმი", desc: "სისტემის გამოყენება ინდივიდუალურად ულიმიტო რაოდენობის ექიმებისთვის." },
+      { name: "ულიმიტო ექიმი", desc: "სისტემის გამოყენება ინდივიდუალურად ულიმიტო რაოდენობის ექიმებისთვის. ფასი განისაზღვრება ექიმების რაოდენობით." },
       { name: "EHR სინქრონიზაცია", desc: "ჯანმრთელობის შესახებ ელექტრონული ჩანაწერების (EHR) სისტემაში მონაცემების გადაცემა ავტომატურად" },
       { name: "ულიმიტო პაციენტი", desc: "პაციენტების ულიმიტო ბაზა კლინიკის სრული დატვირთვისთვის." },
       { name: "ულიმიტო ინვენტარი", desc: "საწყობის სრული კონტროლი და მარაგების მართვა." },
@@ -119,7 +123,6 @@ export const PLANS = {
       { name: "რენტგენის შენახვა", desc: "სამედიცინო რენტგენის კაბინეტის მართვა და მონაცემების პაციენტის ისტორიაში ჩანიშვნა." },
       { name: "SMS შეხსენებები", desc: "მომხმარებლისთვის ჯავშნის შეხსენების ავტომატური SMS გზავნილი." },
       { name: "სადაზღვეო კომპანიებთან სინქრონიზაცია", desc: "სადაზღვეოებთან მონაცემების ავტომატური გაცვლა." },
-      { name: "გადახდის ტერმინალის ინტეგრაცია", desc: "ფიზიკური ტერმინალის დაკავშირება სისტემასთან სწრაფი გადახდებისთვის." },
       { name: "VIP პოზიცია კატალოგში", desc: "კლინიკის პორტფოლიო იქნება მთავარ გვერდზე და კატალოგში მოწინავე პოზიციაზე." }
     ]
   }
@@ -128,13 +131,18 @@ export const PLANS = {
 // დამხმარე ფუნქციები
 const getPlan = (planId) => {
   const id = (planId || "free").toLowerCase();
-  if (id === "solo") return PLANS.basic; // ძველი Solo პაკეტების მხარდაჭერა
+  if (id === "solo" || id === "basic") return PLANS.business; // ძველი Solo და Basic პაკეტების მხარდაჭერა
+  if (id === "pro") return PLANS.custom; // ძველი Pro პაკეტის მხარდაჭერა
   return PLANS[id] || PLANS.free;
 };
 
-export const canAddDoctor = (planId, currentDoctorsCount) => {
+export const canAddDoctor = (planId, currentDoctorsCount, customMaxDoctors) => {
   const plan = getPlan(planId);
-  return currentDoctorsCount < plan.maxDoctors;
+  let max = plan.maxDoctors;
+  if (plan.id === 'custom' && customMaxDoctors) {
+    max = customMaxDoctors;
+  }
+  return currentDoctorsCount < max;
 };
 
 export const canAddPatient = (planId, currentPatientsCount) => {

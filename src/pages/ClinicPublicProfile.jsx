@@ -35,7 +35,8 @@ const ClinicPublicProfile = () => {
           setClinic({ id: clinicDoc.id, ...data });
           
           const planId = (data.plan || "free").toLowerCase();
-          const pKey = planId === "solo" ? "basic" : planId;
+          const pKey = (planId === "solo" || planId === "basic") ? "business" : 
+                       (planId === "pro" ? "custom" : planId);
           const pFeatures = PLANS[pKey]?.portfolioFeatures || PLANS.free.portfolioFeatures;
 
           if (pFeatures.canShowDoctors) {
@@ -77,7 +78,8 @@ const ClinicPublicProfile = () => {
   );
 
   const planId = (clinic.plan || "free").toLowerCase();
-  const pKey = planId === "solo" ? "basic" : planId;
+  const pKey = (planId === "solo" || planId === "basic") ? "business" : 
+               (planId === "pro" ? "custom" : planId);
   const features = PLANS[pKey]?.portfolioFeatures || PLANS.free.portfolioFeatures;
 
   return (

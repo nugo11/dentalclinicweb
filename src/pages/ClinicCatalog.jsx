@@ -32,7 +32,7 @@ const ClinicCatalog = () => {
         
         const getPlanPriority = (doc) => {
           const plan = (doc.plan || "free").toLowerCase();
-          const priorities = { 'pro': 3, 'basic': 1, 'solo': 1, 'free': 0 };
+          const priorities = { 'custom': 3, 'pro': 3, 'business': 1, 'basic': 1, 'solo': 1, 'free': 0 };
           return priorities[plan] || 0;
         };
 
@@ -121,8 +121,8 @@ const ClinicCatalog = () => {
 
 const ClinicCard = ({ clinic }) => {
   const planKey = (clinic.plan || "free").toLowerCase();
-  const isVip = planKey === 'pro';
-  const isBasic = planKey === 'basic' || planKey === 'solo';
+  const isVip = planKey === 'custom' || planKey === 'pro';
+  const isBasic = planKey === 'business' || planKey === 'basic' || planKey === 'solo';
 
   return (
   <Link to={`/catalog/${clinic.id}`} className="block group h-full">

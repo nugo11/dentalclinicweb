@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../../firebase';
-import { collection, query, where, onSnapshot, addDoc, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, orderBy, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { useAuth } from "../../context/AuthContext";
-import { Image as ImageIcon, Download, Eye, Upload, Loader2, MessageSquare, X, Camera, AlertTriangle, Save } from 'lucide-react';
+import { Image as ImageIcon, Download, Eye, Upload, Loader2, MessageSquare, X, Camera, AlertTriangle, Save, Trash2 } from 'lucide-react';
 import { logActivity } from "../../utils/activityLogger";
 
 const PatientXRays = ({ patientId, patientName }) => {
@@ -15,6 +15,8 @@ const PatientXRays = ({ patientId, patientName }) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [imageToDelete, setImageToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Upload form state
   const [fileToUpload, setFileToUpload] = useState(null);
@@ -205,6 +207,78 @@ const PatientXRays = ({ patientId, patientName }) => {
       setShowViewModal(true);
   };
 
+  const deleteFromCloudinary = async (imageUrl) => {
+    try {
+        const cloudName = "dxyhm9ftw";
+        const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
+        const apiSecret = import.meta.env.VITE_CLOUDINARY_API_SECRET;
+        
+        if (!apiKey || !apiSecret) {
+            console.warn("Cloudinary API credentials missing. Cannot delete from Cloudinary.");
+            return true; // Pretend it succeeded so we can still delete from DB
+        }
+
+        // Extract public_id from URL
+        const parts = imageUrl.split('/');
+        const filename = parts.pop();
+        const publicId = filename.split('.')[0];
+        
+        const timestamp = Math.round(new Date().getTime() / 1000);
+        
+        // Generate signature: SHA-1 of "public_id={publicId}&timestamp={timestamp}{apiSecret}"
+        const stringToSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+        
+        // Use Web Crypto API
+        const encoder = new TextEncoder();
+        const data = encoder.encode(stringToSign);
+        const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        const formData = new FormData();
+        formData.append('public_id', publicId);
+        formData.append('signature', signature);
+        formData.append('api_key', apiKey);
+        formData.append('timestamp', timestamp);
+        
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await res.json();
+        return result.result === 'ok';
+    } catch (e) {
+        console.error("Cloudinary delete error:", e);
+        return false;
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!imageToDelete) return;
+    setIsDeleting(true);
+    
+    try {
+        await deleteFromCloudinary(imageToDelete.imageUrl);
+
+        await deleteDoc(doc(db, "patient_xrays", imageToDelete.id));
+        
+        const clinicId = userData?.clinicId || currentUser?.uid;
+        await logActivity(
+            clinicId, 
+            activeStaff || userData || { uid: currentUser?.uid, fullName: 'Unknown', role: 'unknown' }, 
+            'xray_delete', 
+            `წაიშალა რენტგენის სურათი პაციენტისთვის: ${patientName || 'უცნობი'}`, 
+            { patientId }
+        );
+        setImageToDelete(null);
+    } catch (error) {
+        console.error("Error deleting xray:", error);
+    } finally {
+        setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="bg-surface rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 border border-border-main shadow-sm relative overflow-hidden mt-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
@@ -270,6 +344,13 @@ const PatientXRays = ({ patientId, patientName }) => {
                   title="გადმოწერა"
                 >
                   <Download size={18} />
+                </button>
+                <button 
+                  onClick={() => setImageToDelete(xray)}
+                  className="flex-1 xl:flex-none flex items-center justify-center p-3 xl:px-4 bg-surface border border-border-main text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm group/btn tooltip-trigger relative"
+                  title="წაშლა"
+                >
+                  <Trash2 size={18} />
                 </button>
               </div>
             </div>
@@ -417,6 +498,39 @@ const PatientXRays = ({ patientId, patientName }) => {
                         alt="Full X-Ray" 
                         className="max-w-full max-h-full object-contain rounded-2xl" 
                     />
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {imageToDelete && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" onClick={() => !isDeleting && setImageToDelete(null)} />
+            <div className="bg-surface rounded-[32px] w-full max-w-sm p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200">
+                <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Trash2 size={32} />
+                </div>
+                <h3 className="text-xl font-black text-text-main text-center mb-2">ფოტოს წაშლა</h3>
+                <p className="text-sm font-bold text-text-muted text-center mb-8">
+                    ნამდვილად გსურთ ფოტოს წაშლა? <br/>ეს მოქმედება შეუქცევადია.
+                </p>
+                
+                <div className="flex gap-4">
+                    <button 
+                        onClick={() => setImageToDelete(null)}
+                        disabled={isDeleting}
+                        className="flex-1 py-4 bg-surface-soft text-text-muted rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-border-main transition-all"
+                    >
+                        გაუქმება
+                    </button>
+                    <button 
+                        onClick={confirmDelete}
+                        disabled={isDeleting}
+                        className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all flex items-center justify-center gap-2"
+                    >
+                        {isDeleting ? <><Loader2 size={16} className="animate-spin" /> იშლება</> : "წაშლა"}
+                    </button>
                 </div>
             </div>
         </div>

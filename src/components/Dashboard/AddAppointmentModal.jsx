@@ -148,7 +148,8 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   };
 
   const sendAppointmentSms = async (patientPhone, date, time, service, doctorName) => {
-    if (!patientPhone || patientPhone === "არ არის მითითებული" || clinicData?.plan !== "pro") return;
+    const planKey = (clinicData?.plan || "free").toLowerCase();
+    if (!patientPhone || patientPhone === "არ არის მითითებული" || planKey === "free") return;
     
     // ნომრის ფორმატირება
     let formattedPhone = patientPhone.replace(/\D/g, "");
@@ -251,8 +252,9 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         createdAt: serverTimestamp(),
       });
 
-      // SMS გაგზავნა მხოლოდ Pro პაკეტისთვის
-      if (!isExternal && selectedPatient?.phone && clinicData?.plan === "pro") {
+      // SMS გაგზავნა ფასიანი პაკეტებისთვის
+      const planKey = (clinicData?.plan || "free").toLowerCase();
+      if (!isExternal && selectedPatient?.phone && planKey !== "free") {
         const docName = canSelectDoctor ? formData.doctorName : (activeStaff?.fullName || userData?.fullName);
         sendAppointmentSms(selectedPatient.phone, formData.date, formData.startTime, formData.service, docName);
       }
