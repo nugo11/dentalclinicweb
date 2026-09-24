@@ -1,7 +1,9 @@
 export const generateInvoice = async (order, clinicData) => {
-  const vatAmount = order.vatAmount || (Number(order.price || 0) * 0.18);
+  const vatAmount = order.vatAmount !== undefined 
+    ? Number(order.vatAmount) 
+    : (order.applyVat ? (Number(order.price || 0) * 0.18) : 0);
   const materialsAmount = order.extraMaterials?.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0) || 0;
-  const servicesAmount = Number(order.price || 0) - materialsAmount;
+  const servicesAmount = order.billedServices?.reduce((sum, s) => sum + Number(s.price || 0), 0) || Math.max(0, Number(order.price || 0) - materialsAmount - vatAmount);
 
   const content = `
     <html>
@@ -137,9 +139,9 @@ export const generateInvoice = async (order, clinicData) => {
                 <span class="total-label">დამატებითი ხარჯი</span>
                 <span class="total-value">₾${materialsAmount.toFixed(2)}</span>
               </div>
-              <div class="total-row" style="color: #fbbf24;">
+              <div class="total-row" style="${vatAmount > 0 ? 'color: #fbbf24;' : 'opacity: 0.6;'}">
                 <span class="total-label" style="color: inherit">დღგ (18%)</span>
-                <span class="total-value">₾${vatAmount.toFixed(2)}</span>
+                <span class="total-value">${vatAmount > 0 ? `₾${vatAmount.toFixed(2)}` : '0.00 ₾ (გათავისუფლებული)'}</span>
               </div>
               <div class="total-row" style="margin-top: 20px;">
                 <span class="total-label">სულ გადასახდელი</span>

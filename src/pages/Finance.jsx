@@ -52,6 +52,7 @@ const Finance = () => {
     return onSnapshot(q, (snapshot) => {
       let total = 0,
           paid = 0,
+          totalVat = 0,
           expenses = 0;
 
       const data = snapshot.docs.map((doc) => {
@@ -59,12 +60,16 @@ const Finance = () => {
         const price = Number(item.price || 0);
         const amountPaid = Number(item.paidAmount || 0);
         const materialCost = Number(item.materialCost || 0); // საწყობის ხარჯი
+        const vatAmount = item.vatAmount !== undefined 
+          ? Number(item.vatAmount || 0) 
+          : (item.applyVat ? (price * 0.18) : 0);
 
         total += price;
         paid += amountPaid;
         expenses += materialCost;
+        totalVat += vatAmount;
 
-        return { id: doc.id, ...item, price, amountPaid, materialCost };
+        return { id: doc.id, ...item, price, amountPaid, materialCost, vatAmount };
       });
 
       setTransactions(data.sort((a, b) => new Date(b.finalizedAt) - new Date(a.finalizedAt)));
@@ -72,7 +77,7 @@ const Finance = () => {
       setStats({
         total,
         paid,
-        vat: total * 0.18,
+        vat: totalVat,
         expenses,
         netProfit: paid - expenses
       });
@@ -185,7 +190,7 @@ const Finance = () => {
                         </td>
                         <td className="px-8 py-6">
                             <span className="text-xs font-bold text-amber-600">
-                              ₾ {(t.vatAmount || (t.price * 0.18)).toFixed(2)}
+                              ₾ {(t.vatAmount !== undefined ? Number(t.vatAmount) : (t.applyVat ? (t.price * 0.18) : 0)).toFixed(2)}
                             </span>
                         </td>
                         <td className="p-6">
