@@ -12,6 +12,7 @@ import {
 import { PLANS } from "../config/plans";
 import { useAuth } from "../context/AuthContext";
 import MainHeader from "../components/Common/MainHeader";
+import { getRoleLabel } from "../utils/roleUtils";
 
 const ClinicPublicProfile = () => {
   const { id } = useParams();
@@ -201,7 +202,7 @@ const ClinicPublicProfile = () => {
                                 </div>
                                 <div>
                                    <p className="font-black text-text-main text-lg leading-tight">{d.fullName}</p>
-                                   <p className="text-[11px] text-text-muted font-black uppercase tracking-widest mt-1.5">{d.role}</p>
+                                   <p className="text-[11px] text-text-muted font-black uppercase tracking-widest mt-1.5">{getRoleLabel(d.role)}</p>
                                 </div>
                              </div>
                           ))}

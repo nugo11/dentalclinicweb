@@ -22,6 +22,7 @@ import { useAuth } from "../context/AuthContext";
 import { canAddService, PLANS } from "../config/plans";
 import { logActivity } from "../utils/activityLogger";
 import useLockBodyScroll from "../hooks/useLockBodyScroll";
+import { scrollToFirstError } from "../utils/scrollHelper";
 
 const Services = () => {
   const { userData, clinicData } = useAuth();
@@ -32,6 +33,7 @@ const Services = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null); // null = ახალი, ID = რედაქტირება
+  const [errors, setErrors] = useState({});
 
   useLockBodyScroll(isModalOpen);
 
@@ -67,13 +69,26 @@ const Services = () => {
 
   const handleSaveService = async (e) => {
     e.preventDefault();
-    if (!newService.name || !newService.price) return;
+    const newErrors = {};
+    if (!newService.name || !newService.name.trim()) {
+      newErrors.name = "სერვისის დასახელება სავალდებულოა";
+    }
+    if (!newService.price || Number(newService.price) <= 0) {
+      newErrors.price = "სერვისის ფასი სავალდებულოა და უნდა აღემატებოდეს 0-ს";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      scrollToFirstError('.app-sheet');
+      return;
+    }
+    setErrors({});
     if (isLimitReached) return;
 
     try {
       const serviceData = {
         clinicId: userData?.clinicId || auth.currentUser.uid,
-        name: newService.name,
+        name: newService.name.trim(),
         price: Number(newService.price),
         ncsp: newService.ncsp || "",
         materials: newService.materials,
@@ -113,6 +128,7 @@ const Services = () => {
       ncsp: s.ncsp || "",
       materials: s.materials || []
     });
+    setErrors({});
     setIsModalOpen(true);
   };
 
@@ -120,6 +136,7 @@ const Services = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setNewService({ name: "", price: "", ncsp: "", materials: [] });
+    setErrors({});
     setSearchTerm("");
   };
 
@@ -259,12 +276,38 @@ const Services = () => {
                 <form onSubmit={handleSaveService} className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">სერვისის დასახელება</label>
-                      <input required type="text" value={newService.name} onChange={e => setNewService({...newService, name: e.target.value})} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all" />
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+                        სერვისის დასახელება <span className="text-red-500">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        value={newService.name} 
+                        data-error={Boolean(errors.name)}
+                        aria-invalid={Boolean(errors.name)}
+                        onChange={e => {
+                          setNewService({...newService, name: e.target.value});
+                          if (errors.name) setErrors(prev => ({ ...prev, name: null }));
+                        }} 
+                        className={`w-full bg-surface-soft border-2 ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-transparent focus:border-brand-purple'} rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all`} 
+                      />
+                      {errors.name && <span className="text-red-500 text-[10px] font-bold block ml-2">{errors.name}</span>}
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">ფასი (₾)</label>
-                      <input required type="number" value={newService.price} onChange={e => setNewService({...newService, price: e.target.value})} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all" />
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+                        ფასი (₾) <span className="text-red-500">*</span>
+                      </label>
+                      <input 
+                        type="number" 
+                        value={newService.price} 
+                        data-error={Boolean(errors.price)}
+                        aria-invalid={Boolean(errors.price)}
+                        onChange={e => {
+                          setNewService({...newService, price: e.target.value});
+                          if (errors.price) setErrors(prev => ({ ...prev, price: null }));
+                        }} 
+                        className={`w-full bg-surface-soft border-2 ${errors.price ? 'border-red-500 focus:border-red-500' : 'border-transparent focus:border-brand-purple'} rounded-2xl px-5 py-4 outline-none font-bold text-sm transition-all`} 
+                      />
+                      {errors.price && <span className="text-red-500 text-[10px] font-bold block ml-2">{errors.price}</span>}
                     </div>
                     <div className="space-y-2 col-span-full">
                       <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest ml-2 italic flex items-center gap-2">

@@ -210,6 +210,24 @@ html {
   animation: shake 0.15s ease-in-out 0s 2;
 }
 
+/* Dashboard layout & iOS Dynamic Island scroll protection */
+.dashboard-layout,
+.h-screen.w-full.bg-surface-soft.flex.overflow-hidden {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+.top-nav-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  touch-action: pan-x;
+  overscroll-behavior: none;
+}
+
 /* App-like motion primitives & enhanced modal elevation */
 .body-scroll-lock {
   overflow: hidden !important;

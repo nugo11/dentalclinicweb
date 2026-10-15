@@ -24,6 +24,7 @@ import {
 import { auth } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
+import { getRoleLabel } from "../../utils/roleUtils";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
@@ -276,11 +277,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               <div className="mt-4 pt-4 border-t border-white/10">
                  <p className="text-[10px] font-black text-white uppercase tracking-widest">{activeStaff?.fullName || userData?.fullName}</p>
                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-1">
-                    {role === 'admin' ? 'ადმინისტრატორი' : 
-                     role === 'doctor' ? 'ექიმი' : 
-                     role === 'accountant' ? 'ბუღალტერი' : 
-                     role === 'receptionist' ? 'რეგისტრატორი' : 
-                     role === 'manager' ? 'მენეჯერი' : role}
+                    {getRoleLabel(role)}
                  </p>
               </div>
             </div>

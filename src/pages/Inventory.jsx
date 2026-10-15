@@ -17,6 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { canAddInventoryItem } from "../config/plans"; 
 import { logActivity } from "../utils/activityLogger";
 import useLockBodyScroll from "../hooks/useLockBodyScroll";
+import { scrollToFirstError } from "../utils/scrollHelper";
 import {
   PackageSearch,
   Plus,
@@ -95,6 +96,7 @@ const Inventory = () => {
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+      scrollToFirstError('.app-sheet');
       return;
     }
 
@@ -326,7 +328,10 @@ const Inventory = () => {
                 <form onSubmit={handleSave} className="space-y-5">
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2">
-                      <InputField icon={Box} placeholder="დასახელება" label="მასალის სახელი" value={formData.name} onChange={(val) => setFormData({ ...formData, name: val })} error={formErrors.name} />
+                      <InputField required icon={Box} placeholder="დასახელება" label="მასალის სახელი" value={formData.name} onChange={(val) => {
+                        setFormData({ ...formData, name: val });
+                        if (formErrors.name) setFormErrors(prev => ({ ...prev, name: undefined }));
+                      }} error={formErrors.name} />
                     </div>
                     <div>
                       <label className="text-[10px] font-black text-text-main/40 uppercase tracking-[0.2em] ml-5 mb-2 block">ტიპი</label>
@@ -345,10 +350,16 @@ const Inventory = () => {
                         <option value="კოლოფი">კოლოფი</option>
                       </select>
                     </div>
-                    <InputField icon={TrendingDown} type="number" label="რაოდენობა" value={formData.quantity} onChange={(val) => setFormData({ ...formData, quantity: val })} error={formErrors.quantity} />
+                    <InputField required icon={TrendingDown} type="number" label="რაოდენობა" value={formData.quantity} onChange={(val) => {
+                      setFormData({ ...formData, quantity: val });
+                      if (formErrors.quantity) setFormErrors(prev => ({ ...prev, quantity: undefined }));
+                    }} error={formErrors.quantity} />
                     <InputField icon={AlertCircle} type="number" label="მინ. ზღვარი" value={formData.minThreshold} onChange={(val) => setFormData({ ...formData, minThreshold: val })} />
                     <div className="col-span-2">
-                      <InputField icon={TrendingDown} type="number" step="0.01" label="ერთეულის ფასი (₾)" value={formData.pricePerUnit} onChange={(val) => setFormData({ ...formData, pricePerUnit: val })} error={formErrors.pricePerUnit} />
+                      <InputField required icon={TrendingDown} type="number" step="0.01" label="ერთეულის ფასი (₾)" value={formData.pricePerUnit} onChange={(val) => {
+                        setFormData({ ...formData, pricePerUnit: val });
+                        if (formErrors.pricePerUnit) setFormErrors(prev => ({ ...prev, pricePerUnit: undefined }));
+                      }} error={formErrors.pricePerUnit} />
                     </div>
                     <div className="col-span-2">
                        <label className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] ml-5 mb-2 block flex items-center gap-2">
@@ -406,12 +417,21 @@ const StatCard = ({ title, amount, icon: Icon, color, bg, alert }) => (
   </div>
 );
 
-const InputField = ({ icon: Icon, label, error, value, onChange, ...props }) => (
-  <div className="space-y-1 w-full">
-    <label className="text-[10px] font-black text-text-main/40 uppercase tracking-[0.2em] ml-5 mb-2 block">{label}</label>
-    <div className={`relative border-2 rounded-[22px] transition-all duration-300 ${error ? "border-red-500 bg-red-500/10" : "border-transparent bg-surface-soft focus-within:border-brand-purple focus-within:bg-surface focus-within:shadow-lg focus-within:shadow-brand-purple/5"}`}>
+const InputField = ({ icon: Icon, label, error, required, value, onChange, ...props }) => (
+  <div className="space-y-1 w-full" data-error={Boolean(error)}>
+    <label className="text-[10px] font-black text-text-main/40 uppercase tracking-[0.2em] ml-5 mb-2 block">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <div className={`relative border-2 rounded-[22px] transition-all duration-300 ${error ? "border-red-500 bg-red-500/10 animate-shake" : "border-transparent bg-surface-soft focus-within:border-brand-purple focus-within:bg-surface focus-within:shadow-lg focus-within:shadow-brand-purple/5"}`}>
       <Icon className={`absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${error ? "text-red-500" : "text-text-muted group-focus-within:text-brand-purple"}`} size={18} />
-      <input value={value} onChange={(e) => onChange(e.target.value)} {...props} className="w-full pl-14 pr-6 py-4 bg-transparent outline-none font-bold text-sm text-text-main placeholder:text-text-muted" />
+      <input 
+        value={value} 
+        onChange={(e) => onChange(e.target.value)} 
+        data-error={Boolean(error)}
+        aria-invalid={Boolean(error)}
+        {...props} 
+        className="w-full pl-14 pr-6 py-4 bg-transparent outline-none font-bold text-sm text-text-main placeholder:text-text-muted" 
+      />
     </div>
     {error && <p className="text-[10px] text-red-600 font-black ml-6 uppercase tracking-widest">{error}</p>}
   </div>

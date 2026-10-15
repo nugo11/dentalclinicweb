@@ -31,7 +31,7 @@ const FormInput = ({
   };
 
   return (
-    <div className={`relative group min-w-0 ${containerClassName}`}>
+    <div className={`relative group min-w-0 ${containerClassName}`} data-error={Boolean(error)}>
       {label && (
         <label className={labelStyle}>
           {label} {required && <span className="text-red-500">*</span>}
@@ -49,12 +49,16 @@ const FormInput = ({
         {props.type === 'textarea' ? (
           <textarea 
             {...props} 
+            data-error={Boolean(error)}
+            aria-invalid={Boolean(error)}
             onChange={handleChange}
             className={`${inputStyle} h-24 resize-none`} 
           />
         ) : props.type === 'select' ? (
           <select 
             {...props} 
+            data-error={Boolean(error)}
+            aria-invalid={Boolean(error)}
             onChange={handleChange}
             className={`${inputStyle} appearance-none cursor-pointer`} 
           >
@@ -64,6 +68,8 @@ const FormInput = ({
           <>
             <input 
               {...props} 
+              data-error={Boolean(error)}
+              aria-invalid={Boolean(error)}
               onClick={(e) => {
                 if (props.type === 'date' || props.type === 'time') {
                   try {

@@ -12,6 +12,7 @@ import PhoneInput from '../Common/PhoneInput';
 import { logActivity } from '../../utils/activityLogger';
 import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 import { validatePhone, formatPhone } from '../../utils/phoneFormatter';
+import { scrollToFirstError } from '../../utils/scrollHelper';
 
 const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
   useLockBodyScroll(isOpen);
@@ -38,18 +39,32 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // ვალიდაცია
+    // მკაცრი ვალიდაცია ყველა დაფიფქულ (*) და ფორმატირებულ ველზე
     const errors = {};
-    if (!formData.fullName) errors.fullName = true;
+    if (!formData.fullName || !formData.fullName.trim()) {
+      errors.fullName = "სრული სახელი და გვარი სავალდებულოა";
+    }
     
     const phoneError = validatePhone(formData.phone, true);
     if (phoneError) {
       errors.phone = phoneError;
     }
 
+    if (!formData.actualRegion || !formData.actualRegion.trim()) {
+      errors.actualRegion = "რეგიონი / ქალაქი სავალდებულოა";
+    }
+
+    if (!formData.actualResidenceAddress || !formData.actualResidenceAddress.trim()) {
+      errors.actualResidenceAddress = "ფაქტობრივი მისამართი სავალდებულოა";
+    }
+
+    if (formData.personalId && formData.personalId.replace(/\D/g, '').length !== 11) {
+      errors.personalId = "პირადი ნომერი უნდა შედგებოდეს 11 ციფრისგან";
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      setTimeout(() => setFormErrors({}), 3000);
+      scrollToFirstError('.app-sheet');
       return;
     }
 
@@ -137,7 +152,10 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                   placeholder="მაგ: გიორგი მაისურაძე"
                   value={formData.fullName}
                   error={formErrors.fullName}
-                  onChange={val => setFormData({...formData, fullName: transliterateToGeorgian(val)})}
+                  onChange={val => {
+                    setFormData({...formData, fullName: transliterateToGeorgian(val)});
+                    if (formErrors.fullName) setFormErrors(prev => ({ ...prev, fullName: undefined }));
+                  }}
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
@@ -147,7 +165,12 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                     maxLength={11} 
                     placeholder="010XXXXXXXX"
                     value={formData.personalId}
-                    onChange={val => setFormData({...formData, personalId: val})}
+                    error={formErrors.personalId}
+                    onChange={val => {
+                      const clean = val.replace(/\D/g, '');
+                      setFormData({...formData, personalId: clean});
+                      if (formErrors.personalId) setFormErrors(prev => ({ ...prev, personalId: undefined }));
+                    }}
                   />
                   <FormInput 
                     type="date"
@@ -172,7 +195,10 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                   required 
                   value={formData.phone}
                   error={formErrors.phone}
-                  onChange={(formatted) => setFormData({...formData, phone: formatted})}
+                  onChange={(formatted) => {
+                    setFormData({...formData, phone: formatted});
+                    if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: undefined }));
+                  }}
                 />
                 <FormInput 
                   label="ელ-ფოსტა" 
@@ -190,7 +216,11 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                   icon={FileText} 
                   placeholder="მაგ: თბილისი"
                   value={formData.actualRegion}
-                  onChange={val => setFormData({...formData, actualRegion: val})}
+                  error={formErrors.actualRegion}
+                  onChange={val => {
+                    setFormData({...formData, actualRegion: val});
+                    if (formErrors.actualRegion) setFormErrors(prev => ({ ...prev, actualRegion: undefined }));
+                  }}
                 />
                 <FormInput 
                   label="ფაქტობრივი მისამართი" 
@@ -198,7 +228,11 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                   icon={FileText} 
                   placeholder="მაგ: ე. ამაშუკელის N16"
                   value={formData.actualResidenceAddress}
-                  onChange={val => setFormData({...formData, actualResidenceAddress: val})}
+                  error={formErrors.actualResidenceAddress}
+                  onChange={val => {
+                    setFormData({...formData, actualResidenceAddress: val});
+                    if (formErrors.actualResidenceAddress) setFormErrors(prev => ({ ...prev, actualResidenceAddress: undefined }));
+                  }}
                 />
               </div>
             </div>

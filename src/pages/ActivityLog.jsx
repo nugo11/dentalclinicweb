@@ -14,6 +14,7 @@ import {
   Trash2, AlertTriangle, ChevronLeft, ChevronRight,
   Clock, Loader2
 } from 'lucide-react';
+import { getRoleLabel } from '../utils/roleUtils';
 
 const LOGS_PER_PAGE = 10;
 
@@ -266,7 +267,7 @@ const ActivityLog = () => {
                              </div>
                              <div>
                                <p className="text-sm font-black text-text-main truncate">{log.userName}</p>
-                               <p className="text-[9px] font-bold text-text-muted uppercase tracking-tighter">{log.userRole}</p>
+                               <p className="text-[9px] font-bold text-text-muted uppercase tracking-tighter">{getRoleLabel(log.userRole)}</p>
                              </div>
                           </div>
                         </td>

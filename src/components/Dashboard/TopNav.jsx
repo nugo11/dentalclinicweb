@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import ThemeToggle from '../Common/ThemeToggle';
+import { getRoleLabel } from '../../utils/roleUtils';
 
 const TopNav = ({ onMenuClick }) => {
   const { activeStaff, userData, staffLogout, role } = useAuth();
@@ -26,7 +27,7 @@ const TopNav = ({ onMenuClick }) => {
   const roleMap = {
     admin: "ადმინისტრატორი",
     doctor: "ექიმი",
-    receptionist: "რეცეფცია",
+    receptionist: "რეგისტრატორი",
     manager: "მენეჯერი",
     accountant: "ბუღალტერი"
   };
@@ -90,6 +91,9 @@ const TopNav = ({ onMenuClick }) => {
 
     const handleScroll = () => {
       setShowUserMenu(false);
+      if (window.scrollY > 0) {
+        window.scrollTo(0, 0);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -101,7 +105,15 @@ const TopNav = ({ onMenuClick }) => {
   }, []);
 
   return (
-    <div className="px-3 sm:px-4 md:px-8 shrink-0 z-30 font-nino max-w-full" style={{ paddingTop: 'calc(0.75rem + var(--safe-top))' }}>
+    <div 
+      className="top-nav-header sticky top-0 px-3 sm:px-4 md:px-8 shrink-0 z-40 font-nino max-w-full select-none" 
+      style={{ paddingTop: 'max(0.75rem, calc(0.75rem + env(safe-area-inset-top, 0px)))' }}
+      onTouchMove={(e) => {
+        if (!e.target.closest('.overflow-y-auto')) {
+          e.preventDefault();
+        }
+      }}
+    >
       <header className="h-16 sm:h-20 md:h-22 px-4 sm:px-6 md:px-10 flex items-center justify-between bg-surface/80 backdrop-blur-xl border border-border-main rounded-2xl sm:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] gap-3">
         {/* Left Section: Menu button, Responsive Logo, and Search */}
         <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">

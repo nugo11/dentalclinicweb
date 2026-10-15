@@ -10,6 +10,7 @@ import {
   User, Building2, Lock, Save, Loader2, 
   CheckCircle2, Camera, Mail, Shield, Smartphone, Activity, AlertTriangle
 } from "lucide-react";
+import { scrollToFirstError } from "../../utils/scrollHelper";
 
 const Settings = () => {
   const { userData, clinicData } = useAuth();
@@ -137,6 +138,7 @@ const Settings = () => {
     if (Object.keys(errors).length > 0) {
       setPasswordErrors(errors);
       setPasswordMessage({ type: "error", text: Object.values(errors)[0] });
+      scrollToFirstError();
       return;
     }
     
@@ -165,9 +167,11 @@ const Settings = () => {
       ) {
         setPasswordErrors({ currentPassword: "მიმდინარე (ძველი) პაროლი არასწორია!" });
         setPasswordMessage({ type: "error", text: "მიმდინარე (ძველი) პაროლი არასწორია!" });
+        scrollToFirstError();
       } else if (code === "auth/weak-password") {
         setPasswordErrors({ newPassword: "პაროლი ძალიან სუსტია" });
         setPasswordMessage({ type: "error", text: "ახალი პაროლი ძალიან სუსტია (მინიმუმ 6 სიმბოლო)!" });
+        scrollToFirstError();
       } else if (code === "auth/too-many-requests") {
         setPasswordMessage({ type: "error", text: "ძალიან ბევრი მცდელობა. გთხოვთ სცადოთ მოგვიანებით." });
       } else if (code === "auth/requires-recent-login") {

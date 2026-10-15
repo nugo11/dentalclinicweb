@@ -11,6 +11,7 @@ import { doc, setDoc, collection, getDoc, query, where, getDocs } from "firebase
 import { useAuth } from "../context/AuthContext";
 import { useLockBodyScroll } from "../hooks/useLockBodyScroll";
 import { formatPhone, cleanPhone, validatePhone } from "../utils/phoneFormatter";
+import { getRoleLabel } from "../utils/roleUtils";
 import { 
   Activity, Mail, Lock, ArrowRight, Loader2, Eye, EyeOff, 
   Building2, ShieldCheck, ChevronLeft, User, 
@@ -742,7 +743,7 @@ const AuthPage = () => {
                           {member.fullName ? member.fullName[0] : "?"}
                        </div>
                        <h4 className="font-black text-text-main text-sm leading-tight">{member.fullName}</h4>
-                       <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest mt-1">{member.role}</p>
+                       <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest mt-1">{getRoleLabel(member.role)}</p>
                     </button>
                   ))}
                </div>

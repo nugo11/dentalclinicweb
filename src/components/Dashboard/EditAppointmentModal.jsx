@@ -5,6 +5,7 @@ import { X, Loader2, Trash2, Edit3, AlertTriangle, Check } from 'lucide-react';
 import { transliterateToGeorgian } from '../../utils/transliterateKa';
 import { useAuth } from '../../context/AuthContext';
 import useLockBodyScroll from '../../hooks/useLockBodyScroll';
+import { scrollToFirstError } from '../../utils/scrollHelper';
 
 const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
   useLockBodyScroll(isOpen);
@@ -13,6 +14,7 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
   const [loading, setLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "" });
+  const [formErrors, setFormErrors] = useState({});
   
   const [formData, setFormData] = useState({
     date: '',
@@ -47,6 +49,19 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+
+    const errors = {};
+    if (!formData.date) errors.date = true;
+    if (!formData.startTime) errors.startTime = true;
+    if (!formData.service || !formData.service.trim()) errors.service = true;
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setToast({ show: true, message: "გთხოვთ შეავსოთ ყველა აუცილებელი ველი (*)" });
+      scrollToFirstError('.app-sheet');
+      setTimeout(() => setToast({ show: false, message: "" }), 4000);
+      return;
+    }
 
     // წარსულში ჯავშნის ვალიდაცია
     const today = new Date();
@@ -175,18 +190,25 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
             <form onSubmit={handleUpdate} className="space-y-6">
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2 min-w-0">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">თარიღი</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+                    თარიღი <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative min-w-0">
                     <input 
                       type="date" 
                       required 
                       disabled={isReadOnly} 
+                      data-error={Boolean(formErrors.date)}
+                      aria-invalid={Boolean(formErrors.date)}
                       value={formData.date} 
                       onClick={(e) => {
                         try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
                       }}
-                      onChange={e => setFormData({...formData, date: e.target.value})} 
-                      className={inputClasses} 
+                      onChange={e => {
+                        setFormData({...formData, date: e.target.value});
+                        if (formErrors.date) setFormErrors(prev => ({ ...prev, date: false }));
+                      }} 
+                      className={`${inputClasses} ${formErrors.date ? 'border-red-500 bg-red-500/10 animate-shake' : ''}`} 
                     />
                     {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !formData.date && (
                       <span className="absolute left-3.5 sm:left-5 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-4">
@@ -196,17 +218,24 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
                   </div>
                 </div>
                 <div className="space-y-2 min-w-0">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">დრო</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+                    დრო <span className="text-red-500">*</span>
+                  </label>
                   <input 
                     type="time" 
                     required 
                     disabled={isReadOnly} 
+                    data-error={Boolean(formErrors.startTime)}
+                    aria-invalid={Boolean(formErrors.startTime)}
                     value={formData.startTime} 
                     onClick={(e) => {
                       try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
                     }}
-                    onChange={e => setFormData({...formData, startTime: e.target.value})} 
-                    className={inputClasses} 
+                    onChange={e => {
+                      setFormData({...formData, startTime: e.target.value});
+                      if (formErrors.startTime) setFormErrors(prev => ({ ...prev, startTime: false }));
+                    }} 
+                    className={`${inputClasses} ${formErrors.startTime ? 'border-red-500 bg-red-500/10 animate-shake' : ''}`} 
                   />
                 </div>
               </div>
@@ -223,8 +252,22 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
                   <div className="absolute right-4 top-[38px] pointer-events-none text-text-muted border-l border-b border-gray-400 w-2 h-2 -rotate-45" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">მომსახურება</label>
-                  <input required disabled={isReadOnly} type="text" value={formData.service} onChange={e => setFormData({...formData, service: transliterateToGeorgian(e.target.value)})} className={inputClasses} />
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+                    მომსახურება <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    required 
+                    disabled={isReadOnly} 
+                    type="text" 
+                    data-error={Boolean(formErrors.service)}
+                    aria-invalid={Boolean(formErrors.service)}
+                    value={formData.service} 
+                    onChange={e => {
+                      setFormData({...formData, service: transliterateToGeorgian(e.target.value)});
+                      if (formErrors.service) setFormErrors(prev => ({ ...prev, service: false }));
+                    }} 
+                    className={`${inputClasses} ${formErrors.service ? 'border-red-500 bg-red-500/10 animate-shake' : ''}`} 
+                  />
                 </div>
               </div>
 

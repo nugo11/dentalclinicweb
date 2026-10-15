@@ -26,6 +26,7 @@ import { transliterateToGeorgian, transliterateToLatin } from "../../utils/trans
 import FormInput from "../Common/FormInput";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 import { formatPhone, cleanPhone, validatePhone } from "../../utils/phoneFormatter";
+import { scrollToFirstError } from "../../utils/scrollHelper";
 
 const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   useLockBodyScroll(isOpen);
@@ -216,11 +217,11 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      setToast({ show: true, message: "გთხოვთ შეავსოთ ყველა აუცილებელი ველი" });
+      setToast({ show: true, message: "გთხოვთ შეავსოთ ყველა აუცილებელი ველი (*)" });
+      scrollToFirstError('.app-sheet');
       setTimeout(() => {
-        setFormErrors({});
         setToast({ show: false, message: "" });
-      }, 3000);
+      }, 4000);
       return;
     }
 

@@ -19,6 +19,8 @@ import { logActivity } from "../utils/activityLogger";
 import useLockBodyScroll from "../hooks/useLockBodyScroll";
 import PhoneInput from "../components/Common/PhoneInput";
 import { formatPhone, validatePhone } from "../utils/phoneFormatter";
+import { getRoleLabel } from "../utils/roleUtils";
+import { scrollToFirstError } from "../utils/scrollHelper";
 
 const Staff = () => {
   const { userData, clinicData, activeStaff } = useAuth();
@@ -100,16 +102,25 @@ const Staff = () => {
   const handleAddDoctor = async (e) => {
     e.preventDefault();
     if (doctorLimitReached) return;
-    if (newDoctor.pin.length !== 4) {
-        alert("PIN უნდა შედგებოდეს 4 ციფრისგან");
-        return;
+
+    const errors = {};
+    if (!newDoctor.fullName || !newDoctor.fullName.trim()) {
+      errors.addFullName = "მიუთითეთ სრული სახელი";
+    }
+    if (!newDoctor.pin || newDoctor.pin.length !== 4) {
+      errors.addPin = "PIN უნდა შედგებოდეს 4 ციფრისგან";
     }
     if (newDoctor.phone) {
       const phoneErr = validatePhone(newDoctor.phone, false);
       if (phoneErr) {
-        setStaffErrors(prev => ({ ...prev, addPhone: phoneErr }));
-        return;
+        errors.addPhone = phoneErr;
       }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setStaffErrors(errors);
+      scrollToFirstError('.app-sheet');
+      return;
     }
     setIsProcessing(true);
 
@@ -164,13 +175,26 @@ const Staff = () => {
 
   const handleUpdateStaff = async (e) => {
     e.preventDefault();
+    const errors = {};
+    if (!editFormData.fullName || !editFormData.fullName.trim()) {
+      errors.editFullName = "მიუთითეთ სრული სახელი";
+    }
+    if (editFormData.pin && editFormData.pin.length !== 4) {
+      errors.editPin = "ახალი PIN უნდა იყოს 4 ციფრიანი";
+    }
     if (editFormData.phone) {
       const phoneErr = validatePhone(editFormData.phone, false);
       if (phoneErr) {
-        setStaffErrors(prev => ({ ...prev, editPhone: phoneErr }));
-        return;
+        errors.editPhone = phoneErr;
       }
     }
+
+    if (Object.keys(errors).length > 0) {
+      setStaffErrors(errors);
+      scrollToFirstError('.app-sheet');
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const updates = {
@@ -187,10 +211,6 @@ const Staff = () => {
 
       if (editFormData.pin && editFormData.pin.length === 4) {
         updates.pinHash = await hashPin(editFormData.pin);
-      } else if (editFormData.pin && editFormData.pin.length !== 4) {
-        alert("ახალი PIN უნდა იყოს 4 ციფრიანი");
-        setIsProcessing(false);
-        return;
       }
 
       await updateDoc(doc(db, "users", editTarget), updates);
@@ -318,7 +338,7 @@ const Staff = () => {
                     <div className="pt-6 border-t border-border-main flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                        <span className="text-[10px] font-black text-text-main uppercase tracking-widest">{member.role}</span>
+                        <span className="text-[10px] font-black text-text-main uppercase tracking-widest">{getRoleLabel(member.role)}</span>
                       </div>
                       <div className="flex items-center gap-1.5 bg-surface-soft px-2.5 py-1.5 rounded-xl border border-border-main">
                         <Shield size={10} className="text-brand-purple" />
@@ -379,8 +399,21 @@ const Staff = () => {
                    <button type="button" onClick={() => setShowAddModal(false)} className="text-text-muted hover:text-text-main"><X /></button>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">სრული სახელი</label>
-                  <input required className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.fullName} onChange={e => setNewDoctor({...newDoctor, fullName: e.target.value})} />
+                  <div className="flex justify-between items-center ml-4">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">სრული სახელი <span className="text-red-500">*</span></label>
+                    {staffErrors.addFullName && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addFullName}</span>}
+                  </div>
+                  <input 
+                    required 
+                    data-error={Boolean(staffErrors.addFullName)}
+                    aria-invalid={Boolean(staffErrors.addFullName)}
+                    className={`w-full bg-surface-soft border-2 rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all ${staffErrors.addFullName ? 'border-red-500 bg-red-500/10 animate-shake' : 'border-transparent focus:border-brand-purple'}`} 
+                    value={newDoctor.fullName} 
+                    onChange={e => {
+                      setNewDoctor({...newDoctor, fullName: e.target.value});
+                      if (staffErrors.addFullName) setStaffErrors(prev => ({ ...prev, addFullName: undefined }));
+                    }} 
+                  />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-1 min-w-0">
@@ -409,16 +442,30 @@ const Staff = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">PIN (4 ციფრი)</label>
-                      <input required maxLength={4} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm text-center tracking-[0.5em] transition-all" value={newDoctor.pin} onChange={e => setNewDoctor({...newDoctor, pin: e.target.value.replace(/\D/g, '')})} />
+                      <div className="flex justify-between items-center ml-4">
+                        <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">PIN (4 ციფრი) <span className="text-red-500">*</span></label>
+                        {staffErrors.addPin && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addPin}</span>}
+                      </div>
+                      <input 
+                        required 
+                        maxLength={4} 
+                        data-error={Boolean(staffErrors.addPin)}
+                        aria-invalid={Boolean(staffErrors.addPin)}
+                        className={`w-full bg-surface-soft border-2 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-center tracking-[0.5em] transition-all ${staffErrors.addPin ? 'border-red-500 bg-red-500/10 animate-shake' : 'border-transparent focus:border-brand-purple'}`} 
+                        value={newDoctor.pin} 
+                        onChange={e => {
+                          setNewDoctor({...newDoctor, pin: e.target.value.replace(/\D/g, '')});
+                          if (staffErrors.addPin) setStaffErrors(prev => ({ ...prev, addPin: undefined }));
+                        }} 
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">როლი</label>
-                      <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all" value={newDoctor.role} onChange={e => setNewDoctor({...newDoctor, role: e.target.value})}>
-                        <option value="doctor">Doctor</option>
-                        <option value="receptionist">Reception</option>
-                        <option value="accountant">Accountant</option>
-                        <option value="manager">Manager</option>
+                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">როლი <span className="text-red-500">*</span></label>
+                      <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all cursor-pointer" value={newDoctor.role} onChange={e => setNewDoctor({...newDoctor, role: e.target.value})}>
+                        <option value="doctor">ექიმი</option>
+                        <option value="receptionist">რეგისტრატორი</option>
+                        <option value="accountant">ბუღალტერი</option>
+                        <option value="manager">მენეჯერი</option>
                       </select>
                     </div>
                 </div>
@@ -477,8 +524,21 @@ const Staff = () => {
                   <button type="button" onClick={() => setEditTarget(null)} className="text-text-muted hover:text-text-main cursor-pointer"><X /></button>
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">სრული სახელი</label>
-                <input required className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.fullName} onChange={e => setEditFormData({...editFormData, fullName: e.target.value})} />
+                <div className="flex justify-between items-center ml-4">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">სრული სახელი <span className="text-red-500">*</span></label>
+                  {staffErrors.editFullName && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.editFullName}</span>}
+                </div>
+                <input 
+                  required 
+                  data-error={Boolean(staffErrors.editFullName)}
+                  aria-invalid={Boolean(staffErrors.editFullName)}
+                  className={`w-full bg-surface-soft border-2 rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all ${staffErrors.editFullName ? 'border-red-500 bg-red-500/10 animate-shake' : 'border-transparent focus:border-brand-purple'}`} 
+                  value={editFormData.fullName} 
+                  onChange={e => {
+                    setEditFormData({...editFormData, fullName: e.target.value});
+                    if (staffErrors.editFullName) setStaffErrors(prev => ({ ...prev, editFullName: undefined }));
+                  }} 
+                />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1 min-w-0">
@@ -506,13 +566,13 @@ const Staff = () => {
                   </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">როლი</label>
-                <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all" value={editFormData.role} onChange={e => setEditFormData({...editFormData, role: e.target.value})}>
-                  <option value="admin">Admin</option>
-                  <option value="manager">Manager</option>
-                  <option value="doctor">Doctor</option>
-                  <option value="receptionist">Reception</option>
-                  <option value="accountant">Accountant</option>
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">როლი <span className="text-red-500">*</span></label>
+                <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all cursor-pointer" value={editFormData.role} onChange={e => setEditFormData({...editFormData, role: e.target.value})}>
+                  <option value="admin">ადმინისტრატორი</option>
+                  <option value="manager">მენეჯერი</option>
+                  <option value="doctor">ექიმი</option>
+                  <option value="receptionist">რეგისტრატორი</option>
+                  <option value="accountant">ბუღალტერი</option>
                 </select>
               </div>
               <div>
@@ -528,8 +588,22 @@ const Staff = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ახალი PIN (4 ციფრი)</label>
-                    <input maxLength={4} className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm text-center tracking-[0.5em] transition-all" value={editFormData.pin} onChange={e => setEditFormData({...editFormData, pin: e.target.value.replace(/\D/g, '')})} placeholder="****" />
+                    <div className="flex justify-between items-center ml-4">
+                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">ახალი PIN (4 ციფრი)</label>
+                      {staffErrors.editPin && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.editPin}</span>}
+                    </div>
+                    <input 
+                      maxLength={4} 
+                      data-error={Boolean(staffErrors.editPin)}
+                      aria-invalid={Boolean(staffErrors.editPin)}
+                      className={`w-full bg-surface-soft border-2 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-center tracking-[0.5em] transition-all ${staffErrors.editPin ? 'border-red-500 bg-red-500/10 animate-shake' : 'border-transparent focus:border-brand-purple'}`} 
+                      value={editFormData.pin} 
+                      onChange={e => {
+                        setEditFormData({...editFormData, pin: e.target.value.replace(/\D/g, '')});
+                        if (staffErrors.editPin) setStaffErrors(prev => ({ ...prev, editPin: undefined }));
+                      }} 
+                      placeholder="****" 
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ელ-ფოსტა</label>

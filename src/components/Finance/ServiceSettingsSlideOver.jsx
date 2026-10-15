@@ -3,6 +3,7 @@ import { db, auth } from '../../firebase';
 import { collection, addDoc, query, where, onSnapshot, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { X, Plus, Trash2, Tag, DollarSign, Loader2, Package, Minus, Search } from 'lucide-react';
 import useLockBodyScroll from '../../hooks/useLockBodyScroll';
+import { scrollToFirstError } from '../../utils/scrollHelper';
 
 const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
   useLockBodyScroll(isOpen);
@@ -10,6 +11,7 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
   const [inventory, setInventory] = useState([]); // საწყობის სია
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [errors, setErrors] = useState({});
   
   const [newService, setNewService] = useState({ 
     name: '', 
@@ -66,19 +68,33 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
 
   const handleAddService = async (e) => {
     e.preventDefault();
-    if (!newService.name || !newService.price) return;
+    const newErrors = {};
+    if (!newService.name || !newService.name.trim()) {
+      newErrors.name = "სერვისის დასახელება სავალდებულოა";
+    }
+    if (!newService.price || Number(newService.price) <= 0) {
+      newErrors.price = "სტანდარტული ფასი სავალდებულოა და უნდა აღემატებოდეს 0-ს";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      scrollToFirstError('.app-sheet');
+      return;
+    }
+    setErrors({});
 
     setLoading(true);
     try {
       const user = auth.currentUser;
       await addDoc(collection(db, "services"), {
         clinicId: user.uid,
-        name: newService.name,
+        name: newService.name.trim(),
         price: Number(newService.price),
         materials: newService.materials, // მასალების მასივი
         createdAt: serverTimestamp()
       });
       setNewService({ name: '', price: '', materials: [] });
+      setErrors({});
     } catch (error) {
       console.error(error);
     } finally {
@@ -120,33 +136,47 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
               <div className="p-8 space-y-6 bg-surface">
                 <form onSubmit={handleAddService} className="space-y-5">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">მომსახურების დასახელება</label>
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+                      მომსახურების დასახელება <span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                       <input 
                         type="text" 
-                        required
                         placeholder="მაგ: კბილის დაბჟენა"
-                        className="w-full pl-12 pr-4 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm border-2 border-transparent focus:border-brand-purple transition-all"
+                        data-error={Boolean(errors.name)}
+                        aria-invalid={Boolean(errors.name)}
+                        className={`w-full pl-12 pr-4 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm border-2 ${errors.name ? 'border-red-500 focus:border-red-500' : 'border-transparent focus:border-brand-purple'} transition-all`}
                         value={newService.name}
-                        onChange={(e) => setNewService({...newService, name: e.target.value})}
+                        onChange={(e) => {
+                          setNewService({...newService, name: e.target.value});
+                          if (errors.name) setErrors(prev => ({ ...prev, name: null }));
+                        }}
                       />
                     </div>
+                    {errors.name && <span className="text-red-500 text-[10px] font-bold block ml-2">{errors.name}</span>}
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">სტანდარტული ფასი (₾)</label>
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">
+                      სტანდარტული ფასი (₾) <span className="text-red-500">*</span>
+                    </label>
                     <div className="relative">
                       <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                       <input 
                         type="number" 
-                        required
                         placeholder="0.00"
-                        className="w-full pl-12 pr-4 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm border-2 border-transparent focus:border-brand-purple transition-all"
+                        data-error={Boolean(errors.price)}
+                        aria-invalid={Boolean(errors.price)}
+                        className={`w-full pl-12 pr-4 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm border-2 ${errors.price ? 'border-red-500 focus:border-red-500' : 'border-transparent focus:border-brand-purple'} transition-all`}
                         value={newService.price}
-                        onChange={(e) => setNewService({...newService, price: e.target.value})}
+                        onChange={(e) => {
+                          setNewService({...newService, price: e.target.value});
+                          if (errors.price) setErrors(prev => ({ ...prev, price: null }));
+                        }}
                       />
                     </div>
+                    {errors.price && <span className="text-red-500 text-[10px] font-bold block ml-2">{errors.price}</span>}
                   </div>
 
                   {/* Material Integration Section */}

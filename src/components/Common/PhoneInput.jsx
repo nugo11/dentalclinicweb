@@ -60,7 +60,7 @@ const PhoneInput = ({
   const labelStyle = `text-[10px] font-black text-text-muted uppercase tracking-widest ml-4 mb-2 flex items-center justify-between ${labelClassName}`;
 
   return (
-    <div className={`relative group min-w-0 ${containerClassName}`}>
+    <div className={`relative group min-w-0 ${containerClassName}`} data-error={Boolean(displayError)}>
       {label && (
         <label className={labelStyle} htmlFor={id}>
           <span>
@@ -99,6 +99,8 @@ const PhoneInput = ({
           onChange={handleChange}
           onBlur={handleBlur}
           placeholder={placeholder}
+          data-error={Boolean(displayError)}
+          aria-invalid={Boolean(displayError)}
           maxLength={15} // formatted phone with spaces: "032 2 11 00 11" is 14 chars
           className={inputStyle}
           autoComplete="tel"
