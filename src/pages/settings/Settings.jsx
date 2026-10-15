@@ -8,14 +8,17 @@ import Sidebar from "../../components/Dashboard/Sidebar";
 import TopNav from "../../components/Dashboard/TopNav";
 import { 
   User, Building2, Lock, Save, Loader2, 
-  CheckCircle2, Camera, Mail, Shield, Smartphone, Activity
+  CheckCircle2, Camera, Mail, Shield, Smartphone, Activity, AlertTriangle
 } from "lucide-react";
 
 const Settings = () => {
   const { userData, clinicData } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [profileMessage, setProfileMessage] = useState({ type: "", text: "" });
+  const [passwordMessage, setPasswordMessage] = useState({ type: "", text: "" });
+  const [passwordErrors, setPasswordErrors] = useState({});
 
   // State-ები ფორმისთვის
   const [personalInfo, setPersonalInfo] = useState({
@@ -67,15 +70,23 @@ const Settings = () => {
 
   // შეტყობინების ავტომატური გაქრობა
   useEffect(() => {
-    if (message.text) {
-      const timer = setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+    if (profileMessage.text) {
+      const timer = setTimeout(() => setProfileMessage({ type: "", text: "" }), 4000);
       return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [profileMessage]);
+
+  useEffect(() => {
+    if (passwordMessage.text) {
+      const timer = setTimeout(() => setPasswordMessage({ type: "", text: "" }), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [passwordMessage]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    setIsSaving(true);
+    setIsSavingProfile(true);
+    setProfileMessage({ type: "", text: "" });
     try {
       // პირადი მონაცემების განახლება
       await updateDoc(doc(db, "users", auth.currentUser.uid), {
@@ -94,49 +105,78 @@ const Settings = () => {
         await updateDoc(doc(db, "clinics", userData.clinicId), clinicUpdates);
       }
       
-      setMessage({ type: "success", text: "მონაცემები წარმატებით განახლდა!" });
+      setProfileMessage({ type: "success", text: "მონაცემები წარმატებით განახლდა!" });
     } catch (err) {
-      setMessage({ type: "error", text: "განახლება ვერ მოხერხდა." });
+      console.error("Profile update error:", err);
+      setProfileMessage({ type: "error", text: "განახლება ვერ მოხერხდა." });
     } finally {
-      setIsSaving(false);
+      setIsSavingProfile(false);
     }
   };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
+    setPasswordErrors({});
+    setPasswordMessage({ type: "", text: "" });
+
+    const errors = {};
     if (!passwords.currentPassword) {
-      setMessage({ type: "error", text: "შეიყვანეთ მიმდინარე (ძველი) პაროლი!" });
-      return;
+      errors.currentPassword = "შეიყვანეთ მიმდინარე (ძველი) პაროლი!";
     }
-    if (passwords.newPassword.length < 6) {
-      setMessage({ type: "error", text: "ახალი პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს!" });
-      return;
+    if (!passwords.newPassword) {
+      errors.newPassword = "შეიყვანეთ ახალი პაროლი!";
+    } else if (passwords.newPassword.length < 6) {
+      errors.newPassword = "ახალი პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს!";
     }
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      setMessage({ type: "error", text: "პაროლები არ ემთხვევა!" });
+    if (!passwords.confirmPassword) {
+      errors.confirmPassword = "გაიმეორეთ ახალი პაროლი!";
+    } else if (passwords.newPassword !== passwords.confirmPassword) {
+      errors.confirmPassword = "პაროლები არ ემთხვევა!";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setPasswordErrors(errors);
+      setPasswordMessage({ type: "error", text: Object.values(errors)[0] });
       return;
     }
     
-    setIsSaving(true);
+    setIsChangingPassword(true);
     try {
-      if (auth.currentUser?.email) {
-        const credential = EmailAuthProvider.credential(auth.currentUser.email, passwords.currentPassword);
-        await reauthenticateWithCredential(auth.currentUser, credential);
+      const user = auth.currentUser;
+      const email = user?.email || userData?.email || personalInfo.email;
+      if (!user || !email) {
+        throw new Error("მომხმარებლის ელ-ფოსტა ვერ მოიძებნა.");
       }
-      await updatePassword(auth.currentUser, passwords.newPassword);
-      setMessage({ type: "success", text: "პაროლი წარმატებით შეიცვალა!" });
+
+      const credential = EmailAuthProvider.credential(email, passwords.currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, passwords.newPassword);
+
+      setPasswordMessage({ type: "success", text: "პაროლი წარმატებით შეიცვალა!" });
       setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordErrors({});
     } catch (err) {
       console.error("Password update error:", err);
-      if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
-        setMessage({ type: "error", text: "მიმდინარე (ძველი) პაროლი არასწორია!" });
-      } else if (err.code === "auth/weak-password") {
-        setMessage({ type: "error", text: "პაროლი ძალიან სუსტია!" });
+      const code = err.code || "";
+      if (
+        code === "auth/wrong-password" || 
+        code === "auth/invalid-credential" || 
+        code === "auth/invalid-login-credentials"
+      ) {
+        setPasswordErrors({ currentPassword: "მიმდინარე (ძველი) პაროლი არასწორია!" });
+        setPasswordMessage({ type: "error", text: "მიმდინარე (ძველი) პაროლი არასწორია!" });
+      } else if (code === "auth/weak-password") {
+        setPasswordErrors({ newPassword: "პაროლი ძალიან სუსტია" });
+        setPasswordMessage({ type: "error", text: "ახალი პაროლი ძალიან სუსტია (მინიმუმ 6 სიმბოლო)!" });
+      } else if (code === "auth/too-many-requests") {
+        setPasswordMessage({ type: "error", text: "ძალიან ბევრი მცდელობა. გთხოვთ სცადოთ მოგვიანებით." });
+      } else if (code === "auth/requires-recent-login") {
+        setPasswordMessage({ type: "error", text: "უსაფრთხოებისთვის გთხოვთ ხელახლა გაიაროთ ავტორიზაცია." });
       } else {
-        setMessage({ type: "error", text: "შეცდომა! თავიდან გაიარეთ ავტორიზაცია." });
+        setPasswordMessage({ type: "error", text: err.message || "შეცდომა პაროლის შეცვლისას!" });
       }
     } finally {
-      setIsSaving(false);
+      setIsChangingPassword(false);
     }
   };
 
@@ -159,13 +199,6 @@ const Settings = () => {
                 <h1 className="text-3xl font-black text-text-main italic tracking-tighter">პარამეტრები</h1>
                 <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">პროფილისა და კლინიკის მართვა</p>
               </div>
-              
-              {message.text && (
-                <div className={`px-6 py-3 rounded-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300 ${message.type === "success" ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"}`}>
-                  <CheckCircle2 size={16} />
-                  <span className="text-[11px] font-black uppercase tracking-widest">{message.text}</span>
-                </div>
-              )}
             </div>
 
             <div className="grid grid-cols-1 gap-8">
@@ -256,11 +289,23 @@ const Settings = () => {
                     </div>
                   </div>
 
+                  {profileMessage.text && (
+                    <div className={`p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 border ${
+                      profileMessage.type === "success" 
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" 
+                        : "bg-red-500/10 border-red-500/20 text-red-500"
+                    }`}>
+                      {profileMessage.type === "success" ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
+                      <span className="text-xs font-black uppercase tracking-wider">{profileMessage.text}</span>
+                    </div>
+                  )}
+
                   <button 
-                    disabled={isSaving}
+                    type="submit"
+                    disabled={isSavingProfile}
                     className="flex items-center gap-3 bg-brand-purple hover:bg-brand-purple/90 text-white px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/25 active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
-                    {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} მონაცემების შენახვა
+                    {isSavingProfile ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} მონაცემების შენახვა
                   </button>
                 </form>
               </section>
@@ -279,49 +324,117 @@ const Settings = () => {
 
                   <div className="space-y-6">
                     <div className="space-y-2 max-w-md">
-                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">მიმდინარე პაროლი (ძველი)</label>
+                      <div className="flex items-center justify-between ml-4">
+                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">მიმდინარე პაროლი (ძველი)</label>
+                        {passwordErrors.currentPassword && (
+                          <span className="text-[10px] font-black text-red-500 uppercase tracking-tight animate-in fade-in">
+                            {passwordErrors.currentPassword}
+                          </span>
+                        )}
+                      </div>
                       <input 
                         type="password" 
                         required
-                        className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all text-text-main"
+                        className={`w-full px-6 py-4 bg-surface-soft border-2 rounded-2xl outline-none font-bold text-sm transition-all text-text-main ${
+                          passwordErrors.currentPassword 
+                            ? "border-red-500 bg-red-500/10 animate-shake" 
+                            : "border-transparent focus:border-brand-purple"
+                        }`}
                         value={passwords.currentPassword}
-                        onChange={(e) => setPasswords({...passwords, currentPassword: e.target.value})}
+                        onChange={(e) => {
+                          setPasswords({...passwords, currentPassword: e.target.value});
+                          if (passwordErrors.currentPassword) {
+                            setPasswordErrors(prev => ({...prev, currentPassword: null}));
+                          }
+                        }}
                         placeholder="••••••••"
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">ახალი პაროლი</label>
+                        <div className="flex items-center justify-between ml-4">
+                          <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">ახალი პაროლი</label>
+                          {passwordErrors.newPassword && (
+                            <span className="text-[10px] font-black text-red-500 uppercase tracking-tight animate-in fade-in">
+                              {passwordErrors.newPassword}
+                            </span>
+                          )}
+                        </div>
                         <input 
                           type="password" 
                           required
-                          className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all text-text-main"
+                          className={`w-full px-6 py-4 bg-surface-soft border-2 rounded-2xl outline-none font-bold text-sm transition-all text-text-main ${
+                            passwordErrors.newPassword 
+                              ? "border-red-500 bg-red-500/10 animate-shake" 
+                              : "border-transparent focus:border-brand-purple"
+                          }`}
                           value={passwords.newPassword}
-                          onChange={(e) => setPasswords({...passwords, newPassword: e.target.value})}
+                          onChange={(e) => {
+                            setPasswords({...passwords, newPassword: e.target.value});
+                            if (passwordErrors.newPassword) {
+                              setPasswordErrors(prev => ({...prev, newPassword: null}));
+                            }
+                          }}
                           placeholder="••••••••"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">გაიმეორეთ ახალი პაროლი</label>
+                        <div className="flex items-center justify-between ml-4">
+                          <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">გაიმეორეთ ახალი პაროლი</label>
+                          {passwordErrors.confirmPassword && (
+                            <span className="text-[10px] font-black text-red-500 uppercase tracking-tight animate-in fade-in">
+                              {passwordErrors.confirmPassword}
+                            </span>
+                          )}
+                        </div>
                         <input 
                           type="password" 
                           required
-                          className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all text-text-main"
+                          className={`w-full px-6 py-4 bg-surface-soft border-2 rounded-2xl outline-none font-bold text-sm transition-all text-text-main ${
+                            passwordErrors.confirmPassword 
+                              ? "border-red-500 bg-red-500/10 animate-shake" 
+                              : "border-transparent focus:border-brand-purple"
+                          }`}
                           value={passwords.confirmPassword}
-                          onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
+                          onChange={(e) => {
+                            setPasswords({...passwords, confirmPassword: e.target.value});
+                            if (passwordErrors.confirmPassword) {
+                              setPasswordErrors(prev => ({...prev, confirmPassword: null}));
+                            }
+                          }}
                           placeholder="••••••••"
                         />
                       </div>
                     </div>
                   </div>
 
+                  {/* Inline Password Alert Banner */}
+                  {passwordMessage.text && (
+                    <div 
+                      className={`p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 border ${
+                        passwordMessage.type === "success" 
+                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" 
+                          : "bg-red-500/10 border-red-500/20 text-red-500"
+                      }`}
+                    >
+                      {passwordMessage.type === "success" ? (
+                        <CheckCircle2 size={18} className="shrink-0" />
+                      ) : (
+                        <AlertTriangle size={18} className="shrink-0" />
+                      )}
+                      <span className="text-xs font-black uppercase tracking-wider">{passwordMessage.text}</span>
+                    </div>
+                  )}
+
                   <button 
-                    disabled={isSaving}
+                    type="submit"
+                    disabled={isChangingPassword}
                     className="flex items-center gap-3 bg-brand-purple text-white px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-brand-purple/20 hover:bg-brand-deep transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
-                    პაროლის შეცვლა
+                    {isChangingPassword ? <Loader2 className="animate-spin" size={18} /> : null}
+                    <span>პაროლის შეცვლა</span>
                   </button>
                 </form>
               </section>
