@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { db, auth } from "../../firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { updatePassword } from "firebase/auth";
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { useAuth } from "../../context/AuthContext";
 import Sidebar from "../../components/Dashboard/Sidebar";
 import TopNav from "../../components/Dashboard/TopNav";
@@ -28,6 +28,7 @@ const Settings = () => {
     ehrPassword: ""
   });
   const [passwords, setPasswords] = useState({
+    currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   });
@@ -103,6 +104,14 @@ const Settings = () => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
+    if (!passwords.currentPassword) {
+      setMessage({ type: "error", text: "შეიყვანეთ მიმდინარე (ძველი) პაროლი!" });
+      return;
+    }
+    if (passwords.newPassword.length < 6) {
+      setMessage({ type: "error", text: "ახალი პაროლი უნდა შეიცავდეს მინიმუმ 6 სიმბოლოს!" });
+      return;
+    }
     if (passwords.newPassword !== passwords.confirmPassword) {
       setMessage({ type: "error", text: "პაროლები არ ემთხვევა!" });
       return;
@@ -110,11 +119,22 @@ const Settings = () => {
     
     setIsSaving(true);
     try {
+      if (auth.currentUser?.email) {
+        const credential = EmailAuthProvider.credential(auth.currentUser.email, passwords.currentPassword);
+        await reauthenticateWithCredential(auth.currentUser, credential);
+      }
       await updatePassword(auth.currentUser, passwords.newPassword);
       setMessage({ type: "success", text: "პაროლი წარმატებით შეიცვალა!" });
-      setPasswords({ newPassword: "", confirmPassword: "" });
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
-      setMessage({ type: "error", text: "შეცდომა! თავიდან გაიარეთ ავტორიზაცია." });
+      console.error("Password update error:", err);
+      if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+        setMessage({ type: "error", text: "მიმდინარე (ძველი) პაროლი არასწორია!" });
+      } else if (err.code === "auth/weak-password") {
+        setMessage({ type: "error", text: "პაროლი ძალიან სუსტია!" });
+      } else {
+        setMessage({ type: "error", text: "შეცდომა! თავიდან გაიარეთ ავტორიზაცია." });
+      }
     } finally {
       setIsSaving(false);
     }
@@ -238,7 +258,7 @@ const Settings = () => {
 
                   <button 
                     disabled={isSaving}
-                    className="flex items-center gap-3 bg-brand-deep text-white px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl active:scale-95 disabled:opacity-50 cursor-pointer"
+                    className="flex items-center gap-3 bg-brand-purple hover:bg-brand-purple/90 text-white px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/25 active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} მონაცემების შენახვა
                   </button>
@@ -257,29 +277,43 @@ const Settings = () => {
                     <h3 className="text-xl font-black text-text-main italic">უსაფრთხოება</h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">ახალი პაროლი</label>
+                  <div className="space-y-6">
+                    <div className="space-y-2 max-w-md">
+                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">მიმდინარე პაროლი (ძველი)</label>
                       <input 
                         type="password" 
                         required
-                        className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
-                        value={passwords.newPassword}
-                        onChange={(e) => setPasswords({...passwords, newPassword: e.target.value})}
+                        className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all text-text-main"
+                        value={passwords.currentPassword}
+                        onChange={(e) => setPasswords({...passwords, currentPassword: e.target.value})}
                         placeholder="••••••••"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">გაიმეორეთ პაროლი</label>
-                      <input 
-                        type="password" 
-                        required
-                        className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
-                        value={passwords.confirmPassword}
-                        onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
-                        placeholder="••••••••"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">ახალი პაროლი</label>
+                        <input 
+                          type="password" 
+                          required
+                          className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all text-text-main"
+                          value={passwords.newPassword}
+                          onChange={(e) => setPasswords({...passwords, newPassword: e.target.value})}
+                          placeholder="••••••••"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">გაიმეორეთ ახალი პაროლი</label>
+                        <input 
+                          type="password" 
+                          required
+                          className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all text-text-main"
+                          value={passwords.confirmPassword}
+                          onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
+                          placeholder="••••••••"
+                        />
+                      </div>
                     </div>
                   </div>
 

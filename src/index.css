@@ -68,7 +68,6 @@ body {
   font-family: var(--font-nino);
   margin: 0;
   background: var(--bg-surface-soft);
-  overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   max-width: 100vw;
   overflow-x: hidden;
@@ -78,19 +77,16 @@ body {
 body.body-scroll-lock {
   overflow: hidden !important;
   touch-action: none !important;
-  overscroll-behavior: none !important;
 }
 
-/* iOS WebKit Date & Time Input Normalization */
+/* Date & Time Input Normalization */
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
   min-width: 0 !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
+  cursor: pointer;
 }
 
 /* Prevent internal iOS date shadow element from blowing out container width */
@@ -372,7 +368,6 @@ input[type="submit"],
 }
 
 /* Modal and panel scroll containment - stops background rubber-band scrolling */
-.custom-scrollbar,
 .overscroll-contain,
 .modal-scrollable {
   overscroll-behavior: contain !important;

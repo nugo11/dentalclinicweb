@@ -177,8 +177,18 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
                 <div className="space-y-2 min-w-0">
                   <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">თარიღი</label>
                   <div className="relative min-w-0">
-                    <input type="date" required disabled={isReadOnly} value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className={inputClasses} />
-                    {!formData.date && (
+                    <input 
+                      type="date" 
+                      required 
+                      disabled={isReadOnly} 
+                      value={formData.date} 
+                      onClick={(e) => {
+                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                      }}
+                      onChange={e => setFormData({...formData, date: e.target.value})} 
+                      className={inputClasses} 
+                    />
+                    {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !formData.date && (
                       <span className="absolute left-3.5 sm:left-5 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-4">
                         mm/dd/yyyy
                       </span>
@@ -187,7 +197,17 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
                 </div>
                 <div className="space-y-2 min-w-0">
                   <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">დრო</label>
-                  <input type="time" required disabled={isReadOnly} value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} className={inputClasses} />
+                  <input 
+                    type="time" 
+                    required 
+                    disabled={isReadOnly} 
+                    value={formData.startTime} 
+                    onClick={(e) => {
+                      try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                    }}
+                    onChange={e => setFormData({...formData, startTime: e.target.value})} 
+                    className={inputClasses} 
+                  />
                 </div>
               </div>
 

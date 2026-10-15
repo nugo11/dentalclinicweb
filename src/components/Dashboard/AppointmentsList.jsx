@@ -110,7 +110,7 @@ const AppointmentsList = () => {
       </div>
 
       {/* Timeline Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 relative">
+      <div className={`flex-1 pr-2 relative ${filteredAndSorted.length > 0 ? 'overflow-y-auto custom-scrollbar' : 'flex flex-col justify-center'}`}>
         {loading ? (
           <div className="flex justify-center py-20 opacity-20"><Loader2 className="animate-spin" /></div>
         ) : filteredAndSorted.length > 0 ? (
@@ -163,7 +163,7 @@ const AppointmentsList = () => {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full opacity-20 py-20">
+          <div className="flex flex-col items-center justify-center opacity-20 py-12 pointer-events-none select-none">
               <CalendarIcon size={48} />
               <p className="font-black text-[10px] uppercase mt-4 tracking-widest text-center">განრიგი ცარიელია</p>
           </div>

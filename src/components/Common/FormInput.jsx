@@ -64,10 +64,20 @@ const FormInput = ({
           <>
             <input 
               {...props} 
+              onClick={(e) => {
+                if (props.type === 'date' || props.type === 'time') {
+                  try {
+                    if (e.target && typeof e.target.showPicker === 'function') {
+                      e.target.showPicker();
+                    }
+                  } catch (err) {}
+                }
+                if (props.onClick) props.onClick(e);
+              }}
               onChange={handleChange}
               className={inputStyle} 
             />
-            {props.type === 'date' && !props.value && (
+            {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && props.type === 'date' && !props.value && (
               <span className={`absolute ${hasIcon ? 'left-11' : 'left-3.5 md:left-4'} top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-8`}>
                 {props.placeholder || 'mm/dd/yyyy'}
               </span>

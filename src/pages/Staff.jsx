@@ -390,8 +390,16 @@ const Staff = () => {
                     <div className="space-y-1 min-w-0">
                       <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
                       <div className="relative min-w-0">
-                        <input type="date" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" value={newDoctor.birthDate} onChange={e => setNewDoctor({...newDoctor, birthDate: e.target.value})} />
-                        {!newDoctor.birthDate && (
+                        <input 
+                          type="date" 
+                          className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" 
+                          value={newDoctor.birthDate} 
+                          onClick={(e) => {
+                            try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                          }}
+                          onChange={e => setNewDoctor({...newDoctor, birthDate: e.target.value})} 
+                        />
+                        {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !newDoctor.birthDate && (
                           <span className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
                             mm/dd/yyyy
                           </span>
@@ -480,8 +488,16 @@ const Staff = () => {
                   <div className="space-y-1 min-w-0">
                     <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
                     <div className="relative min-w-0">
-                      <input type="date" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" value={editFormData.birthDate} onChange={e => setEditFormData({...editFormData, birthDate: e.target.value})} />
-                      {!editFormData.birthDate && (
+                      <input 
+                        type="date" 
+                        className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" 
+                        value={editFormData.birthDate} 
+                        onClick={(e) => {
+                          try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                        }}
+                        onChange={e => setEditFormData({...editFormData, birthDate: e.target.value})} 
+                      />
+                      {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !editFormData.birthDate && (
                         <span className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
                           mm/dd/yyyy
                         </span>

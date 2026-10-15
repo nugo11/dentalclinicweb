@@ -20,6 +20,7 @@ import {
   Edit3,   
   Trash2,
   FileText,
+  User,
   X,
   ChevronLeft,
   ChevronRight
@@ -318,9 +319,9 @@ const PatientsTable = ({ externalSearch = "" }) => {
                       <button 
                         onClick={() => navigate(`/patients/${patient.id}`)}
                         className="flex items-center gap-1.5 px-3.5 py-2.5 bg-brand-purple text-white hover:bg-brand-deep rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-brand-purple/20 active:scale-95 cursor-pointer"
-                        title="პაციენტის რედაქტირება და ბარათი"
+                        title="პაციენტის გვერდი და ბარათი"
                       >
-                        <Edit3 size={13} /> რედაქტირება
+                        <User size={13} /> პაციენტის გვერდი
                       </button>
                     </div>
                   </td>

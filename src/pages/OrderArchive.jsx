@@ -195,10 +195,13 @@ const OrderArchive = () => {
                     <input 
                       type="date" 
                       value={dateFrom}
+                      onClick={(e) => {
+                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                      }}
                       onChange={(e) => setDateFrom(e.target.value)}
-                      className="w-full bg-surface-soft pl-10 sm:pl-11 pr-3 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-main min-w-0 box-border"
+                      className="w-full bg-surface-soft pl-10 sm:pl-11 pr-3 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-main min-w-0 box-border cursor-pointer"
                     />
-                    {!dateFrom && (
+                    {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !dateFrom && (
                       <span className="absolute left-10 sm:left-11 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
                         თარიღიდან (mm/dd/yy)
                       </span>
@@ -210,10 +213,13 @@ const OrderArchive = () => {
                     <input 
                       type="date" 
                       value={dateTo}
+                      onClick={(e) => {
+                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                      }}
                       onChange={(e) => setDateTo(e.target.value)}
-                      className="w-full bg-surface-soft pl-10 sm:pl-11 pr-3 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-main min-w-0 box-border"
+                      className="w-full bg-surface-soft pl-10 sm:pl-11 pr-3 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-main min-w-0 box-border cursor-pointer"
                     />
-                    {!dateTo && (
+                    {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !dateTo && (
                       <span className="absolute left-10 sm:left-11 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
                         თარიღამდე (mm/dd/yy)
                       </span>

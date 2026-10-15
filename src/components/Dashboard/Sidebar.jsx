@@ -225,6 +225,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                       <Link
                         key={sub.path}
                         to={sub.path}
+                        onClick={() => { if (isMobile) setIsOpen(false); }}
                         className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all cursor-pointer 
                           ${location.pathname === sub.path ? "text-brand-purple bg-surface shadow-md" : "text-white/40 hover:text-white hover:bg-surface/5"}`}
                       >
@@ -244,6 +245,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => { if (isMobile) setIsOpen(false); }}
               className={`flex items-center rounded-2xl transition-all cursor-pointer 
                 ${isOpen ? "px-4 py-4 gap-4" : "p-4 justify-center"} 
                 ${location.pathname === item.path ? "bg-brand-purple text-white shadow-lg shadow-brand-purple/20" : "text-white/50 hover:bg-surface/5 hover:text-white"}`}

@@ -75,6 +75,22 @@ const PatientProfile = () => {
     fetchPatient();
   }, [id, navigate, userData?.clinicId, currentUser?.uid]);
 
+  const [originalPatientData, setOriginalPatientData] = useState(null);
+
+  const handleStartEdit = () => {
+    if (patientData) {
+      setOriginalPatientData(JSON.parse(JSON.stringify(patientData)));
+    }
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (originalPatientData) {
+      setPatientData(originalPatientData);
+    }
+    setIsEditing(false);
+  };
+
   const handleUpdate = async () => {
     if (patientData?.phone) {
       const phoneErr = validatePhone(patientData.phone, false);
@@ -185,37 +201,51 @@ const PatientProfile = () => {
                 <ArrowLeft size={16} /> უკან სიაში
               </button>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="p-4 bg-surface border border-red-500/20 text-red-400 rounded-2xl hover:bg-red-500/10 transition-all shadow-sm cursor-pointer"
-                >
-                  <Trash2 size={20} />
-                </button>
+              <div className="flex gap-2 sm:gap-3">
+                {!isEditing && (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="p-3.5 sm:p-4 bg-surface border border-red-500/20 text-red-400 rounded-2xl hover:bg-red-500/10 transition-all shadow-sm cursor-pointer"
+                    title="პაციენტის წაშლა"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
 
-                <button
-                  onClick={() =>
-                    isEditing ? handleUpdate() : setIsEditing(true)
-                  }
-                  disabled={actionLoading}
-                  className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg transition-all cursor-pointer disabled:opacity-70 ${
-                    isEditing
-                      ? "bg-emerald-500 text-white"
-                      : "bg-brand-purple text-white"
-                  }`}
-                >
-                  {actionLoading ? (
-                    <Loader2 className="animate-spin" size={18} />
-                  ) : isEditing ? (
-                    <>
-                      <Save size={18} /> შენახვა
-                    </>
-                  ) : (
-                    <>
-                      <Edit3 size={18} /> რედაქტირება
-                    </>
-                  )}
-                </button>
+                {isEditing ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      disabled={actionLoading}
+                      className="px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-widest bg-surface-soft hover:bg-surface border border-border-main text-text-muted hover:text-red-500 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      გაუქმება
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleUpdate}
+                      disabled={actionLoading}
+                      className="flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-widest shadow-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-all cursor-pointer disabled:opacity-70"
+                    >
+                      {actionLoading ? (
+                        <Loader2 className="animate-spin" size={18} />
+                      ) : (
+                        <>
+                          <Save size={18} /> შენახვა
+                        </>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleStartEdit}
+                    className="flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-widest shadow-lg bg-brand-purple hover:bg-brand-deep text-white transition-all cursor-pointer"
+                  >
+                    <Edit3 size={18} /> რედაქტირება
+                  </button>
+                )}
               </div>
             </div>
 
@@ -578,11 +608,45 @@ const PatientProfile = () => {
                         "healthy";
                       handleToothUpdate(selectedTooth, status, toothComment);
                     }}
-                    className="w-full py-4 bg-brand-deep text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-brand-deep/20 hover:bg-black transition-all cursor-pointer"
+                    className="w-full py-4 bg-brand-purple text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all cursor-pointer"
                   >
                     მონაცემების შენახვა
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Floating Action Bar when Editing */}
+          {isEditing && (
+            <div 
+              className="fixed bottom-6 left-4 right-4 sm:left-auto sm:right-8 z-40 bg-surface/95 backdrop-blur-xl border-2 border-border-main p-3 sm:p-4 rounded-3xl shadow-2xl shadow-brand-purple/15 flex items-center justify-between gap-3 sm:gap-4 animate-in slide-in-from-bottom-6 duration-300 max-w-md ml-auto"
+              style={{ paddingBottom: 'calc(0.75rem + var(--safe-bottom))' }}
+            >
+              <div className="flex items-center gap-2.5 pl-2 min-w-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-[11px] font-black uppercase tracking-wider text-text-main truncate">
+                  ცვლილებების რეჟიმი
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  disabled={actionLoading}
+                  className="px-4 py-2.5 bg-surface-soft hover:bg-surface border border-border-main text-text-muted hover:text-red-500 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                >
+                  გაუქმება
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUpdate}
+                  disabled={actionLoading}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-lg shadow-emerald-500/25 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+                >
+                  {actionLoading ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                  <span>შენახვა</span>
+                </button>
               </div>
             </div>
           )}
@@ -650,8 +714,13 @@ const InfoBlock = ({
             <input
               type={type}
               value={value}
+              onClick={(e) => {
+                if (type === 'date' || type === 'time') {
+                  try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                }
+              }}
               onChange={(e) => onChange(e.target.value)}
-              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm"
+              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm cursor-pointer"
             />
           )
         ) : (
