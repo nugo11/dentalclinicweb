@@ -3,11 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { Activity, User, ChevronDown, LogOut, Menu, X, Smartphone } from "lucide-react";
 import { auth } from "../../firebase";
 import ThemeToggle from "./ThemeToggle";
+import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 
 const MainHeader = ({ user }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  useLockBodyScroll(isMobileMenuOpen);
   const isLanding = location.pathname === "/";
 
   const handleHomeClick = (e) => {
@@ -116,9 +119,12 @@ const MainHeader = ({ user }) => {
           onClick={() => setIsMobileMenuOpen(false)} 
         />
         
-        <div className={`fixed top-0 right-0 h-screen w-[85%] max-w-sm bg-surface z-[9999] shadow-[-20px_0_80px_-15px_rgba(0,0,0,0.3)] transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className={`fixed top-0 right-0 h-[100dvh] max-h-[100dvh] w-[85%] max-w-sm bg-surface z-[9999] shadow-[-20px_0_80px_-15px_rgba(0,0,0,0.3)] transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
           <div className="flex flex-col h-full overflow-hidden">
-            <div className="p-6 border-b border-border-main flex items-center justify-between bg-surface">
+            <div 
+              className="p-5 sm:p-6 border-b border-border-main flex items-center justify-between bg-surface shrink-0"
+              style={{ paddingTop: 'calc(1.25rem + env(safe-area-inset-top, 0px))' }}
+            >
                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-brand-deep rounded-xl flex items-center justify-center text-white shadow-lg">
                     <Activity size={20} />
@@ -130,7 +136,7 @@ const MainHeader = ({ user }) => {
                </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-surface">
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-3 bg-surface custom-scrollbar overscroll-contain">
                <Link to="/" onClick={handleHomeClick} className="flex items-center justify-between p-5 rounded-[24px] bg-surface-soft/50 hover:bg-brand-purple/5 text-text-main font-black uppercase tracking-widest text-[11px] transition-all group">
                   მთავარი <ChevronDown size={14} className="-rotate-90 text-text-muted group-hover:text-brand-purple" />
                </Link>
@@ -164,24 +170,28 @@ const MainHeader = ({ user }) => {
                 </div>
             </div>
 
-            <div className="p-8 border-t border-border-main bg-surface">
+            <div 
+              className="p-5 sm:p-6 border-t border-border-main bg-surface shrink-0"
+              style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))' }}
+            >
               {user ? (
-                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 p-5 bg-brand-purple text-white rounded-[28px] shadow-2xl shadow-brand-purple/30 transition-all active:scale-95">
-                  <div className="w-12 h-12 rounded-2xl bg-surface/20 flex items-center justify-center">
-                    <Activity size={24} />
+                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 p-4 bg-brand-purple text-white rounded-2xl shadow-xl shadow-brand-purple/30 transition-all active:scale-95">
+                  <div className="w-10 h-10 rounded-xl bg-surface/20 flex items-center justify-center shrink-0">
+                    <Activity size={20} />
                   </div>
-                  <div className="text-left">
+                  <div className="text-left min-w-0 flex-1">
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60">კონტროლის პანელი</p>
-                    <p className="text-[13px] font-bold truncate max-w-[160px]">{user.email}</p>
+                    <p className="text-xs font-bold truncate">{user.email}</p>
                   </div>
                 </Link>
               ) : (
                 <Link 
                   to="/auth" 
                   onClick={() => setIsMobileMenuOpen(false)} 
-                  className="flex items-center justify-center gap-2.5 w-full py-5 bg-gradient-to-r from-brand-purple to-indigo-600 hover:brightness-110 text-white rounded-[24px] font-black text-xs uppercase tracking-[0.25em] shadow-[0_10px_30px_rgba(124,58,237,0.35)] transition-all active:scale-95"
+                  className="flex items-center justify-center gap-2.5 w-full py-4 px-4 bg-gradient-to-r from-brand-purple to-indigo-600 hover:brightness-110 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-purple/25 transition-all active:scale-95 whitespace-nowrap"
                 >
-                  <User size={16} /> შესვლა სისტემაში
+                  <User size={16} className="shrink-0" />
+                  <span>შესვლა სისტემაში</span>
                 </Link>
               )}
             </div>

@@ -71,6 +71,17 @@ function AppContent() {
 
   if (loading) return null;
 
+  // Standalone mode check (iOS Add to Home Screen / PWA)
+  const isStandalone = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches || 
+    Boolean(window.navigator && window.navigator.standalone)
+  );
+
+  // Home Screen აპლიკაციით გახსნისას ავტომატურად გადადის დაშბორდზე (ან /auth-ზე თუ არ არის ავტორიზებული)
+  if (isStandalone && location.pathname === '/') {
+    return <Navigate to={currentUser && activeStaff ? "/dashboard" : "/auth"} replace />;
+  }
+
   return (
     <div className="app-route-enter">
       <ScrollToTop />
