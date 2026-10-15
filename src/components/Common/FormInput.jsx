@@ -13,7 +13,10 @@ const FormInput = ({
   iconClassName = "",
   ...props 
 }) => {
-  const inputStyle = `w-full pl-12 pr-4 py-3.5 bg-surface-soft border-2 rounded-2xl outline-none font-bold text-sm text-text-main transition-all ${
+  const hasIcon = Boolean(Icon);
+  const paddingClass = hasIcon ? "pl-11 md:pl-12 pr-3 md:pr-4" : "px-3.5 md:px-4";
+  
+  const inputStyle = `w-full ${paddingClass} py-3.5 bg-surface-soft border-2 rounded-2xl outline-none font-bold text-sm text-text-main transition-all min-w-0 max-w-full box-border ${
     error 
       ? "border-red-500 bg-red-500/10 animate-shake" 
       : "border-transparent focus:bg-surface focus:border-brand-purple"
@@ -28,16 +31,16 @@ const FormInput = ({
   };
 
   return (
-    <div className={`relative group ${containerClassName}`}>
+    <div className={`relative group min-w-0 ${containerClassName}`}>
       {label && (
         <label className={labelStyle}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
-      <div className="relative">
+      <div className="relative min-w-0">
         {Icon && (
           <Icon 
-            className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${
+            className={`absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 transition-colors pointer-events-none ${
               error ? "text-red-500" : `text-text-muted group-focus-within:text-brand-purple ${iconClassName}`
             }`} 
             size={18} 
@@ -53,16 +56,23 @@ const FormInput = ({
           <select 
             {...props} 
             onChange={handleChange}
-            className={`${inputStyle} appearance-none cursor-pointer`}
+            className={`${inputStyle} appearance-none cursor-pointer`} 
           >
             {children}
           </select>
         ) : (
-          <input 
-            {...props} 
-            onChange={handleChange}
-            className={inputStyle} 
-          />
+          <>
+            <input 
+              {...props} 
+              onChange={handleChange}
+              className={inputStyle} 
+            />
+            {props.type === 'date' && !props.value && (
+              <span className={`absolute ${hasIcon ? 'left-11' : 'left-3.5 md:left-4'} top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-8`}>
+                {props.placeholder || 'mm/dd/yyyy'}
+              </span>
+            )}
+          </>
         )}
       </div>
       {error && typeof error === 'string' && (

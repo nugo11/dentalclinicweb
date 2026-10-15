@@ -17,15 +17,18 @@ import {
   FileText,
   FileDown,
   Plus,
-  Loader2
+  Loader2,
+  Eye
 } from "lucide-react";
 import { generateInvoice } from "../utils/generateInvoice";
 import { generateFinancialReport } from "../utils/generateFinancialReport";
+import OrderDetailsModal from "../components/Finance/OrderDetailsModal";
 
 const OrderArchive = () => {
   const { userData, clinicData } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [archiveData, setArchiveData] = useState([]);
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
   
   // ფილტრების State
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,6 +65,9 @@ const OrderArchive = () => {
 
   const handlePrintOrder = async (order) => {
     setPrintingId(order.id);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const printWin = isMobile ? window.open('about:blank', '_blank') : null;
+
     let personalId = "";
     if (order.patientId) {
       try {
@@ -70,7 +76,7 @@ const OrderArchive = () => {
       } catch (e) { console.error(e); }
     }
 
-    await generateInvoice({ ...order, personalId }, clinicData);
+    await generateInvoice({ ...order, personalId }, clinicData, printWin);
     setPrintingId(null);
   };
 
@@ -122,16 +128,16 @@ const OrderArchive = () => {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          <div className="max-w-6xl mx-auto space-y-8 pb-10">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))]">
+          <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-10">
             
             {/* Header */}
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center">
+              <div className="w-14 h-14 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center shrink-0">
                 <Archive size={28} />
               </div>
               <div>
-                <h1 className="text-3xl font-black text-text-main italic tracking-tighter">
+                <h1 className="text-2xl sm:text-3xl font-black text-text-main italic tracking-tighter">
                   შეკვეთების არქივი
                 </h1>
                 <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-1">
@@ -141,17 +147,17 @@ const OrderArchive = () => {
             </div>
 
             {/* Filters Section */}
-            <div className="bg-surface p-4 sm:p-6 rounded-[32px] border border-border-main shadow-sm space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="bg-surface p-4 sm:p-6 rounded-[28px] sm:rounded-[32px] border border-border-main shadow-sm space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
                 {/* Search */}
-                <div className="lg:col-span-5 relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+                <div className="lg:col-span-5 relative min-w-0">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={18} />
                   <input 
                     type="text" 
                     placeholder="ძებნა პაციენტის სახელით..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-surface-soft pl-12 pr-4 py-3.5 rounded-2xl outline-none font-bold text-sm focus:ring-4 ring-brand-purple/5 transition-all border border-transparent focus:border-brand-purple"
+                    className="w-full bg-surface-soft pl-12 pr-4 py-3.5 rounded-2xl outline-none font-bold text-sm focus:ring-4 ring-brand-purple/5 transition-all border border-transparent focus:border-brand-purple min-w-0"
                   />
                 </div>
 
@@ -160,7 +166,7 @@ const OrderArchive = () => {
                   <select 
                     value={filterMethod}
                     onChange={(e) => setFilterMethod(e.target.value)}
-                    className="bg-surface-soft px-4 py-3.5 rounded-2xl outline-none text-[10px] font-black uppercase tracking-widest border border-transparent focus:border-brand-purple text-text-muted cursor-pointer"
+                    className="bg-surface-soft px-3 sm:px-4 py-3.5 rounded-2xl outline-none text-[10px] font-black uppercase tracking-widest border border-transparent focus:border-brand-purple text-text-muted cursor-pointer min-w-0"
                   >
                     <option value="all">ყველა მეთოდი</option>
                     <option value="cash">💵 ნაღდი</option>
@@ -171,7 +177,7 @@ const OrderArchive = () => {
                   <select 
                     value={filterPayerType}
                     onChange={(e) => setFilterPayerType(e.target.value)}
-                    className="bg-surface-soft px-4 py-3.5 rounded-2xl outline-none text-[10px] font-black uppercase tracking-widest border border-transparent focus:border-brand-purple text-text-muted cursor-pointer"
+                    className="bg-surface-soft px-3 sm:px-4 py-3.5 rounded-2xl outline-none text-[10px] font-black uppercase tracking-widest border border-transparent focus:border-brand-purple text-text-muted cursor-pointer min-w-0"
                   >
                     <option value="all">ყველა ტიპი</option>
                     <option value="personal">პერსონალური</option>
@@ -181,27 +187,37 @@ const OrderArchive = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-4 border-t border-border-main/50">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 pt-4 border-t border-border-main/50">
                 {/* Date Filters */}
-                <div className="lg:col-span-8 flex flex-col sm:flex-row items-center gap-3">
-                  <div className="relative w-full">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  <div className="relative w-full min-w-0">
+                    <Calendar className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={16} />
                     <input 
                       type="date" 
                       value={dateFrom}
                       onChange={(e) => setDateFrom(e.target.value)}
-                      className="w-full bg-surface-soft pl-12 pr-4 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-muted"
+                      className="w-full bg-surface-soft pl-10 sm:pl-11 pr-3 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-main min-w-0 box-border"
                     />
+                    {!dateFrom && (
+                      <span className="absolute left-10 sm:left-11 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
+                        თარიღიდან (mm/dd/yy)
+                      </span>
+                    )}
                   </div>
-                  <span className="text-text-muted hidden sm:block font-black opacity-30">—</span>
-                  <div className="relative w-full">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+
+                  <div className="relative w-full min-w-0">
+                    <Calendar className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={16} />
                     <input 
                       type="date" 
                       value={dateTo}
                       onChange={(e) => setDateTo(e.target.value)}
-                      className="w-full bg-surface-soft pl-12 pr-4 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-muted"
+                      className="w-full bg-surface-soft pl-10 sm:pl-11 pr-3 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-main min-w-0 box-border"
                     />
+                    {!dateTo && (
+                      <span className="absolute left-10 sm:left-11 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
+                        თარიღამდე (mm/dd/yy)
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -234,7 +250,7 @@ const OrderArchive = () => {
                       <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">გადახდის მეთოდი</th>
                       <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">თარიღი</th>
                       <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest">ღირებულება</th>
-                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">ინვოისი</th>
+                      <th className="p-6 text-[10px] font-black uppercase text-text-muted tracking-widest text-right">მოქმედება</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-main">
@@ -262,7 +278,7 @@ const OrderArchive = () => {
                                ) : (
                                  <span className="text-[9px] text-text-muted font-bold uppercase italic">მეთოდი უცნობია</span>
                                )}
-                               
+                                
                                {order.payerType ? (
                                  <span className="text-[8px] text-text-muted font-bold uppercase tracking-tighter ml-1">
                                    {order.payerType === 'personal' ? 'პერსონალური' : order.payerType === 'insurance' ? 'სადაზღვევო' : 'კორპორატიული'}
@@ -278,23 +294,27 @@ const OrderArchive = () => {
                           <td className="p-6 font-black text-brand-purple">
                             {order.price} ₾
                           </td>
-                          <td className="p-6 text-right">
+                          <td className="p-6 text-right whitespace-nowrap">
                              <div className="flex justify-end items-center gap-2">
+                                {/* 1. ინვოისის ბეჭდვა */}
                                 <button
                                   disabled={printingId === order.id}
                                   onClick={() => handlePrintOrder(order)}
-                                  className="p-3 text-text-muted hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                                  title="ბეჭდვა"
+                                  className="p-3 text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-xs"
+                                  title="ინვოისის ბეჭდვა"
+                                  aria-label="ინვოისის ბეჭდვა"
                                 >
-                                  {printingId === order.id ? <Loader2 className="animate-spin" size={18} /> : <Printer size={18} />}
+                                  {printingId === order.id ? <Loader2 className="animate-spin text-brand-purple" size={18} /> : <Printer size={18} />}
                                 </button>
+
+                                {/* 2. შეკვეთის დეტალების ნახვა */}
                                 <button
-                                  disabled={printingId === order.id}
-                                  onClick={() => handlePrintOrder(order)}
-                                  className="p-3 text-text-muted hover:text-brand-purple hover:bg-brand-purple/5 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                                  title="PDF ჩამოტვირთვა"
+                                  onClick={() => setSelectedOrderDetails(order)}
+                                  className="p-3 text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all cursor-pointer active:scale-95 shadow-xs"
+                                  title="შეკვეთის დეტალები"
+                                  aria-label="შეკვეთის დეტალები"
                                 >
-                                  {printingId === order.id ? <Loader2 className="animate-spin" size={18} /> : <FileDown size={18} />}
+                                  <Eye size={18} />
                                 </button>
                              </div>
                           </td>
@@ -302,7 +322,7 @@ const OrderArchive = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" className="p-20 text-center text-text-muted">
+                        <td colSpan="6" className="p-20 text-center text-text-muted">
                           <Receipt size={40} className="mx-auto mb-4 opacity-50" />
                           <p className="font-black text-[10px] uppercase tracking-widest">ჩანაწერები არ მოიძებნა</p>
                         </td>
@@ -342,6 +362,15 @@ const OrderArchive = () => {
                 </div>
               )}
             </div>
+
+            {/* Order Details Modal */}
+            <OrderDetailsModal
+              isOpen={!!selectedOrderDetails}
+              onClose={() => setSelectedOrderDetails(null)}
+              order={selectedOrderDetails}
+              onPrint={handlePrintOrder}
+              isPrinting={printingId === selectedOrderDetails?.id}
+            />
 
           </div>
         </main>

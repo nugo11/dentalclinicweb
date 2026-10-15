@@ -80,23 +80,28 @@ export const generateFinancialReport = async (data, dateFrom, dateTo, clinicData
       }
     });
 
-    const blob = doc.output('blob');
-    const url = URL.createObjectURL(blob);
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = url;
-    document.body.appendChild(iframe);
+    const fileName = `financial-report-${dateFrom || 'start'}-${dateTo || 'now'}.pdf`;
 
-    return new Promise((resolve) => {
-      iframe.onload = () => {
-        iframe.contentWindow.print();
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          URL.revokeObjectURL(url);
-          resolve();
-        }, 1500);
-      };
-    });
+    // Cross-platform PDF download (supporting iOS Safari / iPhone / iPad and Desktop)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    if (isIOS) {
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        if (document.body.contains(link)) document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      }, 500);
+    } else {
+      doc.save(fileName);
+    }
 
   } catch (error) {
     console.error("Report Error:", error);

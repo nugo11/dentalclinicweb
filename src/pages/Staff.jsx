@@ -16,6 +16,7 @@ import {
   Eye, EyeOff
 } from "lucide-react";
 import { logActivity } from "../utils/activityLogger";
+import useLockBodyScroll from "../hooks/useLockBodyScroll";
 
 const Staff = () => {
   const { userData, clinicData, activeStaff } = useAuth();
@@ -54,6 +55,8 @@ const Staff = () => {
     personalId: "",
     birthDate: ""
   });
+
+  useLockBodyScroll(Boolean(showAddModal || editTarget || deleteTargetId));
 
   const currentPlanIdRaw = (clinicData?.plan || "free").toLowerCase();
   const planId = (currentPlanIdRaw === "solo" || currentPlanIdRaw === "basic") ? "business" : 
@@ -359,14 +362,21 @@ const Staff = () => {
                   <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">სრული სახელი</label>
                   <input required className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.fullName} onChange={e => setNewDoctor({...newDoctor, fullName: e.target.value})} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-1 min-w-0">
                       <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">პირადი ნომერი</label>
-                      <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" maxLength={11} value={newDoctor.personalId} onChange={e => setNewDoctor({...newDoctor, personalId: e.target.value})} placeholder="010XXXXXXXX" />
+                      <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0" maxLength={11} value={newDoctor.personalId} onChange={e => setNewDoctor({...newDoctor, personalId: e.target.value})} placeholder="010XXXXXXXX" />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 min-w-0">
                       <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
-                      <input type="date" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.birthDate} onChange={e => setNewDoctor({...newDoctor, birthDate: e.target.value})} />
+                      <div className="relative min-w-0">
+                        <input type="date" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" value={newDoctor.birthDate} onChange={e => setNewDoctor({...newDoctor, birthDate: e.target.value})} />
+                        {!newDoctor.birthDate && (
+                          <span className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
+                            mm/dd/yyyy
+                          </span>
+                        )}
+                      </div>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -436,14 +446,21 @@ const Staff = () => {
                 <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">სრული სახელი</label>
                 <input required className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.fullName} onChange={e => setEditFormData({...editFormData, fullName: e.target.value})} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1 min-w-0">
                     <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">პირადი ნომერი</label>
-                    <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" maxLength={11} value={editFormData.personalId} onChange={e => setEditFormData({...editFormData, personalId: e.target.value})} placeholder="010XXXXXXXX" />
+                    <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0" maxLength={11} value={editFormData.personalId} onChange={e => setEditFormData({...editFormData, personalId: e.target.value})} placeholder="010XXXXXXXX" />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 min-w-0">
                     <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
-                    <input type="date" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.birthDate} onChange={e => setEditFormData({...editFormData, birthDate: e.target.value})} />
+                    <div className="relative min-w-0">
+                      <input type="date" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" value={editFormData.birthDate} onChange={e => setEditFormData({...editFormData, birthDate: e.target.value})} />
+                      {!editFormData.birthDate && (
+                        <span className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
+                          mm/dd/yyyy
+                        </span>
+                      )}
+                    </div>
                   </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

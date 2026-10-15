@@ -12,6 +12,7 @@ import QuickActions from '../components/Dashboard/QuickActions';
 import RecentTreatments from '../components/Dashboard/RecentTreatments';
 import SalaryReminder from '../components/Dashboard/SalaryReminder';
 import PWAInstallBanner from '../components/PWAInstallBanner';
+import CriticalAlertsWidget from '../components/Dashboard/CriticalAlertsWidget';
 import { 
   AlertTriangle, PackageSearch, ChevronRight, Crown, Loader2, Clock, 
   Activity, CalendarDays, Zap, ArrowUpRight, DollarSign, 
@@ -206,53 +207,10 @@ const Dashboard = () => {
         <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
         <PWAInstallBanner />
 
-        {/* --- Missing EHR Credentials Warning --- */}
-        {(role === 'admin' || role === 'manager') && (!clinicData?.ehrUsername || !clinicData?.ehrPassword) && (
-          <div className="mx-4 sm:mx-8 mt-4 animate-in slide-in-from-top-4 duration-500">
-            <div className="bg-red-500/10 border-2 border-red-500/20 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl shadow-red-500/5">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/30">
-                   <AlertTriangle size={28} />
-                </div>
-                <div>
-                   <h4 className="text-lg font-black text-red-600 italic tracking-tighter">EHR მონაცემები არ არის შეყვანილი!</h4>
-                   <p className="text-[10px] font-bold text-red-500/70 uppercase tracking-widest mt-1">თქვენ არ გაქვთ შეყვანილი EHR მონაცემები და ვერ შეძლებთ ჯანდაცვის სამინისტროს სისტემაში სინქრონიზაციას</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => navigate('/settings')}
-                className="w-full sm:w-auto px-8 py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                EHR ავტორიზაცია <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Floating Critical Requirements Widget (EHR, Contact etc.) */}
+        <CriticalAlertsWidget role={role} clinicData={clinicData} />
 
-        {/* --- Missing Phone Number Warning --- */}
-        {role === 'admin' && clinicData?.plan !== 'free' && !clinicData?.phone && (
-          <div className="mx-4 sm:mx-8 mt-4 animate-in slide-in-from-top-4 duration-500">
-            <div className="bg-red-500/10 border-2 border-red-500/20 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl shadow-red-500/5">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/30">
-                   <Phone size={28} />
-                </div>
-                <div>
-                   <h4 className="text-lg font-black text-red-600 italic tracking-tighter">საკონტაქტო ნომერი არ არის დამატებული!</h4>
-                   <p className="text-[10px] font-bold text-red-500/70 uppercase tracking-widest mt-1">SMS შეტყობინებების გასაგზავნად აუცილებელია კლინიკის ნომრის მითითება</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => navigate('/settings/portfolio')}
-                className="w-full sm:w-auto px-8 py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2"
-              >
-                პორტფოლიოში გადასვლა <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))]">
           <div className="max-w-7xl mx-auto space-y-8">
             
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">

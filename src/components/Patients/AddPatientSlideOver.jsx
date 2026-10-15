@@ -9,8 +9,10 @@ import {
 import { transliterateToGeorgian } from '../../utils/transliterateKa';
 import FormInput from '../Common/FormInput';
 import { logActivity } from '../../utils/activityLogger';
+import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 
 const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
+  useLockBodyScroll(isOpen);
   const { clinicData, userData, activeStaff } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -136,7 +138,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                   onChange={val => setFormData({...formData, fullName: transliterateToGeorgian(val)})}
                 />
 
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   <FormInput 
                     label="პირადი ნომერი (11 ნიშნა)" 
                     icon={BadgeInfo} 
@@ -149,6 +151,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                     type="date"
                     label="დაბადების თარიღი" 
                     icon={Calendar} 
+                    placeholder="mm/dd/yyyy"
                     value={formData.birthDate}
                     onChange={val => setFormData({...formData, birthDate: val})}
                   />
@@ -161,7 +164,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
               <div className="flex items-center gap-2 border-l-4 border-blue-500 pl-4">
                 <h3 className="text-xs font-black uppercase tracking-widest text-text-main">საკონტაქტო ინფორმაცია</h3>
               </div>
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <FormInput 
                   label="ტელეფონი" 
                   required 

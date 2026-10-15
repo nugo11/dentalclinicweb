@@ -32,8 +32,10 @@ import { logActivity } from "../../utils/activityLogger";
 import { sendPlannedAmbulatory, replacePlannedAmbulatory, sendCalculation } from "../../ehr-integration/ehrSoapClient";
 import { validateForEHR, EHRValidationError } from "../../ehr-integration/ehrValidationGuard";
 import { HeartPulse } from "lucide-react"; // HeartPulse for UI
+import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 
 const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
+  useLockBodyScroll(isOpen);
   const { role, activeStaff, userData, clinicData } = useAuth();
   
   // ჩახურვის უფლება: ადმინს, მენეჯერს და რეგისტრატორს შეუძლიათ ყველასი. 

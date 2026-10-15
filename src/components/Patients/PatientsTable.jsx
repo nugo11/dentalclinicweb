@@ -241,7 +241,9 @@ const PatientsTable = ({ externalSearch = "" }) => {
               <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest border-b border-border-main">
                 ბოლო ვიზიტი
               </th>
-              <th className="py-5 px-8 border-b border-border-main"></th>
+              <th className="py-5 px-8 text-[10px] font-black text-text-muted uppercase tracking-widest border-b border-border-main text-right w-64 shrink-0">
+                მოქმედება
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-main">
@@ -249,11 +251,11 @@ const PatientsTable = ({ externalSearch = "" }) => {
               currentPatients.map((patient) => (
                 <tr
                   key={patient.id}
-                  className="group hover:bg-surface-soft transition-all cursor-default"
+                  className="group hover:bg-surface-soft/80 transition-all cursor-default"
                 >
                   <td className="py-6 px-8">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-brand-purple/5 text-brand-purple flex items-center justify-center font-black group-hover:bg-brand-purple group-hover:text-white transition-all shadow-sm">
+                      <div className="w-12 h-12 rounded-2xl bg-brand-purple/5 text-brand-purple flex items-center justify-center font-black group-hover:bg-brand-purple group-hover:text-white transition-all shadow-sm shrink-0">
                         {(patient.fullName || "?")[0]}
                       </div>
                       <div>
@@ -266,7 +268,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
                       </div>
                     </div>
                   </td>
-                  <td className="py-6 px-8">
+                  <td className="py-6 px-8 whitespace-nowrap">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 text-text-main font-bold text-xs">
                         <Phone size={14} className="text-text-muted" />{" "}
@@ -279,7 +281,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
                       )}
                     </div>
                   </td>
-                  <td className="py-6 px-8">
+                  <td className="py-6 px-8 whitespace-nowrap">
                     {patient.allergies ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-red-500/20">
                         ⚠ ალერგიული
@@ -290,7 +292,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
                       </span>
                     )}
                   </td>
-                  <td className="py-6 px-8">
+                  <td className="py-6 px-8 whitespace-nowrap">
                     <div className="flex flex-col">
                       <span className="font-bold text-xs text-text-main">
                         {patient.lastVisit || "ვიზიტები არ არის"}
@@ -300,24 +302,25 @@ const PatientsTable = ({ externalSearch = "" }) => {
                       </span>
                     </div>
                   </td>
-                  <td className="py-6 px-8 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      
+                  <td className="py-6 px-8 text-right whitespace-nowrap w-64 shrink-0">
+                    <div className="flex items-center justify-end gap-2 transition-all">
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
                           openFormModal(patient);
                         }}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer"
+                        className="flex items-center gap-1.5 px-3.5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-emerald-500/20 shadow-sm active:scale-95 cursor-pointer"
+                        title="ფორმა 100-ის გენერაცია"
                       >
-                        <FileText size={14} /> ფორმა 100
+                        <FileText size={13} /> ფორმა 100
                       </button>
 
                       <button 
                         onClick={() => navigate(`/patients/${patient.id}`)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-brand-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-brand-purple/20 active:scale-95 cursor-pointer"
+                        className="flex items-center gap-1.5 px-3.5 py-2.5 bg-brand-purple text-white hover:bg-brand-deep rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-brand-purple/20 active:scale-95 cursor-pointer"
+                        title="პაციენტის რედაქტირება და ბარათი"
                       >
-                        ბარათის გახსნა <ArrowRight size={14} />
+                        <Edit3 size={13} /> რედაქტირება
                       </button>
                     </div>
                   </td>

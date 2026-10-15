@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { Search, Bell, User, Menu, Settings, LogOut, X, Book, Loader2, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, User, Menu, Settings, LogOut, X, Loader2, ArrowRight, Activity } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { useEffect, useRef } from 'react';
 import ThemeToggle from '../Common/ThemeToggle';
 
 const TopNav = ({ onMenuClick }) => {
@@ -17,20 +16,9 @@ const TopNav = ({ onMenuClick }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef(null);
+  const userMenuRef = useRef(null);
   
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const initialNotifications = [
-    { id: 1, text: "ახალი ჯავშანი: ლევან კაპანაძე", time: "5 წუთის წინ", type: "appointment" },
-    { id: 2, text: "მარაგი იწურება: სტომატოლოგიური ბჟენი", time: "1 საათის წინ", type: "inventory" }
-  ];
-
-  // ვფილტრავთ ნოთიფიკაციებს როლის მიხედვით (მაგალითად რეგისტრატორს არ მიუვა ინვენტარის შეტყობინება)
-  const hasInventoryAccess = role === 'admin' || role === 'manager' || role === 'doctor' || role === 'accountant';
-  
-  const [notifications, setNotifications] = useState(
-    initialNotifications.filter(n => n.type !== 'inventory' || hasInventoryAccess)
-  );
 
   const displayName = activeStaff?.fullName || userData?.fullName || "მომხმარებელი";
   const displayRole = activeStaff?.role || userData?.role || "პერსონალი";
@@ -47,10 +35,6 @@ const TopNav = ({ onMenuClick }) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
         navigate(`/patients?search=${encodeURIComponent(searchQuery)}`);
     }
-  };
-
-  const dismissNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
   // Live Search Logic
@@ -93,33 +77,59 @@ const TopNav = ({ onMenuClick }) => {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, userData?.clinicId]);
 
-  // Click outside to close search results
+  // Click outside and scroll to close menus
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowResults(false);
       }
-      if (showUserMenu && !event.target.closest('.user-menu-container')) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
       }
     };
+
+    const handleScroll = () => {
+      setShowUserMenu(false);
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
   }, []);
 
   return (
-    <div className="px-4 md:px-8 shrink-0 z-30 font-nino" style={{ paddingTop: 'calc(1rem + var(--safe-top))' }}>
-      <header className="h-20 md:h-22 px-6 md:px-10 flex items-center justify-between bg-surface/80 backdrop-blur-xl border border-border-main rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-        <div className="flex items-center gap-4 flex-1">
+    <div className="px-3 sm:px-4 md:px-8 shrink-0 z-30 font-nino max-w-full" style={{ paddingTop: 'calc(0.75rem + var(--safe-top))' }}>
+      <header className="h-16 sm:h-20 md:h-22 px-4 sm:px-6 md:px-10 flex items-center justify-between bg-surface/80 backdrop-blur-xl border border-border-main rounded-2xl sm:rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] gap-3">
+        {/* Left Section: Menu button, Responsive Logo, and Search */}
+        <div className="flex items-center gap-3 md:gap-4 flex-1 min-w-0">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-3 rounded-2xl border border-border-main text-text-muted hover:text-brand-purple hover:bg-surface-soft transition-all"
+            className="lg:hidden p-2 sm:p-3 rounded-xl sm:rounded-2xl border border-border-main text-text-muted hover:text-brand-purple hover:bg-surface-soft transition-all shrink-0 active:scale-95"
+            aria-label="მენიუ"
           >
-            <Menu size={20} />
+            <Menu size={18} className="sm:w-5 sm:h-5" />
           </button>
+
+          {/* Mobile Clinic Logo to return to Dashboard (Requirement 7) */}
+          <Link 
+            to="/dashboard" 
+            className="flex lg:hidden items-center gap-2 group select-none shrink-0"
+            title="მთავარი პანელი"
+          >
+            <div className="w-8 h-8 rounded-xl bg-brand-deep flex items-center justify-center text-white shadow-md shadow-brand-deep/20 group-hover:bg-brand-purple transition-colors">
+              <Activity size={16} />
+            </div>
+            <span className="text-base font-black text-text-main italic tracking-wider">
+              AiDent
+            </span>
+          </Link>
           
+          {/* Search bar for larger screens */}
           <div className="relative w-full max-w-md group hidden sm:block" ref={searchRef}>
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors" size={18} />
+            <Search className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors" size={17} />
             <input 
               type="text" 
               value={searchQuery}
@@ -127,15 +137,15 @@ const TopNav = ({ onMenuClick }) => {
               onKeyDown={handleSearch}
               onFocus={() => searchQuery.trim().length >= 2 && setShowResults(true)}
               placeholder="მოძებნე პაციენტი (სახელი, ID, ტელეფონი)..." 
-              className="w-full pl-12 pr-10 py-3.5 bg-surface-soft/50 rounded-[22px] outline-none font-bold text-[13px] text-text-main focus:bg-surface focus:ring-4 focus:ring-brand-purple/5 border border-transparent focus:border-brand-purple/20 transition-all"
+              className="w-full pl-11 md:pl-12 pr-10 py-3 md:py-3.5 bg-surface-soft/50 rounded-2xl md:rounded-[22px] outline-none font-bold text-xs md:text-[13px] text-text-main focus:bg-surface focus:ring-4 focus:ring-brand-purple/5 border border-transparent focus:border-brand-purple/20 transition-all"
             />
             {isSearching && (
-              <div className="absolute right-12 top-1/2 -translate-y-1/2">
+              <div className="absolute right-10 md:right-12 top-1/2 -translate-y-1/2">
                 <Loader2 size={14} className="animate-spin text-brand-purple" />
               </div>
             )}
             {searchQuery && (
-                <button onClick={() => { setSearchQuery(""); setShowResults(false); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-muted">
+                <button onClick={() => { setSearchQuery(""); setShowResults(false); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main">
                     <X size={14} />
                 </button>
             )}
@@ -202,91 +212,22 @@ const TopNav = ({ onMenuClick }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 md:gap-6">
-          <ThemeToggle className="flex" />
-          
-          {/* Notifications & Help & Settings */}
-          <div className="flex items-center gap-2">
-              <button 
-                onClick={() => navigate('/documentation')}
-                className="hidden md:flex items-center gap-2 px-5 py-3 bg-brand-purple/10 text-brand-purple rounded-2xl hover:bg-brand-purple hover:text-white transition-all group border border-brand-purple/20"
-                title="დახმარება"
-              >
-                <Book size={18} className="group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-black uppercase tracking-widest">დახმარება</span>
-              </button>
+        {/* Right Section: Theme Toggle, Admin Settings, and User Profile */}
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-6 shrink-0">
+          <ThemeToggle className="flex scale-90 sm:scale-100" />
 
-              <button 
-                onClick={() => navigate('/documentation')}
-                className="flex md:hidden p-3.5 bg-surface-soft text-text-muted rounded-2xl transition-all border border-transparent"
-              >
-                <Book size={20} />
-              </button>
-
-              <div className="relative">
-                <button 
-                    onClick={() => setShowNotifications(!showNotifications)}
-                    className={`relative p-3.5 rounded-2xl transition-all border ${showNotifications ? "bg-brand-purple text-white border-brand-purple" : "bg-surface-soft text-text-muted hover:text-brand-purple hover:bg-surface border-transparent hover:border-border-main"}`}
-                >
-                  <Bell size={20} className={showNotifications ? "" : "group-hover:animate-bounce"} />
-                  {notifications.length > 0 && (
-                    <span className={`absolute top-3 right-3 w-2.5 h-2.5 rounded-full border-2 border-surface ${showNotifications ? "bg-surface" : "bg-red-500"}`}></span>
-                  )}
-                </button>
-                
-                {showNotifications && (
-                    <div className="absolute right-0 top-full mt-4 w-80 bg-surface rounded-[32px] shadow-2xl border border-border-main p-6 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-                        <div className="flex justify-between items-center mb-6">
-                            <h4 className="font-black text-text-main uppercase tracking-tighter text-sm">შეტყობინებები</h4>
-                            {notifications.length > 0 && (
-                                <span className="px-2 py-0.5 bg-brand-purple/10 text-brand-purple rounded-full text-[9px] font-black uppercase">{notifications.length} ახალი</span>
-                            )}
-                        </div>
-                        
-                        <div className="space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-2">
-                            {notifications.length > 0 ? (
-                                notifications.map(notif => (
-                                    <div key={notif.id} className="flex gap-4 p-3 rounded-2xl bg-surface-soft/50 border border-border-main group/item relative transition-all">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${notif.type === 'appointment' ? 'bg-blue-500/10 text-blue-500' : 'bg-red-500/10 text-red-500'}`}>
-                                            <Bell size={18} />
-                                        </div>
-                                        <div className="flex-1 pr-4">
-                                            <p className="text-[11px] font-black text-text-main leading-tight">{notif.text}</p>
-                                            <p className="text-[9px] font-bold text-text-muted uppercase mt-1">{notif.time}</p>
-                                        </div>
-                                        <button 
-                                            onClick={() => dismissNotification(notif.id)}
-                                            className="absolute top-2 right-2 p-1 text-text-muted hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-all"
-                                        >
-                                            <X size={12} />
-                                        </button>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="py-10 text-center">
-                                    <div className="w-12 h-12 bg-surface-soft rounded-2xl flex items-center justify-center mx-auto mb-3 text-text-muted">
-                                        <Bell size={24} />
-                                    </div>
-                                    <p className="text-[10px] font-bold text-text-muted uppercase">შეტყობინებები არ არის</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-              </div>
-
-              {role === 'admin' && (
-                <button 
-                  onClick={() => navigate('/settings')}
-                  className="p-3.5 bg-surface-soft rounded-2xl text-text-muted hover:text-brand-purple hover:bg-surface border border-transparent hover:border-border-main transition-all hidden md:flex"
-                >
-                  <Settings size={20} />
-                </button>
-              )}
-          </div>
+          {role === 'admin' && (
+            <button 
+              onClick={() => navigate('/settings')}
+              className="p-2.5 sm:p-3.5 bg-surface-soft rounded-xl sm:rounded-2xl text-text-muted hover:text-brand-purple hover:bg-surface border border-transparent hover:border-border-main transition-all hidden md:flex active:scale-95"
+              title="პარამეტრები"
+            >
+              <Settings size={18} className="md:w-5 md:h-5" />
+            </button>
+          )}
           
           {/* User Profile */}
-          <div className="flex items-center gap-3 pl-6 border-l border-border-main">
+          <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4 md:pl-6 border-l border-border-main">
             <div className="text-right hidden lg:block">
               <p className="text-[13px] font-black text-text-main uppercase tracking-tighter leading-none mb-1">{displayName}</p>
               <p className="text-[10px] font-black text-brand-purple uppercase tracking-widest opacity-70">
@@ -294,29 +235,48 @@ const TopNav = ({ onMenuClick }) => {
               </p>
             </div>
             
-            <div className="relative user-menu-container">
+            <div className="relative" ref={userMenuRef}>
               <div 
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className={`w-12 h-12 md:w-14 md:h-14 rounded-[22px] flex items-center justify-center text-white shadow-xl cursor-pointer transition-all active:scale-95 ${showUserMenu ? 'bg-brand-purple' : 'bg-brand-deep shadow-brand-deep/20'}`}
+                className={`w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-xl sm:rounded-2xl md:rounded-[22px] flex items-center justify-center text-white shadow-lg cursor-pointer transition-all active:scale-95 ${showUserMenu ? 'bg-brand-purple' : 'bg-brand-deep shadow-brand-deep/20'}`}
+                aria-label="მომხმარებლის პროფილი"
               >
-                <User size={22} />
+                <User size={18} className="sm:w-5 sm:h-5 md:w-[22px] md:h-[22px]" />
               </div>
               
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-3 w-56 bg-surface rounded-[28px] shadow-2xl border border-border-main py-3 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="px-6 py-4 border-b border-border-main mb-2">
-                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">სესია</p>
-                      <p className="text-xs font-black text-text-main truncate">{displayName}</p>
-                    </div>
-                    {role === 'admin' && (
-                      <button onClick={() => { navigate('/settings'); setShowUserMenu(false); }} className="w-full px-6 py-3 text-left text-[11px] font-bold text-text-muted hover:bg-surface-soft flex items-center gap-3 transition-colors">
-                          <Settings size={14} className="text-text-muted" /> პარამეტრები
+                <>
+                  <div 
+                    className="fixed inset-0 z-40 bg-black/5 md:bg-transparent"
+                    onClick={() => setShowUserMenu(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-3 w-56 bg-surface rounded-[24px] sm:rounded-[28px] shadow-2xl border border-border-main py-3 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="px-5 sm:px-6 py-3 sm:py-4 border-b border-border-main mb-2">
+                        <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">სესია</p>
+                        <p className="text-xs font-black text-text-main truncate">{displayName}</p>
+                        <p className="text-[10px] font-bold text-brand-purple uppercase tracking-widest mt-0.5">
+                          {roleMap[displayRole] || displayRole}
+                        </p>
+                      </div>
+                      {role === 'admin' && (
+                        <button 
+                          onClick={() => { navigate('/settings'); setShowUserMenu(false); }} 
+                          className="w-full px-5 sm:px-6 py-3 text-left text-[11px] font-bold text-text-muted hover:bg-surface-soft flex items-center gap-3 transition-colors cursor-pointer"
+                        >
+                            <Settings size={14} className="text-text-muted" /> პარამეტრები
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          staffLogout();
+                        }} 
+                        className="w-full px-5 sm:px-6 py-3 text-left text-[11px] font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors cursor-pointer"
+                      >
+                          <LogOut size={14} /> სისტემიდან გამოსვლა
                       </button>
-                    )}
-                    <button onClick={staffLogout} className="w-full px-6 py-3 text-left text-[11px] font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors">
-                        <LogOut size={14} /> სისტემიდან გამოსვლა
-                    </button>
-                </div>
+                  </div>
+                </>
               )}
             </div>
           </div>

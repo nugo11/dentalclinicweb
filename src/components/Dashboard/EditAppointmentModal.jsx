@@ -4,8 +4,10 @@ import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { X, Loader2, Trash2, Edit3, AlertTriangle, Check } from 'lucide-react';
 import { transliterateToGeorgian } from '../../utils/transliterateKa';
 import { useAuth } from '../../context/AuthContext';
+import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 
 const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
+  useLockBodyScroll(isOpen);
   const { role } = useAuth();
   const isReadOnly = role === 'manager';
   const [loading, setLoading] = useState(false);
@@ -105,10 +107,10 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
 
   if (!isOpen || !appointmentData) return null;
 
-  const inputClasses = "w-full px-5 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm text-text-main focus:bg-surface border-2 border-transparent focus:border-brand-purple transition-all";
+  const inputClasses = "w-full px-3.5 sm:px-5 py-3 sm:py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm text-text-main focus:bg-surface border-2 border-transparent focus:border-brand-purple transition-all min-w-0 box-border";
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className="fixed inset-0 z-[110] flex items-end md:items-center justify-center p-0 md:p-4 overscroll-none touch-action-none">
       <div className="app-overlay fixed inset-0 bg-brand-deep/50 backdrop-blur-sm" onClick={onClose} />
       
       {/* Toast Notification */}
@@ -170,12 +172,19 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
             </div>
           ) : (
             <form onSubmit={handleUpdate} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-2 min-w-0">
                   <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">თარიღი</label>
-                  <input type="date" required disabled={isReadOnly} value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className={inputClasses} />
+                  <div className="relative min-w-0">
+                    <input type="date" required disabled={isReadOnly} value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className={inputClasses} />
+                    {!formData.date && (
+                      <span className="absolute left-3.5 sm:left-5 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-4">
+                        mm/dd/yyyy
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 min-w-0">
                   <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-2 italic">დრო</label>
                   <input type="time" required disabled={isReadOnly} value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} className={inputClasses} />
                 </div>

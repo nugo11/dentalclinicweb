@@ -116,6 +116,26 @@ export const generateForm100 = async (patient, clinicData, doctorNotes = "") => 
   doc.line(pageWidth - margin - 50, currentY, pageWidth - margin, currentY);
   doc.text("ბეჭდის ადგილი", pageWidth - margin - 50, currentY + 5);
 
+  const fileName = `forma-100-${patient.fullName || 'patient'}.pdf`;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  if (isIOS) {
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (document.body.contains(link)) document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }, 500);
+    return Promise.resolve();
+  }
+
   const blob = doc.output('blob');
   const url = URL.createObjectURL(blob);
   const iframe = document.createElement('iframe');
@@ -127,7 +147,9 @@ export const generateForm100 = async (patient, clinicData, doctorNotes = "") => 
     iframe.onload = () => {
       iframe.contentWindow.print();
       setTimeout(() => {
-        document.body.removeChild(iframe);
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
         URL.revokeObjectURL(url);
         resolve();
       }, 1500);

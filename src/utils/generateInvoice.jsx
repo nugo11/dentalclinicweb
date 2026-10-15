@@ -1,4 +1,4 @@
-export const generateInvoice = async (order, clinicData) => {
+export const generateInvoice = async (order, clinicData, targetWindow = null) => {
   const vatAmount = order.vatAmount !== undefined 
     ? Number(order.vatAmount) 
     : (order.applyVat ? (Number(order.price || 0) * 0.18) : 0);
@@ -156,12 +156,33 @@ export const generateInvoice = async (order, clinicData) => {
         </div>
         <script>
           window.onload = function() { 
-            window.print(); 
+            setTimeout(function() { window.print(); }, 200); 
           }
         </script>
       </body>
     </html>
   `;
+
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isMobile || targetWindow) {
+    const printWin = targetWindow || window.open('', '_blank');
+    if (printWin) {
+      printWin.document.open();
+      printWin.document.write(content);
+      printWin.document.close();
+      setTimeout(() => {
+        try {
+          printWin.focus();
+          printWin.print();
+        } catch (e) {
+          console.error("Print error on mobile:", e);
+        }
+      }, 500);
+      return Promise.resolve();
+    }
+  }
+
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed';
   iframe.style.right = '0';
@@ -178,7 +199,9 @@ export const generateInvoice = async (order, clinicData) => {
 
   return new Promise((resolve) => {
     setTimeout(() => {
-      document.body.removeChild(iframe);
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
       resolve();
     }, 1500);
   });

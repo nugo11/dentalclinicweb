@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -16,6 +16,7 @@ import EditAppointmentModal from "../components/Dashboard/EditAppointmentModal";
 
 const CalendarPage = () => {
   const { userData, role, activeStaff } = useAuth();
+  const calendarRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [events, setEvents] = useState([]);
@@ -165,7 +166,7 @@ const CalendarPage = () => {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-surface-soft custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 md:p-8 bg-surface-soft custom-scrollbar pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))]">
           <div className="max-w-[1600px] mx-auto h-full flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div className="flex items-center gap-4">
@@ -201,6 +202,7 @@ const CalendarPage = () => {
             {/* კალენდრის კონტეინერი */}
             <div className="flex-1 bg-surface rounded-[28px] sm:rounded-[40px] p-3 sm:p-6 border border-border-dark shadow-sm overflow-hidden calendar-container">
               <FullCalendar
+                ref={calendarRef}
                 plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                 initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
                 locales={[kaLocale]} 
@@ -208,7 +210,7 @@ const CalendarPage = () => {
                 headerToolbar={{
                   left: "prev,next today",
                   center: "title",
-                  right: isMobile ? "timeGridDay,dayGridMonth" : "timeGridDay,timeGridWeek,dayGridMonth",
+                  right: "timeGridDay,timeGridWeek,dayGridMonth",
                 }}
                 eventDisplay="block"
                 events={events}
@@ -239,9 +241,25 @@ const CalendarPage = () => {
                   setIsEditModalOpen(true);
                 }}
                 dateClick={(info) => {
+                  // თვის ხედიდან რიცხვზე დაჭერისას გადავდივართ დღის ხედზე საათობრივი განრიგის სანახავად
+                  if (info.view.type === "dayGridMonth") {
+                    const calendarApi = calendarRef.current?.getApi();
+                    if (calendarApi) {
+                      calendarApi.changeView("timeGridDay", info.date);
+                    }
+                    return;
+                  }
                   handleDateSelection(info.date);
                 }}
                 select={(info) => {
+                  // თვის ხედში მონიშვნისას გადავდივართ დღის ხედზე
+                  if (info.view.type === "dayGridMonth") {
+                    const calendarApi = calendarRef.current?.getApi();
+                    if (calendarApi) {
+                      calendarApi.changeView("timeGridDay", info.start);
+                    }
+                    return;
+                  }
                   handleDateSelection(info.start);
                 }}
               />
@@ -349,6 +367,20 @@ const CalendarPage = () => {
           border-radius: 12px !important; 
           transition: all 0.2s; 
           box-shadow: none !important;
+        }
+
+        @media (max-width: 640px) {
+          .calendar-container .fc-header-toolbar {
+            gap: 0.35rem;
+          }
+          .calendar-container .fc-toolbar-title {
+            font-size: 0.85rem !important;
+          }
+          .calendar-container .fc-button {
+            padding: 0.35rem 0.5rem !important;
+            font-size: 10px !important;
+            border-radius: 10px !important;
+          }
         }
         .calendar-container .fc-button:hover { background: var(--border-main) !important; color: var(--text-main) !important; }
         .calendar-container .fc-button-active { background: var(--color-brand-purple) !important; color: white !important; border-color: var(--color-brand-purple) !important; }

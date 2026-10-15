@@ -24,8 +24,10 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { transliterateToGeorgian, transliterateToLatin } from "../../utils/transliterateKa";
 import FormInput from "../Common/FormInput";
+import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 
 const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
+  useLockBodyScroll(isOpen);
   const { userData, activeStaff, role, clinicData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");

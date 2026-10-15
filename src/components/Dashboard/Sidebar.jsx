@@ -23,12 +23,15 @@ import {
 } from "lucide-react";
 import { auth } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
+import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { clinicData, userData, activeStaff, role, isAdmin, staffLogout } = useAuth(); 
   const [isMobile, setIsMobile] = useState(false);
+
+  useLockBodyScroll(isMobile && isOpen);
   
   const [expandedMenus, setExpandedMenus] = useState({ 
     finance: false, 
@@ -134,6 +137,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     });
   }
 
+  // დახმარება (დოკუმენტაცია): ხელმისაწვდომია ყველასთვის
+  menuItems.push({
+    icon: Book,
+    label: "დახმარება",
+    path: "/documentation",
+  });
+
   return (
     <>
       {isMobile && (
@@ -143,9 +153,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         />
       )}
       <aside
+        style={isMobile ? { paddingTop: 'calc(1.5rem + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' } : undefined}
         className={`
           app-sheet
-          ${isMobile ? "fixed left-0 top-0 h-screen m-0 rounded-none z-50" : "relative m-2 rounded-[40px]"}
+          ${isMobile ? "fixed left-0 top-0 h-screen m-0 rounded-none z-50 overscroll-contain" : "relative m-2 rounded-[40px]"}
           ${isMobile ? "w-72" : isOpen ? "w-72" : "w-24"}
           ${isMobile ? (isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-95") : "translate-x-0 opacity-100"}
           bg-brand-deep transition-all duration-300 flex flex-col p-6 shadow-2xl overflow-hidden shrink-0

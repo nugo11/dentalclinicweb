@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../../firebase';
 import { collection, addDoc, query, where, onSnapshot, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { X, Plus, Trash2, Tag, DollarSign, Loader2, Package, Minus, Search } from 'lucide-react';
+import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 
 const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
+  useLockBodyScroll(isOpen);
   const [services, setServices] = useState([]);
   const [inventory, setInventory] = useState([]); // საწყობის სია
   const [loading, setLoading] = useState(false);
