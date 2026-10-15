@@ -21,6 +21,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { canAddService, PLANS } from "../config/plans";
 import { logActivity } from "../utils/activityLogger";
+import useLockBodyScroll from "../hooks/useLockBodyScroll";
 
 const Services = () => {
   const { userData, clinicData } = useAuth();
@@ -31,6 +32,8 @@ const Services = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null); // null = ახალი, ID = რედაქტირება
+
+  useLockBodyScroll(isModalOpen);
 
   const [newService, setNewService] = useState({
     name: "",
@@ -247,8 +250,9 @@ const Services = () => {
           {/* New/Edit Service Modal */}
           {isModalOpen && (
             <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
-              <div className="fixed inset-0 bg-brand-deep/40 backdrop-blur-sm" onClick={closeModal} />
-              <div className="bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-lg p-8 md:p-10 shadow-2xl relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
+              <div className="app-overlay fixed inset-0 touch-none" onClick={closeModal} onTouchMove={(e) => e.preventDefault()} />
+              <div className="app-sheet bg-surface rounded-t-[32px] md:rounded-[40px] w-full max-w-lg p-6 md:p-10 relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] overscroll-contain custom-scrollbar">
+                <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-6 md:hidden" />
                 <h3 className="text-2xl font-black text-text-main italic mb-8">
                   {editingId ? "სერვისის რედაქტირება" : "ახალი მომსახურების დამატება"}
                 </h3>

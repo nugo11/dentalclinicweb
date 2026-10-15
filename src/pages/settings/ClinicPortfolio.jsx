@@ -7,6 +7,9 @@ import { PLANS } from "../../config/plans";
 import Sidebar from "../../components/Dashboard/Sidebar";
 import TopNav from "../../components/Dashboard/TopNav";
 import FormInput from "../../components/Common/FormInput";
+import PhoneInput from "../../components/Common/PhoneInput";
+import useLockBodyScroll from "../../hooks/useLockBodyScroll";
+import { formatPhone, cleanPhone, validatePhone } from "../../utils/phoneFormatter";
 import { 
   Globe, 
   Image as ImageIcon, 
@@ -91,6 +94,8 @@ const ClinicPortfolio = () => {
   const [userOtp, setUserOtp] = useState("");
   const [smsStatus, setSmsStatus] = useState("idle"); // idle, loading, sent, verified
   const [resendTimer, setResendTimer] = useState(0);
+
+  useLockBodyScroll(showSmsModal);
 
   useEffect(() => {
     // შემოწმება localStorage-დან
@@ -310,14 +315,17 @@ const ClinicPortfolio = () => {
     if (!isAdmin || !clinicData?.id) return;
 
     // ტელეფონის ვალიდაცია
-    const cleanPhone = formData.phone.replace(/\D/g, "");
-    if (cleanPhone && (cleanPhone.length !== 9 || !cleanPhone.startsWith("5"))) {
-      setToast({ type: "error", text: "ტელეფონის ნომერი უნდა იყოს 9 ნიშნა და იწყებოდეს 5-ით" });
-      return;
+    const cleanPhoneDigits = cleanPhone(formData.phone);
+    if (cleanPhoneDigits) {
+      const phoneErr = validatePhone(formData.phone, false);
+      if (phoneErr) {
+        setToast({ type: "error", text: phoneErr });
+        return;
+      }
     }
 
-    // თუ ნომერი შეიცვალა და ჯერ არ არის ვერიფიცირებული
-    if (cleanPhone && cleanPhone !== clinicData.phone && smsStatus !== "verified") {
+    // თუ ნომერი მობილურია, შეიცვალა და ჯერ არ არის ვერიფიცირებული
+    if (cleanPhoneDigits && cleanPhoneDigits.startsWith("5") && cleanPhoneDigits !== clinicData.phone && smsStatus !== "verified") {
       setShowSmsModal(true);
       
       const lastSent = localStorage.getItem(`sms_cooldown_${cleanPhone}`);
@@ -519,15 +527,12 @@ const ClinicPortfolio = () => {
                      </h3>
                      <div className="space-y-6">
                         <div className="relative group">
-                           <FormInput 
+                           <PhoneInput 
                             label="ტელეფონის ნომერი" 
-                            icon={Phone} 
-                            placeholder="5XXXXXXXX"
-                            maxLength={9}
                             value={formData.phone} 
-                            onChange={val => {
-                              const cleaned = val.replace(/\D/g, "").slice(0, 9);
-                              setFormData({...formData, phone: cleaned});
+                            onChange={(formatted) => {
+                              setFormData({...formData, phone: formatted});
+                              setSmsStatus("idle");
                             }} 
                             className={!features.canShowPhone ? "opacity-30 pointer-events-none" : ""} 
                            />
@@ -649,8 +654,8 @@ const ClinicPortfolio = () => {
     {/* SMS Verification Modal */}
     {showSmsModal && (
       <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-        <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" />
-        <div className="bg-surface rounded-[40px] w-full max-w-sm p-10 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+        <div className="app-overlay fixed inset-0 touch-none" onClick={() => setShowSmsModal(false)} onTouchMove={(e) => e.preventDefault()} />
+        <div className="app-sheet bg-surface rounded-[40px] w-full max-w-sm p-10 relative z-10 text-center animate-in zoom-in-95 duration-200">
           <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6">
             <Phone size={40} />
           </div>

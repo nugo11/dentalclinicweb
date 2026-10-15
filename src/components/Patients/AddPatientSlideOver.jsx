@@ -8,8 +8,10 @@ import {
 } from 'lucide-react';
 import { transliterateToGeorgian } from '../../utils/transliterateKa';
 import FormInput from '../Common/FormInput';
+import PhoneInput from '../Common/PhoneInput';
 import { logActivity } from '../../utils/activityLogger';
 import useLockBodyScroll from '../../hooks/useLockBodyScroll';
+import { validatePhone, formatPhone } from '../../utils/phoneFormatter';
 
 const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
   useLockBodyScroll(isOpen);
@@ -40,14 +42,14 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
     const errors = {};
     if (!formData.fullName) errors.fullName = true;
     
-    const cleanPhone = formData.phone.replace(/\D/g, "");
-    if (!cleanPhone || cleanPhone.length !== 9 || !cleanPhone.startsWith("5")) {
-      errors.phone = true;
+    const phoneError = validatePhone(formData.phone, true);
+    if (phoneError) {
+      errors.phone = phoneError;
     }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      setTimeout(() => setFormErrors({}), 2000);
+      setTimeout(() => setFormErrors({}), 3000);
       return;
     }
 
@@ -96,9 +98,9 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
 
   return (
     <>
-      <div className="app-overlay fixed inset-0 bg-brand-deep/30 backdrop-blur-sm z-40 animate-in fade-in duration-300" onClick={onClose} />
+      <div className="app-overlay fixed inset-0 touch-none z-40 animate-in fade-in duration-300" onClick={onClose} onTouchMove={(e) => e.preventDefault()} />
       
-      <div className="app-sheet fixed top-0 right-0 w-full max-w-xl h-full bg-surface shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-500 font-nino">
+      <div className="app-sheet fixed top-0 right-0 w-full max-w-xl h-full bg-surface shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-500 font-nino overscroll-contain">
         
         {/* Header */}
         <div className="p-8 border-b border-border-main flex items-center justify-between bg-surface-soft/50">
@@ -113,12 +115,12 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-3 hover:bg-red-500/10 text-text-muted hover:text-red-500 rounded-xl transition-all">
+          <button onClick={onClose} className="p-3 hover:bg-red-500/10 text-text-muted hover:text-red-500 rounded-xl transition-all cursor-pointer">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto custom-scrollbar overscroll-contain">
           <div className="p-8 space-y-10">
             
             {/* სექცია 1: პირადი ინფორმაცია */}
@@ -165,14 +167,12 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                 <h3 className="text-xs font-black uppercase tracking-widest text-text-main">საკონტაქტო ინფორმაცია</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                <FormInput 
+                <PhoneInput 
                   label="ტელეფონი" 
                   required 
-                  icon={Phone} 
-                  placeholder="599 XX XX XX"
                   value={formData.phone}
                   error={formErrors.phone}
-                  onChange={val => setFormData({...formData, phone: val})}
+                  onChange={(formatted) => setFormData({...formData, phone: formatted})}
                 />
                 <FormInput 
                   label="ელ-ფოსტა" 

@@ -16,6 +16,7 @@ import TopNav from "../components/Dashboard/TopNav";
 import { useAuth } from "../context/AuthContext"; 
 import { canAddInventoryItem } from "../config/plans"; 
 import { logActivity } from "../utils/activityLogger";
+import useLockBodyScroll from "../hooks/useLockBodyScroll";
 import {
   PackageSearch,
   Plus,
@@ -45,6 +46,8 @@ const Inventory = () => {
   const [filter, setFilter] = useState("ყველა");
   const [formErrors, setFormErrors] = useState({});
   const [deleteTargetId, setDeleteTargetId] = useState(null);
+
+  useLockBodyScroll(isModalOpen || !!deleteTargetId);
 
   // ფორმის State
   const [formData, setFormData] = useState({
@@ -312,8 +315,9 @@ const Inventory = () => {
           {/* Modal */}
           {isModalOpen && (
             <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
-              <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-              <div className="bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-lg p-8 md:p-10 shadow-2xl relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
+              <div className="app-overlay fixed inset-0 touch-none" onClick={() => setIsModalOpen(false)} onTouchMove={(e) => e.preventDefault()} />
+              <div className="app-sheet bg-surface rounded-t-[32px] md:rounded-[40px] w-full max-w-lg p-6 md:p-10 relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] overscroll-contain custom-scrollbar">
+                <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-6 md:hidden" />
                 <div className="mb-8 text-center">
                   <h3 className="text-2xl font-black text-text-main italic tracking-tighter">{editingItem ? "მასალის რედაქტირება" : "ახალი მასალა"}</h3>
                   {formErrors.general && <p className="text-[11px] text-red-500 font-black uppercase mt-2">{formErrors.general}</p>}
@@ -368,9 +372,9 @@ const Inventory = () => {
         </main>
 
           {deleteTargetId && (
-            <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
-              <div style={{position:'fixed',inset:0,background:'rgba(15,23,42,0.5)',backdropFilter:'blur(4px)'}} onClick={() => setDeleteTargetId(null)} />
-              <div className="bg-surface rounded-[40px] w-full max-w-sm p-10 shadow-2xl relative z-10 text-center animate-in zoom-in-95 duration-200">
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+              <div className="app-overlay fixed inset-0 touch-none" onClick={() => setDeleteTargetId(null)} onTouchMove={(e) => e.preventDefault()} />
+              <div className="app-sheet bg-surface rounded-[40px] w-full max-w-sm p-10 relative z-10 text-center animate-in zoom-in-95 duration-200">
                 <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
                   <Trash2 size={32} />
                 </div>

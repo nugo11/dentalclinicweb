@@ -25,6 +25,7 @@ import { useAuth } from "../../context/AuthContext";
 import { transliterateToGeorgian, transliterateToLatin } from "../../utils/transliterateKa";
 import FormInput from "../Common/FormInput";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
+import { formatPhone, cleanPhone, validatePhone } from "../../utils/phoneFormatter";
 
 const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   useLockBodyScroll(isOpen);
@@ -119,26 +120,28 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   const handleQuickAdd = async () => {
     if (!searchTerm) return;
     
-    // ტელეფონის ვალიდაცია
-    const cleanPhone = quickAddPhone.replace(/\D/g, "");
-    if (cleanPhone.length !== 9 || !cleanPhone.startsWith("5")) {
-      setFormErrors({ ...formErrors, quickAddPhone: true });
-      setToast({ show: true, message: "ტელეფონის ნომერი უნდა იყოს 9 ნიშნა და იწყებოდეს 5-ით" });
+    // ტელეფონის ვალიდაცია (მობილური 9 ციფრი, ქალაქის 10 ციფრი)
+    const phoneError = validatePhone(quickAddPhone, true);
+    if (phoneError) {
+      setFormErrors({ ...formErrors, quickAddPhone: phoneError });
+      setToast({ show: true, message: phoneError });
       setTimeout(() => setToast({ show: false, message: "" }), 3000);
       return;
     }
+
+    const cleaned = cleanPhone(quickAddPhone);
 
     setLoading(true);
     try {
       const clinicId = userData?.clinicId;
       const docRef = await addDoc(collection(db, "patients"), {
         fullName: searchTerm,
-        phone: cleanPhone,
+        phone: cleaned,
         clinicId,
         createdAt: serverTimestamp(),
         status: "active",
       });
-      setSelectedPatient({ id: docRef.id, fullName: searchTerm, phone: cleanPhone });
+      setSelectedPatient({ id: docRef.id, fullName: searchTerm, phone: cleaned });
       setSearchTerm(searchTerm);
       setSearchResults([]);
       setIsQuickAdding(false);
@@ -291,7 +294,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   return (
     <div className="fixed inset-0 z-[110] flex items-end md:items-center justify-center p-0 md:p-4">
 
-      <div className="app-overlay fixed inset-0 bg-brand-deep/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="app-overlay fixed inset-0 touch-none" onClick={onClose} onTouchMove={(e) => e.preventDefault()} />
 
       {/* Toast Notification */}
       {toast.show && (
@@ -303,8 +306,9 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         </div>
       )}
 
-      <div className="app-sheet bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-lg shadow-2xl relative z-10 overflow-visible font-nino animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
-        <div className="p-5 md:p-8 border-b border-border-main flex justify-between items-center bg-surface-soft/50 rounded-t-[28px] md:rounded-t-[40px]">
+      <div className="app-sheet bg-surface rounded-t-[32px] md:rounded-[40px] w-full max-w-lg shadow-2xl relative z-10 overflow-visible font-nino animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2.5 md:hidden" />
+        <div className="p-5 md:p-8 border-b border-border-main flex justify-between items-center bg-surface-soft/50 rounded-t-[32px] md:rounded-t-[40px]">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${isExternal ? "bg-slate-500 text-white shadow-slate-500/20" : "bg-brand-purple text-white shadow-brand-purple/20"}`}>
               {isExternal ? <Building2 size={24} /> : <CalendarDays size={24} />}
@@ -321,7 +325,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 md:p-8 space-y-6 overflow-y-auto max-h-[80vh] md:max-h-[70vh] custom-scrollbar">
+        <form onSubmit={handleSubmit} className="p-5 md:p-8 space-y-6 overflow-y-auto max-h-[80vh] md:max-h-[70vh] overscroll-contain custom-scrollbar">
           {/* მხოლოდ ექიმებს შეუძლიათ სხვა კლინიკის ჯავშნები */}
           {!isReceptionist && (
             <div className="flex p-1 bg-surface-soft rounded-2xl">
@@ -366,31 +370,49 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
                   )}
                   {isQuickAdding && (
                     <div className="p-4 space-y-3 bg-surface-soft/50 rounded-xl animate-in fade-in zoom-in-95 duration-200">
-                       <p className="text-[9px] font-black uppercase tracking-widest text-text-muted ml-2">შეიყვანეთ ტელეფონი</p>
+                       <div className="flex items-center justify-between ml-2">
+                         <p className="text-[9px] font-black uppercase tracking-widest text-text-muted">შეიყვანეთ ტელეფონი</p>
+                         {quickAddPhone && (
+                           <span className="text-[9px] font-bold text-text-muted">
+                             {cleanPhone(quickAddPhone).startsWith("5") 
+                               ? `მობილური (${cleanPhone(quickAddPhone).length}/9)` 
+                               : `ქალაქის (${cleanPhone(quickAddPhone).length}/10)`}
+                           </span>
+                         )}
+                       </div>
                        <div className="flex gap-2">
                           <div className="relative flex-1">
-                            <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+                            <Phone size={16} className={`absolute left-4 top-1/2 -translate-y-1/2 ${formErrors.quickAddPhone ? "text-red-500" : "text-text-muted"}`} />
                             <input 
                               type="tel" 
-                              maxLength={9}
-                              placeholder="5XXXXXXXX"
+                              maxLength={15}
+                              placeholder="5XX XX XX XX ან 032 2 11 00 11"
                               value={quickAddPhone}
-                              onChange={(e) => setQuickAddPhone(e.target.value.replace(/\D/g, ""))}
-                              className={`w-full pl-10 pr-4 py-3 bg-surface border-2 rounded-xl outline-none font-bold text-sm transition-all ${formErrors.quickAddPhone ? "border-red-500" : "border-transparent focus:border-brand-purple"}`}
+                              onChange={(e) => {
+                                const formatted = formatPhone(e.target.value);
+                                setQuickAddPhone(formatted);
+                                if (formErrors.quickAddPhone) {
+                                  setFormErrors({ ...formErrors, quickAddPhone: undefined });
+                                }
+                              }}
+                              className={`w-full pl-10 pr-4 py-3 bg-surface border-2 rounded-xl outline-none font-bold text-sm transition-all ${formErrors.quickAddPhone ? "border-red-500 bg-red-500/10" : "border-border-main focus:border-brand-purple"}`}
                             />
                           </div>
                           <button 
                             type="button" 
                             onClick={handleQuickAdd}
                             disabled={loading}
-                            className="px-6 bg-brand-purple text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-purple/20"
+                            className="px-6 bg-brand-purple text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-purple/20 hover:brightness-110 cursor-pointer"
                           >
                             {loading ? <Loader2 className="animate-spin" size={16} /> : "შენახვა"}
                           </button>
-                          <button type="button" onClick={() => setIsQuickAdding(false)} className="p-3 text-text-muted hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all">
+                          <button type="button" onClick={() => setIsQuickAdding(false)} className="p-3 text-text-muted hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all cursor-pointer">
                              <X size={16} />
                           </button>
                        </div>
+                       {formErrors.quickAddPhone && (
+                         <p className="text-[9px] font-black text-red-500 uppercase tracking-widest ml-2">{formErrors.quickAddPhone}</p>
+                       )}
                     </div>
                   )}
                 </div>

@@ -111,7 +111,7 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
 
   return (
     <div className="fixed inset-0 z-[110] flex items-end md:items-center justify-center p-0 md:p-4 overscroll-none touch-action-none">
-      <div className="app-overlay fixed inset-0 bg-brand-deep/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="app-overlay fixed inset-0 touch-none" onClick={onClose} onTouchMove={(e) => e.preventDefault()} />
       
       {/* Toast Notification */}
       {toast.show && (
@@ -123,7 +123,8 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
         </div>
       )}
 
-      <div className="app-sheet bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-md shadow-2xl relative z-10 overflow-hidden font-nino animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
+      <div className="app-sheet bg-surface rounded-t-[32px] md:rounded-[40px] w-full max-w-md shadow-2xl relative z-10 overflow-hidden font-nino animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overscroll-contain">
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2.5 md:hidden" />
         
         {/* Header */}
         <div className="p-5 md:p-8 border-b border-border-main flex justify-between items-center bg-surface-soft/50">

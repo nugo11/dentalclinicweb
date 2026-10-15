@@ -9,6 +9,8 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, collection, getDoc, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
+import { useLockBodyScroll } from "../hooks/useLockBodyScroll";
+import { formatPhone, cleanPhone, validatePhone } from "../utils/phoneFormatter";
 import { 
   Activity, Mail, Lock, ArrowRight, Loader2, Eye, EyeOff, 
   Building2, ShieldCheck, ChevronLeft, User, 
@@ -63,6 +65,8 @@ const AuthPage = () => {
   const [resendTimer, setResendTimer] = useState(0);
   const [recoveredLoginName, setRecoveredLoginName] = useState("");
   const [copied, setCopied] = useState(false);
+
+  useLockBodyScroll(showSmsModal);
   React.useEffect(() => {
     // შემოწმება localStorage-დან
     const lastSent = localStorage.getItem(`sms_cooldown_${phone}`);
@@ -126,11 +130,11 @@ const AuthPage = () => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) errors.email = "შეიყვანეთ სწორი ელ-ფოსტა (@ და .)";
         
-        const phoneRegex = /^5\d{8}$/;
-        if (!phone.trim()) {
-            errors.phone = "მიუთითეთ ტელეფონის ნომერი";
-        } else if (!phoneRegex.test(phone.replace(/\D/g, ""))) {
-            errors.phone = "უნდა იწყებოდეს 5-ით და შეიცავდეს 9 ციფრს";
+        const phoneValidation = validatePhone(phone, true);
+        if (!phoneValidation.isValid) {
+            errors.phone = phoneValidation.message;
+        } else if (!cleanPhone(phone).startsWith("5")) {
+            errors.phone = "რეგისტრაციისთვის აუცილებელია მობილურის ნომერი (5XX...) SMS კოდის მისაღებად";
         }
 
         const latinRegex = /^[a-zA-Z0-9-]+$/;
@@ -207,8 +211,13 @@ const AuthPage = () => {
           }
 
           // 2. ვამოწმებთ ტელეფონის ნომერს
-          const phoneQuery = query(collection(db, "users"), where("phone", "==", phone));
-          const phoneSnap = await getDocs(phoneQuery);
+          const cleanedPhone = cleanPhone(phone);
+          let phoneQuery = query(collection(db, "users"), where("phone", "==", cleanedPhone));
+          let phoneSnap = await getDocs(phoneQuery);
+          if (phoneSnap.empty && phone !== cleanedPhone) {
+              phoneQuery = query(collection(db, "users"), where("phone", "==", phone));
+              phoneSnap = await getDocs(phoneQuery);
+          }
           if (!phoneSnap.empty) {
               setFormErrors({ phone: "ეს ტელეფონის ნომერი უკვე რეგისტრირებულია" });
               setIsLoading(false);
@@ -262,10 +271,15 @@ const AuthPage = () => {
   };
 
   const checkPhoneUniqueness = async (phoneToTest) => {
-    if (!phoneToTest || phoneToTest.length < 9) return;
+    const cleaned = cleanPhone(phoneToTest);
+    if (!cleaned || cleaned.length < 9) return;
     try {
-      const q = query(collection(db, "users"), where("phone", "==", phoneToTest));
-      const snap = await getDocs(q);
+      let q = query(collection(db, "users"), where("phone", "==", cleaned));
+      let snap = await getDocs(q);
+      if (snap.empty && phoneToTest !== cleaned) {
+        q = query(collection(db, "users"), where("phone", "==", phoneToTest));
+        snap = await getDocs(q);
+      }
       if (!snap.empty) {
         setFormErrors(prev => ({ ...prev, phone: "ეს ტელეფონის ნომერი უკვე რეგისტრირებულია" }));
       }
@@ -360,7 +374,7 @@ const AuthPage = () => {
         const pinHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
         const newUser = {
-          fullName, email: email.toLowerCase(), phone, clinicId: generatedClinicId,
+          fullName, email: email.toLowerCase(), phone: cleanPhone(phone), clinicId: generatedClinicId,
           role: "admin", adminPinHash: pinHash,
           createdAt: new Date().toISOString(),
         };
@@ -412,10 +426,14 @@ const AuthPage = () => {
   };
 
   const handleSendSms = async () => {
-    let formattedPhone = phone.trim();
+    const cleaned = cleanPhone(phone);
+    if (!cleaned.startsWith("5") || cleaned.length !== 9) {
+      setFormErrors(prev => ({ ...prev, phone: "SMS-ისთვის საჭიროა 9-ნიშნა მობილურის ნომერი (მაგ: 595 99 98 62)" }));
+      return;
+    }
     
     // სპამის პრევენცია - შემოწმება გაგზავნამდე
-    const lastSent = localStorage.getItem(`sms_cooldown_${phone}`);
+    const lastSent = localStorage.getItem(`sms_cooldown_${cleaned}`);
     if (lastSent) {
         const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
         if (remaining > 0) {
@@ -425,16 +443,7 @@ const AuthPage = () => {
         }
     }
     
-    // ქართული ნომრის ვალიდაცია
-    const phoneRegex = /^(?:\+?995)?(5\d{8})$/;
-    const match = formattedPhone.match(phoneRegex);
-    
-    if (!match) {
-      setFormErrors(prev => ({ ...prev, phone: "არასწორი ფორმატი. მაგ: 555123456" }));
-      return;
-    }
-    
-    const finalPhone = "995" + match[1];
+    const finalPhone = "995" + cleaned;
     setFormErrors(prev => ({ ...prev, phone: undefined, general: undefined }));
     setSmsStatus("loading");
     
@@ -586,26 +595,28 @@ const AuthPage = () => {
                       <InputField icon={User} placeholder="სახელი და გვარი" value={fullName} onChange={setFullName} error={formErrors.fullName} />
                       <InputField 
                           icon={Phone} 
-                          placeholder="ტელეფონი (მაგ: 555123456)" 
+                          placeholder="ტელეფონი (მაგ: 595 99 98 62)" 
                           value={phone} 
                           onChange={(v) => { 
-                              const cleaned = v.replace(/\D/g, '').slice(0, 9);
-                              setPhone(cleaned);
+                              const formatted = formatPhone(v);
+                              setPhone(formatted);
                               setSmsStatus("idle");
                               setUserOtp("");
                               
-                              if (cleaned.length > 0 && cleaned[0] !== '5') {
-                                  setFormErrors(prev => ({...prev, phone: "ნომერი უნდა იწყებოდეს 5-ით"}));
-                              } else if (cleaned.length === 9) {
-                                  setFormErrors(prev => ({...prev, phone: undefined}));
-                              } else if (formErrors.phone === "ნომერი უნდა იწყებოდეს 5-ით" && (cleaned.length === 0 || cleaned[0] === '5')) {
+                              const validation = validatePhone(formatted, false);
+                              if (!validation.isValid && formatted) {
+                                  setFormErrors(prev => ({...prev, phone: validation.message}));
+                              } else {
                                   setFormErrors(prev => ({...prev, phone: undefined}));
                               }
                           }} 
                           onBlur={() => {
-                              if (phone.length > 0 && phone.length < 9) {
-                                  setFormErrors(prev => ({...prev, phone: "ნომერი არასწორია (უნდა შეიცავდეს 9 ციფრს)"}));
-                              } else if (phone.length === 9) {
+                              const validation = validatePhone(phone, true);
+                              if (!validation.isValid) {
+                                  setFormErrors(prev => ({...prev, phone: validation.message}));
+                              } else if (!cleanPhone(phone).startsWith("5")) {
+                                  setFormErrors(prev => ({...prev, phone: "რეგისტრაციისთვის აუცილებელია მობილურის ნომერი (5XX...)"}));
+                              } else {
                                   checkPhoneUniqueness(phone);
                               }
                           }}
@@ -841,18 +852,32 @@ const AuthPage = () => {
 
               <form onSubmit={async (e) => {
                 e.preventDefault();
-                if (!phone || phone.length < 9) {
-                  setFormErrors({ phone: "შეიყვანეთ სწორი ტელეფონის ნომერი" });
+                const cleaned = cleanPhone(phone);
+                const validation = validatePhone(phone, true);
+                if (!validation.isValid) {
+                  setFormErrors({ phone: validation.message });
+                  return;
+                }
+                if (!cleaned.startsWith("5")) {
+                  setFormErrors({ phone: "SMS-ისთვის საჭიროა 9-ნიშნა მობილურის ნომერი" });
                   return;
                 }
                 setIsLoading(true);
                 try {
                   // ვეძებთ ადმინისტრატორს ამ ტელეფონით
-                  let q = query(collection(db, "users"), where("phone", "==", phone), where("role", "==", "admin"));
+                  let q = query(collection(db, "users"), where("phone", "==", cleaned), where("role", "==", "admin"));
                   let snap = await getDocs(q);
+                  if (snap.empty && phone !== cleaned) {
+                    q = query(collection(db, "users"), where("phone", "==", phone), where("role", "==", "admin"));
+                    snap = await getDocs(q);
+                  }
                   
                   // თუ ადმინისტრატორი არ მოიძებნა, ვეძებთ ნებისმიერ მომხმარებელს ამ ტელეფონით
                   if (snap.empty) {
+                    q = query(collection(db, "users"), where("phone", "==", cleaned));
+                    snap = await getDocs(q);
+                  }
+                  if (snap.empty && phone !== cleaned) {
                     q = query(collection(db, "users"), where("phone", "==", phone));
                     snap = await getDocs(q);
                   }
@@ -894,7 +919,7 @@ const AuthPage = () => {
                   setGeneratedOtp(otp);
                   
                   // Send SMS via UBill API
-                  const finalPhone = "995" + phone;
+                  const finalPhone = "995" + cleaned;
                   const apiKey = import.meta.env.VITE_UBILL_API_KEY;
                   const response = await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
                     method: "POST",
@@ -922,9 +947,18 @@ const AuthPage = () => {
               }} className="space-y-6">
                 <InputField 
                     icon={Phone} 
-                    placeholder="ტელეფონი (მაგ: 555123456)" 
+                    placeholder="ტელეფონი (მაგ: 595 99 98 62)" 
                     value={phone} 
-                    onChange={(v) => setPhone(v.replace(/\D/g, '').slice(0, 9))}
+                    onChange={(v) => {
+                      const formatted = formatPhone(v);
+                      setPhone(formatted);
+                      const validation = validatePhone(formatted, false);
+                      if (!validation.isValid && formatted) {
+                        setFormErrors(prev => ({ ...prev, phone: validation.message }));
+                      } else {
+                        setFormErrors(prev => ({ ...prev, phone: undefined }));
+                      }
+                    }}
                     error={formErrors.phone} 
                 />
 
@@ -1059,9 +1093,9 @@ const AuthPage = () => {
 
     {/* --- SMS Verification Modal --- */}
     {showSmsModal && (
-        <div className="fixed inset-0 bg-surface-deep/80 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-surface w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 sm:p-8 pb-10 sm:pb-8 shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
-             <div className="w-12 h-1.5 bg-border-main rounded-full mx-auto mb-6 sm:hidden" />
+        <div className="fixed inset-0 app-overlay z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 touch-none">
+          <div className="bg-surface w-full max-w-md rounded-t-[32px] sm:rounded-[32px] p-6 sm:p-8 pb-10 sm:pb-8 app-sheet sm:app-modal-card overscroll-contain animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+             <div className="w-14 h-1.5 bg-border-main/80 rounded-full mx-auto mb-6 sm:hidden shrink-0" />
              <div className="text-center mb-8">
                <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-full flex items-center justify-center mx-auto mb-4">
                   <ShieldCheck size={40} />

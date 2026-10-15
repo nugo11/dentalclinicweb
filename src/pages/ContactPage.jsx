@@ -3,14 +3,22 @@ import { Helmet } from "react-helmet-async";
 import MainHeader from "../components/Common/MainHeader";
 import { 
   Mail, Phone, MapPin, Send, MessageSquare, 
-  Clock, Globe, ArrowRight, CheckCircle2, Sparkles
+  Clock, Globe, ArrowRight, CheckCircle2, Sparkles, AlertCircle
 } from "lucide-react";
+import { formatPhone, cleanPhone, validatePhone } from "../utils/phoneFormatter";
 
 const ContactPage = ({ user }) => {
   const [formStatus, setFormStatus] = useState(null); // 'sending', 'sent', null
+  const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const err = validatePhone(phone, true);
+    if (err) {
+      setPhoneError(err);
+      return;
+    }
     setFormStatus('sending');
     setTimeout(() => setFormStatus('sent'), 1500);
   };
@@ -147,7 +155,24 @@ const ContactPage = ({ user }) => {
                        </div>
                        <div className="space-y-3">
                           <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-2 italic">ტელეფონი</label>
-                          <input required type="tel" placeholder="+995" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-3xl px-8 py-5 outline-none font-bold text-sm transition-all focus:bg-surface shadow-sm" />
+                          <input 
+                             required 
+                             type="tel" 
+                             maxLength={15}
+                             placeholder="5XX XX XX XX ან 032 2 11 00 11" 
+                             value={phone}
+                             onChange={(e) => {
+                               const formatted = formatPhone(e.target.value);
+                               setPhone(formatted);
+                               if (phoneError) setPhoneError("");
+                             }}
+                             className={`w-full bg-surface-soft border-2 rounded-3xl px-8 py-5 outline-none font-bold text-sm transition-all focus:bg-surface shadow-sm ${phoneError ? "border-red-500 bg-red-500/10" : "border-transparent focus:border-brand-purple"}`} 
+                           />
+                           {phoneError && (
+                             <p className="text-[9px] font-black text-red-500 uppercase tracking-widest ml-2 flex items-center gap-1">
+                               <AlertCircle size={12} /> {phoneError}
+                             </p>
+                           )}
                        </div>
                      </div>
                      

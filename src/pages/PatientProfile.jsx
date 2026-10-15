@@ -31,6 +31,8 @@ import DentalChart from "../components/Patients/DentalChart/DentalChart";
 import { useAuth } from "../context/AuthContext";
 import { transliterateToGeorgian } from "../utils/transliterateKa";
 import { logActivity } from "../utils/activityLogger";
+import useLockBodyScroll from "../hooks/useLockBodyScroll";
+import { formatPhone, cleanPhone, validatePhone } from "../utils/phoneFormatter";
 
 const PatientProfile = () => {
   const { id } = useParams();
@@ -43,6 +45,8 @@ const PatientProfile = () => {
   const [patientData, setPatientData] = useState(null);
   const [selectedTooth, setSelectedTooth] = useState(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+
+  useLockBodyScroll(showDeleteConfirm || isStatusModalOpen);
   const [toothComment, setToothComment] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -72,6 +76,13 @@ const PatientProfile = () => {
   }, [id, navigate, userData?.clinicId, currentUser?.uid]);
 
   const handleUpdate = async () => {
+    if (patientData?.phone) {
+      const phoneErr = validatePhone(patientData.phone, false);
+      if (phoneErr) {
+        alert(phoneErr);
+        return;
+      }
+    }
     setActionLoading(true);
     try {
       const clinicId = userData?.clinicId || currentUser?.uid;
@@ -80,7 +91,11 @@ const PatientProfile = () => {
         return;
       }
       const patientRef = doc(db, "patients", id);
-      await updateDoc(patientRef, patientData);
+      const dataToSave = {
+        ...patientData,
+        phone: patientData.phone ? formatPhone(patientData.phone) : ""
+      };
+      await updateDoc(patientRef, dataToSave);
       
       // LOG ACTIVITY
       await logActivity(clinicId, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'patient_update', `განახლდა პაციენტის (${patientData.fullName}) მონაცემები`, { patientId: id, patientName: patientData.fullName });
@@ -433,10 +448,11 @@ const PatientProfile = () => {
           {showDeleteConfirm && (
             <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
               <div
-                className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md"
+                className="app-overlay fixed inset-0 touch-none"
                 onClick={() => setShowDeleteConfirm(false)}
+                onTouchMove={(e) => e.preventDefault()}
               />
-              <div className="bg-surface rounded-[40px] w-full max-w-sm p-10 shadow-2xl relative z-10 text-center animate-in zoom-in-95 duration-200">
+              <div className="app-sheet bg-surface rounded-[40px] w-full max-w-sm p-10 relative z-10 text-center animate-in zoom-in-95 duration-200">
                 <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
                   <AlertTriangle size={40} />
                 </div>
@@ -470,12 +486,14 @@ const PatientProfile = () => {
 
           {/* Tooth Status Modal */}
           {isStatusModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
               <div
-                className="fixed inset-0 bg-brand-deep/40 backdrop-blur-sm"
+                className="app-overlay fixed inset-0 touch-none"
                 onClick={() => setIsStatusModalOpen(false)}
+                onTouchMove={(e) => e.preventDefault()}
               />
-              <div className="bg-surface rounded-[32px] w-full max-w-md p-8 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200">
+              <div className="app-sheet bg-surface rounded-t-[32px] md:rounded-[32px] w-full max-w-md p-6 md:p-8 relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] overscroll-contain custom-scrollbar">
+                <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4 md:hidden" />
                 <div className="flex justify-between items-center mb-6">
                   <div>
                     <h3 className="text-xl font-black text-text-main italic">
@@ -583,44 +601,67 @@ const InfoBlock = ({
   onChange,
   type = "text",
   options = [],
-}) => (
-  <div className="bg-surface p-6 rounded-[28px] border border-border-main shadow-sm group">
-    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest mb-3 block italic">
-      {label}
-    </label>
-    <div className="flex items-center gap-3">
-      <div className="p-2.5 bg-surface-soft rounded-xl text-text-muted group-focus-within:text-brand-purple transition-colors">
-        <Icon size={18} />
+}) => {
+  const isPhone = type === "phone" || (label && label.toLowerCase().includes("ტელეფონ"));
+  const displayValue = isPhone && value ? formatPhone(value) : value;
+
+  return (
+    <div className="bg-surface p-6 rounded-[28px] border border-border-main shadow-sm group">
+      <div className="flex items-center justify-between mb-3">
+        <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block italic">
+          {label}
+        </label>
+        {isPhone && editable && value && (
+          <span className="text-[9px] font-bold text-text-muted italic">
+            {cleanPhone(value).startsWith("5")
+              ? `მობილური (${cleanPhone(value).length}/9)`
+              : `ქალაქის (${cleanPhone(value).length}/10)`}
+          </span>
+        )}
       </div>
-      {editable ? (
-        type === "select" ? (
-          <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm cursor-pointer"
-          >
-            <option value="">აირჩიე...</option>
-            {options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+      <div className="flex items-center gap-3">
+        <div className="p-2.5 bg-surface-soft rounded-xl text-text-muted group-focus-within:text-brand-purple transition-colors">
+          <Icon size={18} />
+        </div>
+        {editable ? (
+          type === "select" ? (
+            <select
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm cursor-pointer"
+            >
+              <option value="">აირჩიე...</option>
+              {options.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : isPhone ? (
+            <input
+              type="tel"
+              maxLength={15}
+              placeholder="5XX XX XX XX ან 032 2 11 00 11"
+              value={formatPhone(value)}
+              onChange={(e) => onChange(formatPhone(e.target.value))}
+              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm"
+            />
+          ) : (
+            <input
+              type={type}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm"
+            />
+          )
         ) : (
-          <input
-            type={type}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm"
-          />
-        )
-      ) : (
-        <p className="font-black text-text-main tracking-tight text-sm italic">
-          {value || "—"}
-        </p>
-      )}
+          <p className="font-black text-text-main tracking-tight text-sm italic">
+            {displayValue || "—"}
+          </p>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default PatientProfile;

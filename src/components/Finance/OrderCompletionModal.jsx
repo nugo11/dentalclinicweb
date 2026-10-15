@@ -504,11 +504,13 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   return (
     <div className="fixed inset-0 z-[160] flex items-end md:items-center justify-center p-0 md:p-4">
       <div
-        className="app-overlay fixed inset-0 bg-slate-900/60 dark:bg-slate-950/85 backdrop-blur-md"
+        className="app-overlay fixed inset-0 touch-none"
         onClick={onClose}
+        onTouchMove={(e) => e.preventDefault()}
       />
 
-      <div className="app-sheet bg-white dark:bg-[#111726] border border-slate-200/90 dark:border-slate-700/80 rounded-t-[28px] md:rounded-[36px] w-full max-w-4xl shadow-2xl relative z-10 overflow-hidden font-nino flex flex-col max-h-[92vh] md:max-h-[90vh] animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200">
+      <div className="app-sheet bg-white dark:bg-[#111726] rounded-t-[32px] md:rounded-[36px] w-full max-w-4xl relative z-10 overflow-hidden font-nino flex flex-col max-h-[92vh] md:max-h-[90vh] animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overscroll-contain">
+        <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2.5 md:hidden" />
         
         {successMsg && (
           <div className="absolute inset-0 bg-white/95 dark:bg-slate-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300">

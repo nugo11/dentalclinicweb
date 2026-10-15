@@ -98,11 +98,11 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[150] overflow-hidden font-nino text-text-main">
-      <div className="absolute inset-0 bg-brand-deep/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      <div className="app-overlay fixed inset-0 touch-none" onClick={onClose} onTouchMove={(e) => e.preventDefault()} />
       
       <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-md animate-in slide-in-from-right duration-300">
-          <div className="h-full flex flex-col bg-surface shadow-2xl rounded-l-[40px] overflow-hidden border-l border-border-main">
+          <div className="app-sheet h-full flex flex-col bg-surface shadow-2xl rounded-l-[40px] overflow-hidden overscroll-contain">
             
             {/* Header */}
             <div className="p-8 border-b border-border-main flex items-center justify-between bg-surface-soft/50">

@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { logActivity } from "../utils/activityLogger";
 import useLockBodyScroll from "../hooks/useLockBodyScroll";
+import PhoneInput from "../components/Common/PhoneInput";
+import { formatPhone, validatePhone } from "../utils/phoneFormatter";
 
 const Staff = () => {
   const { userData, clinicData, activeStaff } = useAuth();
@@ -28,6 +30,7 @@ const Staff = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [visiblePins, setVisiblePins] = useState({});
+  const [staffErrors, setStaffErrors] = useState({});
   
   const [newDoctor, setNewDoctor] = useState({
     fullName: "",
@@ -101,6 +104,13 @@ const Staff = () => {
         alert("PIN უნდა შედგებოდეს 4 ციფრისგან");
         return;
     }
+    if (newDoctor.phone) {
+      const phoneErr = validatePhone(newDoctor.phone, false);
+      if (phoneErr) {
+        setStaffErrors(prev => ({ ...prev, addPhone: phoneErr }));
+        return;
+      }
+    }
     setIsProcessing(true);
 
     try {
@@ -109,7 +119,7 @@ const Staff = () => {
       await addDoc(collection(db, "users"), {
         fullName: newDoctor.fullName,
         email: newDoctor.email,
-        phone: newDoctor.phone,
+        phone: newDoctor.phone ? formatPhone(newDoctor.phone) : "",
         pinHash: pinHash,
         role: newDoctor.role,
         salaryAmount: newDoctor.salaryType === 'fixed' ? (Number(newDoctor.salaryAmount) || 0) : 0,
@@ -126,6 +136,7 @@ const Staff = () => {
       await logActivity(userData.clinicId, activeStaff || userData || { uid: userData.uid, fullName: 'Unknown', role: 'unknown' }, 'staff_create', `დაემატა ახალი თანამშრომელი: ${newDoctor.fullName} (${newDoctor.role})`, { name: newDoctor.fullName, role: newDoctor.role });
 
       setShowAddModal(false);
+      setStaffErrors({});
       setNewDoctor({ fullName: "", email: "", phone: "", pin: "", role: "doctor", salaryAmount: "", salaryPayDay: "", salaryType: "fixed", personalId: "", birthDate: "" });
     } catch (error) {
       console.error("Error:", error);
@@ -136,6 +147,7 @@ const Staff = () => {
 
   const handleEditStaff = (member) => {
     setEditTarget(member.id);
+    setStaffErrors({});
     setEditFormData({
       fullName: member.fullName || "",
       email: member.email || "",
@@ -152,12 +164,19 @@ const Staff = () => {
 
   const handleUpdateStaff = async (e) => {
     e.preventDefault();
+    if (editFormData.phone) {
+      const phoneErr = validatePhone(editFormData.phone, false);
+      if (phoneErr) {
+        setStaffErrors(prev => ({ ...prev, editPhone: phoneErr }));
+        return;
+      }
+    }
     setIsProcessing(true);
     try {
       const updates = {
         fullName: editFormData.fullName,
         email: editFormData.email,
-        phone: editFormData.phone,
+        phone: editFormData.phone ? formatPhone(editFormData.phone) : "",
         role: editFormData.role,
         salaryAmount: editFormData.salaryType === 'fixed' ? (Number(editFormData.salaryAmount) || 0) : 0,
         salaryPayDay: Number(editFormData.salaryPayDay) || 1,
@@ -317,16 +336,16 @@ const Staff = () => {
       {/* Delete Modal */}
       {deleteTargetId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-sm" onClick={() => setDeleteTargetId(null)} />
-          <div className="bg-surface rounded-[40px] w-full max-w-sm p-10 shadow-2xl relative z-10 text-center animate-in zoom-in-95 duration-200">
+          <div className="app-overlay fixed inset-0 touch-none" onClick={() => setDeleteTargetId(null)} onTouchMove={(e) => e.preventDefault()} />
+          <div className="app-sheet bg-surface rounded-[40px] w-full max-w-sm p-10 relative z-10 text-center animate-in zoom-in-95 duration-200">
             <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <Trash2 size={32} />
             </div>
             <h3 className="text-xl font-black text-text-main italic mb-2">თანამშრომლის წაშლა</h3>
             <p className="text-xs text-text-muted font-bold leading-relaxed mb-8 uppercase tracking-widest">ეს ოპერაცია შეუქცევადია.</p>
             <div className="grid grid-cols-2 gap-4">
-              <button onClick={() => setDeleteTargetId(null)} className="py-4 bg-surface-soft text-text-muted rounded-2xl font-black text-[10px] uppercase tracking-widest">გაუქმება</button>
-              <button onClick={confirmDeleteStaff} className="py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg">წაშლა</button>
+              <button onClick={() => setDeleteTargetId(null)} className="py-4 bg-surface-soft text-text-muted rounded-2xl font-black text-[10px] uppercase tracking-widest cursor-pointer">გაუქმება</button>
+              <button onClick={confirmDeleteStaff} className="py-4 bg-red-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg cursor-pointer">წაშლა</button>
             </div>
           </div>
         </div>
@@ -335,8 +354,9 @@ const Staff = () => {
       {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" onClick={() => setShowAddModal(false)} />
-          <div className="bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-md p-8 md:p-10 relative z-10 shadow-2xl animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
+          <div className="app-overlay fixed inset-0 touch-none" onClick={() => setShowAddModal(false)} onTouchMove={(e) => e.preventDefault()} />
+          <div className="app-sheet bg-surface rounded-t-[32px] md:rounded-[40px] w-full max-w-md p-6 md:p-10 relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] overscroll-contain custom-scrollbar">
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4 md:hidden" />
             {doctorLimitReached ? (
               <div className="text-center py-4">
                 <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6">
@@ -394,15 +414,20 @@ const Staff = () => {
                       </select>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ტელეფონი</label>
-                      <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.phone} onChange={e => setNewDoctor({...newDoctor, phone: e.target.value})} placeholder="599 XX XX XX" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ელ-ფოსტა</label>
-                      <input type="email" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.email} onChange={e => setNewDoctor({...newDoctor, email: e.target.value})} />
-                    </div>
+                <div>
+                  <PhoneInput 
+                    label="ტელეფონი" 
+                    value={newDoctor.phone} 
+                    error={staffErrors.addPhone}
+                    onChange={(formatted) => {
+                      setNewDoctor({...newDoctor, phone: formatted});
+                      if (staffErrors.addPhone) setStaffErrors(prev => ({ ...prev, addPhone: undefined }));
+                    }} 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ელ-ფოსტა</label>
+                  <input type="email" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.email} onChange={e => setNewDoctor({...newDoctor, email: e.target.value})} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
@@ -435,12 +460,13 @@ const Staff = () => {
       {/* Edit Modal */}
       {editTarget && (
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="fixed inset-0 bg-brand-deep/60 backdrop-blur-md" onClick={() => setEditTarget(null)} />
-          <div className="bg-surface rounded-t-[28px] md:rounded-[40px] w-full max-w-md p-8 md:p-10 relative z-10 shadow-2xl animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] custom-scrollbar">
+          <div className="app-overlay fixed inset-0 touch-none" onClick={() => setEditTarget(null)} onTouchMove={(e) => e.preventDefault()} />
+          <div className="app-sheet bg-surface rounded-t-[32px] md:rounded-[40px] w-full max-w-md p-6 md:p-10 relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] overscroll-contain custom-scrollbar">
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4 md:hidden" />
             <form onSubmit={handleUpdateStaff} className="space-y-4">
               <div className="flex justify-between items-center mb-6">
                   <h3 className="text-2xl font-black text-text-main italic">მონაცემების შეცვლა</h3>
-                  <button type="button" onClick={() => setEditTarget(null)} className="text-text-muted hover:text-text-main"><X /></button>
+                  <button type="button" onClick={() => setEditTarget(null)} className="text-text-muted hover:text-text-main cursor-pointer"><X /></button>
               </div>
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">სრული სახელი</label>
@@ -463,21 +489,26 @@ const Staff = () => {
                     </div>
                   </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">როლი</label>
-                    <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all" value={editFormData.role} onChange={e => setEditFormData({...editFormData, role: e.target.value})}>
-                      <option value="admin">Admin</option>
-                      <option value="manager">Manager</option>
-                      <option value="doctor">Doctor</option>
-                      <option value="receptionist">Reception</option>
-                      <option value="accountant">Accountant</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ტელეფონი</label>
-                    <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.phone} onChange={e => setEditFormData({...editFormData, phone: e.target.value})} />
-                  </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">როლი</label>
+                <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all" value={editFormData.role} onChange={e => setEditFormData({...editFormData, role: e.target.value})}>
+                  <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
+                  <option value="doctor">Doctor</option>
+                  <option value="receptionist">Reception</option>
+                  <option value="accountant">Accountant</option>
+                </select>
+              </div>
+              <div>
+                <PhoneInput 
+                  label="ტელეფონი" 
+                  value={editFormData.phone} 
+                  error={staffErrors.editPhone}
+                  onChange={(formatted) => {
+                    setEditFormData({...editFormData, phone: formatted});
+                    if (staffErrors.editPhone) setStaffErrors(prev => ({ ...prev, editPhone: undefined }));
+                  }} 
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">

@@ -215,31 +215,50 @@ html {
 }
 
 /* App-like motion primitives & enhanced modal elevation */
+.body-scroll-lock {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  -webkit-overflow-scrolling: auto !important;
+}
+
 .app-overlay {
-  background-color: rgba(15, 23, 42, 0.6) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+  background-color: rgba(15, 23, 42, 0.72) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  touch-action: none;
   transition: opacity 220ms ease;
 }
 
 .dark .app-overlay {
-  background-color: rgba(2, 6, 23, 0.85) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
+  background-color: rgba(2, 6, 23, 0.88) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  touch-action: none;
 }
 
-.app-sheet {
-  border: 1px solid rgba(203, 213, 225, 0.9) !important;
-  box-shadow: 0 25px 70px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
+.app-sheet,
+.app-modal-card {
+  border: 2px solid #cbd5e1 !important; /* Crisp high-contrast border in light mode */
+  box-shadow:
+    0 25px 80px -10px rgba(15, 23, 42, 0.42),
+    0 12px 35px -6px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
   transition:
     transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 220ms ease;
   will-change: transform, opacity;
 }
 
-.dark .app-sheet {
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 30px 90px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+.dark .app-sheet,
+.dark .app-modal-card {
+  border: 1.5px solid rgba(255, 255, 255, 0.24) !important;
+  box-shadow:
+    0 30px 95px -12px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app-dropdown {

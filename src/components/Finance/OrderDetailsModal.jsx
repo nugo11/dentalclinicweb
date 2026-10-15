@@ -27,14 +27,15 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onPrint, isPrinting }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 font-nino overscroll-none touch-action-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 font-nino overscroll-none">
       <div 
-        className="fixed inset-0" 
+        className="app-overlay fixed inset-0 touch-none" 
         onClick={onClose} 
+        onTouchMove={(e) => e.preventDefault()}
         aria-hidden="true" 
       />
 
-      <div className="relative w-full max-w-2xl bg-surface rounded-[28px] sm:rounded-[32px] border border-border-main shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10 animate-in zoom-in-95 duration-200">
+      <div className="app-sheet relative w-full max-w-2xl bg-surface rounded-[28px] sm:rounded-[32px] overflow-hidden flex flex-col max-h-[90vh] z-10 animate-in zoom-in-95 duration-200 overscroll-contain">
         
         {/* Header */}
         <div className="p-6 md:p-8 bg-surface-soft/60 border-b border-border-main flex items-center justify-between">
