@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dentalhub-v2';
+const CACHE_NAME = 'dentalhub-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -56,7 +56,7 @@ self.addEventListener('fetch', event => {
         return new Response('Internet connection is required to load this app.', {
           status: 503,
           statusText: 'Service Unavailable',
-          headers: new Headers({ 'Content-Type': 'text/plain' })
+          headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
         });
       })
     );
@@ -68,12 +68,22 @@ self.addEventListener('fetch', event => {
     fetch(request)
       .then(response => {
         // Only cache valid responses
-        if (response.ok) {
+        if (response && response.ok) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(request, responseClone));
         }
         return response;
       })
-      .catch(() => caches.match(request))
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        const indexCached = await caches.match('/index.html') || await caches.match('/');
+        if (indexCached) return indexCached;
+        return new Response('Network error or resource unavailable', {
+          status: 504,
+          statusText: 'Gateway Timeout',
+          headers: new Headers({ 'Content-Type': 'text/plain; charset=utf-8' })
+        });
+      })
   );
 });

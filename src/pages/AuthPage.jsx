@@ -131,9 +131,9 @@ const AuthPage = () => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) errors.email = "შეიყვანეთ სწორი ელ-ფოსტა (@ და .)";
         
-        const phoneValidation = validatePhone(phone, true);
-        if (!phoneValidation.isValid) {
-            errors.phone = phoneValidation.message;
+        const phoneError = validatePhone(phone, true);
+        if (phoneError) {
+            errors.phone = phoneError;
         } else if (!cleanPhone(phone).startsWith("5")) {
             errors.phone = "რეგისტრაციისთვის აუცილებელია მობილურის ნომერი (5XX...) SMS კოდის მისაღებად";
         }
@@ -604,17 +604,17 @@ const AuthPage = () => {
                               setSmsStatus("idle");
                               setUserOtp("");
                               
-                              const validation = validatePhone(formatted, false);
-                              if (!validation.isValid && formatted) {
-                                  setFormErrors(prev => ({...prev, phone: validation.message}));
+                              const phoneErr = validatePhone(formatted, false);
+                              if (phoneErr && formatted) {
+                                  setFormErrors(prev => ({...prev, phone: phoneErr}));
                               } else {
                                   setFormErrors(prev => ({...prev, phone: undefined}));
                               }
                           }} 
                           onBlur={() => {
-                              const validation = validatePhone(phone, true);
-                              if (!validation.isValid) {
-                                  setFormErrors(prev => ({...prev, phone: validation.message}));
+                              const phoneErr = validatePhone(phone, true);
+                              if (phoneErr) {
+                                  setFormErrors(prev => ({...prev, phone: phoneErr}));
                               } else if (!cleanPhone(phone).startsWith("5")) {
                                   setFormErrors(prev => ({...prev, phone: "რეგისტრაციისთვის აუცილებელია მობილურის ნომერი (5XX...)"}));
                               } else {
@@ -854,9 +854,9 @@ const AuthPage = () => {
               <form onSubmit={async (e) => {
                 e.preventDefault();
                 const cleaned = cleanPhone(phone);
-                const validation = validatePhone(phone, true);
-                if (!validation.isValid) {
-                  setFormErrors({ phone: validation.message });
+                const phoneErr = validatePhone(phone, true);
+                if (phoneErr) {
+                  setFormErrors({ phone: phoneErr });
                   return;
                 }
                 if (!cleaned.startsWith("5")) {
@@ -953,9 +953,9 @@ const AuthPage = () => {
                     onChange={(v) => {
                       const formatted = formatPhone(v);
                       setPhone(formatted);
-                      const validation = validatePhone(formatted, false);
-                      if (!validation.isValid && formatted) {
-                        setFormErrors(prev => ({ ...prev, phone: validation.message }));
+                      const phoneErr = validatePhone(formatted, false);
+                      if (phoneErr && formatted) {
+                        setFormErrors(prev => ({ ...prev, phone: phoneErr }));
                       } else {
                         setFormErrors(prev => ({ ...prev, phone: undefined }));
                       }
