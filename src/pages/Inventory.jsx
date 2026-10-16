@@ -34,10 +34,8 @@ const Inventory = () => {
   const { currentUser, clinicData, userData, role, activeStaff } = useAuth();
   
   // წვდომის შეზღუდვა
-  const isAccountant = role === 'accountant';
-  const isDoctor = role === 'doctor';
   const isAdminOrManager = role === 'admin' || role === 'manager';
-  const isReadOnly = isAccountant || isDoctor;
+  const isReadOnly = !isAdminOrManager;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [items, setItems] = useState([]);
@@ -86,13 +84,24 @@ const Inventory = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser || isReadOnly) return;
 
     // 1. ვალიდაცია
     let errors = {};
-    if (!formData.name) errors.name = "მიუთითეთ დასახელება";
-    if (!formData.quantity) errors.quantity = "მიუთითეთ რაოდენობა";
-    if (!formData.pricePerUnit) errors.pricePerUnit = "მიუთითეთ ფასი";
+    if (!formData.name?.trim()) errors.name = "მიუთითეთ დასახელება";
+    if (formData.quantity === "" || formData.quantity === null || formData.quantity === undefined) {
+      errors.quantity = "მიუთითეთ რაოდენობა";
+    } else if (Number(formData.quantity) < 0) {
+      errors.quantity = "რაოდენობა არ შეიძლება იყოს უარყოფითი";
+    }
+    if (formData.pricePerUnit === "" || formData.pricePerUnit === null || formData.pricePerUnit === undefined) {
+      errors.pricePerUnit = "მიუთითეთ ფასი";
+    } else if (Number(formData.pricePerUnit) < 0) {
+      errors.pricePerUnit = "ფასი არ შეიძლება იყოს უარყოფითი";
+    }
+    if (formData.minThreshold !== "" && Number(formData.minThreshold) < 0) {
+      errors.minThreshold = "მინ. ზღვარი არ შეიძლება იყოს უარყოფითი";
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -111,10 +120,11 @@ const Inventory = () => {
     try {
       await setDoc(doc(db, "inventory", docId), {
         ...formData,
+        name: formData.name.trim(),
         clinicId: userData?.clinicId || currentUser.uid,
-        quantity: Number(formData.quantity),
-        minThreshold: Number(formData.minThreshold || 0),
-        pricePerUnit: Number(formData.pricePerUnit),
+        quantity: Math.max(0, Number(formData.quantity)),
+        minThreshold: Math.max(0, Number(formData.minThreshold || 0)),
+        pricePerUnit: Math.max(0, Number(formData.pricePerUnit)),
         itemGroupId: formData.itemGroupId || "G1",
         updatedAt: new Date().toISOString(),
       });
@@ -122,10 +132,10 @@ const Inventory = () => {
       // LOG ACTIVITY
       const action = editingItem ? 'inventory_update' : 'inventory_create';
       const details = editingItem 
-        ? `განახლდა მარაგი: ${formData.name} (რაოდენობა: ${formData.quantity} ${formData.unit})`
-        : `დაემატა ახალი მარაგი: ${formData.name} (რაოდენობა: ${formData.quantity} ${formData.unit})`;
+        ? `განახლდა მარაგი: ${formData.name.trim()} (რაოდენობა: ${formData.quantity} ${formData.unit})`
+        : `დაემატა ახალი მარაგი: ${formData.name.trim()} (რაოდენობა: ${formData.quantity} ${formData.unit})`;
       
-      await logActivity(userData?.clinicId || currentUser.uid, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, action, details, { itemId: docId, name: formData.name });
+      await logActivity(userData?.clinicId || currentUser.uid, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, action, details, { itemId: docId, name: formData.name.trim() });
 
       setIsModalOpen(false);
       setEditingItem(null);
@@ -285,8 +295,10 @@ const Inventory = () => {
                               </p>
                             </td>
                             <td className="px-4 py-6 md:p-6 font-black text-base md:text-lg">
-                              <span className={isLow ? "text-red-500" : "text-text-main"}>{item.quantity}</span>
-                              <span className="text-[10px] text-text-muted ml-1 uppercase">{item.unit}</span>
+                              <div className="inline-flex items-baseline gap-1.5">
+                                <span className={isLow ? "text-red-500" : "text-text-main"}>{item.quantity}</span>
+                                <span className="text-[10px] text-text-muted uppercase font-bold">{item.unit}</span>
+                              </div>
                             </td>
                             <td className="px-4 py-6 md:p-6 font-bold text-text-main text-sm hidden sm:table-cell">{item.pricePerUnit} ₾</td>
                             <td className="px-4 py-6 md:p-6">
@@ -350,13 +362,16 @@ const Inventory = () => {
                         <option value="კოლოფი">კოლოფი</option>
                       </select>
                     </div>
-                    <InputField required icon={TrendingDown} type="number" label="რაოდენობა" value={formData.quantity} onChange={(val) => {
+                    <InputField required icon={TrendingDown} type="number" min="0" step="any" label="რაოდენობა" value={formData.quantity} onChange={(val) => {
                       setFormData({ ...formData, quantity: val });
                       if (formErrors.quantity) setFormErrors(prev => ({ ...prev, quantity: undefined }));
                     }} error={formErrors.quantity} />
-                    <InputField icon={AlertCircle} type="number" label="მინ. ზღვარი" value={formData.minThreshold} onChange={(val) => setFormData({ ...formData, minThreshold: val })} />
+                    <InputField icon={AlertCircle} type="number" min="0" step="any" label="მინ. ზღვარი" value={formData.minThreshold} onChange={(val) => {
+                      setFormData({ ...formData, minThreshold: val });
+                      if (formErrors.minThreshold) setFormErrors(prev => ({ ...prev, minThreshold: undefined }));
+                    }} error={formErrors.minThreshold} />
                     <div className="col-span-2">
-                      <InputField required icon={TrendingDown} type="number" step="0.01" label="ერთეულის ფასი (₾)" value={formData.pricePerUnit} onChange={(val) => {
+                      <InputField required icon={TrendingDown} type="number" min="0" step="0.01" label="ერთეულის ფასი (₾)" value={formData.pricePerUnit} onChange={(val) => {
                         setFormData({ ...formData, pricePerUnit: val });
                         if (formErrors.pricePerUnit) setFormErrors(prev => ({ ...prev, pricePerUnit: undefined }));
                       }} error={formErrors.pricePerUnit} />

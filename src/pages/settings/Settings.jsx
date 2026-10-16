@@ -13,7 +13,7 @@ import {
 import { scrollToFirstError } from "../../utils/scrollHelper";
 
 const Settings = () => {
-  const { userData, clinicData } = useAuth();
+  const { userData, clinicData, isAdmin } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -51,8 +51,8 @@ const Settings = () => {
     }
   }, [userData, clinicData]);
 
-  // წვდომის შემოწმება
-  if (userData && userData.role !== 'admin' && userData.role !== 'manager') {
+  // წვდომის შემოწმება - მხოლოდ კლინიკის ადმინისტრატორს
+  if (!isAdmin) {
     return (
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
@@ -62,7 +62,7 @@ const Settings = () => {
           </div>
           <h2 className="text-3xl font-black text-text-main italic">წვდომა შეზღუდულია</h2>
           <p className="text-text-muted font-bold text-sm uppercase tracking-widest mt-4 max-w-sm text-center leading-relaxed">
-            ამ გვერდის მართვა შეუძლია მხოლოდ კლინიკის ადმინისტრატორს ან მენეჯერს.
+            ამ გვერდის მართვა შეუძლია მხოლოდ კლინიკის ადმინისტრატორს.
           </p>
         </div>
       </div>
@@ -88,20 +88,35 @@ const Settings = () => {
     e.preventDefault();
     setIsSavingProfile(true);
     setProfileMessage({ type: "", text: "" });
+
+    const trimmedFullName = personalInfo.fullName?.trim();
+    const trimmedClinicName = clinicInfo.clinicName?.trim();
+
+    if (!trimmedFullName) {
+      setProfileMessage({ type: "error", text: "სრული სახელი სავალდებულოა." });
+      setIsSavingProfile(false);
+      return;
+    }
+
+    if (!trimmedClinicName) {
+      setProfileMessage({ type: "error", text: "კლინიკის დასახელება სავალდებულოა." });
+      setIsSavingProfile(false);
+      return;
+    }
+
     try {
       // პირადი მონაცემების განახლება
       await updateDoc(doc(db, "users", auth.currentUser.uid), {
-        fullName: personalInfo.fullName
+        fullName: trimmedFullName
       });
       
-      // კლინიკის მონაცემების განახლება (ადმინისთვის და მენეჯერისთვის)
-      if ((userData.role === 'admin' || userData.role === 'manager') && userData.clinicId) {
-        const clinicUpdates = {};
-        if (userData.role === 'admin') {
-          clinicUpdates.clinicName = clinicInfo.clinicName;
-        }
-        clinicUpdates.ehrUsername = clinicInfo.ehrUsername;
-        clinicUpdates.ehrPassword = clinicInfo.ehrPassword;
+      // კლინიკის მონაცემების განახლება
+      if (userData?.clinicId) {
+        const clinicUpdates = {
+          clinicName: trimmedClinicName,
+          ehrUsername: clinicInfo.ehrUsername?.trim() || "",
+          ehrPassword: clinicInfo.ehrPassword || ""
+        };
         
         await updateDoc(doc(db, "clinics", userData.clinicId), clinicUpdates);
       }
@@ -284,6 +299,8 @@ const Settings = () => {
                         <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-4">EHR პაროლი</label>
                         <input 
                           type="password" 
+                          name="clinic_ehr_pwd"
+                          autoComplete="new-password"
                           className="w-full px-6 py-4 bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl outline-none font-bold text-sm transition-all"
                           value={clinicInfo.ehrPassword}
                           onChange={(e) => setClinicInfo({...clinicInfo, ehrPassword: e.target.value})}

@@ -1,8 +1,11 @@
 import React from 'react';
 import { Users, Package, TrendingUp, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
-const StatsGrid = ({ patientsGrowth = 0, inventoryAlerts = 0, monthlyIncome = 0, monthlyExpenses = 0, role }) => {
+const StatsGrid = ({ patientsGrowth = 0, inventoryAlerts = 0, monthlyIncome = 0, monthlyExpenses = 0, incomeTrend = "+0%", role }) => {
   const isFinanceRole = role === 'admin' || role === 'accountant';
+
+  const isPositive = incomeTrend.startsWith('+') || incomeTrend === '0%';
+  const trendColor = isPositive ? "text-emerald-500" : "text-amber-500";
 
   return (
     <div className="grid grid-cols-1 gap-4 md:gap-5">
@@ -15,8 +18,8 @@ const StatsGrid = ({ patientsGrowth = 0, inventoryAlerts = 0, monthlyIncome = 0,
             icon={TrendingUp} 
             iconColor="text-emerald-500"
             bgColor="bg-emerald-500/10"
-            trend="+12%" 
-            trendColor="text-emerald-500"
+            trend={incomeTrend} 
+            trendColor={trendColor}
           />
           
           <StatCard 

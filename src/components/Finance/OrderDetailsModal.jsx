@@ -44,13 +44,19 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onPrint, isPrinting }) => {
               <Receipt size={24} />
             </div>
             <div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-xl font-black text-text-main italic tracking-tight">
                   შეკვეთის დეტალები
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                  დასრულებული
-                </span>
+                {Number(order.debtAmount || 0) > 0 ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 border border-amber-500/20">
+                    ვალი: {Number(order.debtAmount).toFixed(2)} ₾
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                    სრულად გადახდილი
+                  </span>
+                )}
               </div>
               <p className="text-[11px] font-bold text-text-muted uppercase tracking-widest mt-1">
                 #ORD-{order.id?.slice(-8).toUpperCase()} • {order.finalizedAt ? new Date(order.finalizedAt).toLocaleDateString("ka-GE", { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "—"}
@@ -215,13 +221,27 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onPrint, isPrinting }) => {
               </div>
             )}
 
-            <div className="pt-3 border-t border-border-main flex justify-between items-center">
-              <span className="font-black text-xs uppercase tracking-wider text-text-main">
-                სულ გადახდილი თანხა:
-              </span>
-              <span className="text-2xl font-black text-brand-purple italic tracking-tight">
-                {Number(order.price || 0).toFixed(2)} ₾
-              </span>
+            <div className="pt-3 border-t border-border-main space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-text-muted">სულ გადასახდელი:</span>
+                <span className="font-black text-text-main text-sm">{Number(order.price || 0).toFixed(2)} ₾</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-black text-emerald-600 dark:text-emerald-400">ფაქტობრივად გადახდილი:</span>
+                <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                  {Number(order.paidAmount !== undefined ? order.paidAmount : order.price || 0).toFixed(2)} ₾
+                </span>
+              </div>
+              {Number(order.debtAmount || 0) > 0 && (
+                <div className="flex justify-between items-center p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <span className="text-xs font-black text-red-600 uppercase tracking-wider">
+                    დარჩენილი ვალი:
+                  </span>
+                  <span className="text-base font-black text-red-600">
+                    {Number(order.debtAmount).toFixed(2)} ₾
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

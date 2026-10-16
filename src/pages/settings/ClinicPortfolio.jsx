@@ -31,35 +31,25 @@ import { Link } from "react-router-dom";
 import { logActivity } from "../../utils/activityLogger";
 
 const DIRECTIONS = [
-  "ბავშვთა ქირურგია",
+  "თერაპიული სტომატოლოგია",
   "ორთოდონტია",
-  "ესთეტიური სტომატოლოგია",
-  "ბავშვთა თერაპია",
-  "ყბა-სახის ქირურგია",
-  "იმპლანტოლოგია",
-  "ოდონტოლოგია",
-  "მოზრდილთა სტომატოლოგია",
-  "ბავშვთა სტომატოლოგია",
-  "მოზრდილთა თერაპია",
-  "მოზრდილთა ქირურგია",
-  "პროფილაქტიკური სტომატოლოგია",
-  "ბავშვთა თერაპიული სტომატოლოგია",
-  "ბავშვთა ორთოდონტია",
-  "ბავშვთა ორთოპედია",
-  "სედაცია",
-  "ციფრული დიაგნოსტიკა",
-  "სედაცია და ზოგადი გაუტკივარება",
-  "ენდოდონტია",
-  "პაროდონტოლოგია",
   "ორთოპედიული სტომატოლოგია",
-  "ვინირება",
-  "კბილების გათეთრება",
-  "რენტგენო-დიაგნოსტიკა"
+  "ქირურგიული სტომატოლოგია",
+  "იმპლანტოლოგია",
+  "ბავშვთა სტომატოლოგია",
+  "პაროდონტოლოგია",
+  "ენდოდონტია",
+  "ესთეტიკური სტომატოლოგია",
+  "ყბა-სახის ქირურგია",
+  "ციფრული და რენტგენოდიაგნოსტიკა",
+  "სედაცია და ზოგადი გაუტკივარება",
+  "პროფილაქტიკა და ჰიგიენა",
+  "კბილების გათეთრება და ვინირება"
 ];
 const UpgradeOverlay = ({ title }) => (
   <div className="absolute inset-0 bg-surface/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-border-dark group-hover:border-brand-purple/20 transition-all">
      <Lock className="text-text-muted mb-2" size={24} />
-     <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-4">{title || "Upgrade Required"}</p>
+     <p className="text-[10px] font-black uppercase tracking-widest text-text-muted mb-4">{title || "Business / Custom Required"}</p>
      <Link to="/settings/billing" className="px-4 py-2 bg-brand-purple text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg">გაუმჯობესება</Link>
   </div>
 );
@@ -452,7 +442,7 @@ const ClinicPortfolio = () => {
                                  disabled={planKey === 'free'} 
                               />
                            </label>
-                           {planKey === 'free' && <UpgradeOverlay title="Pro / Clinic Plus Required" />}
+                           {planKey === 'free' && <UpgradeOverlay title="Business / Custom Required" />}
                         </div>
                         <div>
                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-purple/5 text-brand-purple rounded-full text-[9px] font-black uppercase tracking-widest mb-3">
@@ -466,7 +456,7 @@ const ClinicPortfolio = () => {
                         <FormInput label="კლინიკის საჯარო სახელი" icon={Globe} value={formData.clinicName} onChange={val => setFormData({...formData, clinicName: val})} />
                         <div className="relative group">
                            <FormInput type="textarea" label="კლინიკის შესახებ" value={formData.description} onChange={val => setFormData({...formData, description: val})} className={!features.canShowAbout ? "opacity-30 pointer-events-none" : ""} />
-                           {!features.canShowAbout && <UpgradeOverlay title="Pro / Clinic Plus Required" />}
+                           {!features.canShowAbout && <UpgradeOverlay title="Business / Custom Required" />}
                         </div>
                      </div>
                   </div>
@@ -515,7 +505,7 @@ const ClinicPortfolio = () => {
                               </button>
                            ))}
                         </div>
-                        {!features.canShowSpecialties && <UpgradeOverlay title="Pro / Clinic Plus Required" />}
+                        {!features.canShowSpecialties && <UpgradeOverlay title="Business / Custom Required" />}
                      </div>
                   </div>
                </div>
@@ -536,18 +526,18 @@ const ClinicPortfolio = () => {
                             }} 
                             className={!features.canShowPhone ? "opacity-30 pointer-events-none" : ""} 
                            />
-                           {!features.canShowPhone && <UpgradeOverlay title="Solo / Pro Required" />}
+                           {!features.canShowPhone && <UpgradeOverlay title="Business / Custom Required" />}
                         </div>
                         <div className="relative group">
                            <FormInput label="მისამართი" icon={MapPin} value={formData.address} onChange={val => setFormData({...formData, address: val})} />
                         </div>
                         <div className="relative group">
                            <FormInput label="სამუშაო საათები" icon={Clock} value={formData.workingHours} onChange={val => setFormData({...formData, workingHours: val})} className={!features.canShowHours ? "opacity-30 pointer-events-none" : ""} />
-                           {!features.canShowHours && <UpgradeOverlay title="Solo / Pro Required" />}
+                           {!features.canShowHours && <UpgradeOverlay title="Business / Custom Required" />}
                         </div>
                         <div className="relative group">
                            <FormInput label="Google Maps (Iframe Src)" icon={Globe} value={formData.mapUrl} onChange={val => setFormData({...formData, mapUrl: val})} className={!features.canShowMap ? "opacity-30 pointer-events-none" : ""} />
-                           {!features.canShowMap && <UpgradeOverlay title="Clinic Plus Required" />}
+                           {!features.canShowMap && <UpgradeOverlay title="Business / Custom Required" />}
                         </div>
                      </div>
                   </div>

@@ -34,9 +34,20 @@ import { logActivity } from "../utils/activityLogger";
 import useLockBodyScroll from "../hooks/useLockBodyScroll";
 import { formatPhone, cleanPhone, validatePhone } from "../utils/phoneFormatter";
 
+const STATUS_LABELS_KA = {
+  healthy: "ჯანმრთელი",
+  caries: "კარიესი",
+  pulpitis: "პულპიტი",
+  filling: "ბჟენი",
+  implant: "იმპლანტი",
+  missing: "ამოღებული",
+};
+
 const PatientProfile = () => {
   const { id } = useParams();
-  const { userData, currentUser, activeStaff } = useAuth();
+  const { userData, currentUser, activeStaff, role, isAdmin } = useAuth();
+  const isReceptionist = role === "receptionist";
+  const canEditMedical = role === "admin" || role === "doctor";
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -45,6 +56,7 @@ const PatientProfile = () => {
   const [patientData, setPatientData] = useState(null);
   const [selectedTooth, setSelectedTooth] = useState(null);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [editErrors, setEditErrors] = useState({});
 
   useLockBodyScroll(showDeleteConfirm || isStatusModalOpen);
   const [toothComment, setToothComment] = useState("");
@@ -81,6 +93,7 @@ const PatientProfile = () => {
     if (patientData) {
       setOriginalPatientData(JSON.parse(JSON.stringify(patientData)));
     }
+    setEditErrors({});
     setIsEditing(true);
   };
 
@@ -88,17 +101,39 @@ const PatientProfile = () => {
     if (originalPatientData) {
       setPatientData(originalPatientData);
     }
+    setEditErrors({});
     setIsEditing(false);
   };
 
   const handleUpdate = async () => {
+    const errors = {};
+    if (!patientData?.fullName?.trim()) {
+      errors.fullName = "სრული სახელი სავალდებულოა";
+    }
+
+    if (patientData?.personalId && patientData.personalId.replace(/\D/g, '').length !== 11) {
+      errors.personalId = "პირადი ნომერი უნდა შედგებოდეს 11 ციფრისგან";
+    }
+
     if (patientData?.phone) {
       const phoneErr = validatePhone(patientData.phone, false);
-      if (phoneErr) {
-        alert(phoneErr);
-        return;
+      if (phoneErr) errors.phone = phoneErr;
+    }
+
+    if (patientData?.birthDate) {
+      const birth = new Date(patientData.birthDate);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (birth > today) {
+        errors.birthDate = "დაბადების თარიღი არ შეიძლება იყოს მომავალში";
       }
     }
+
+    if (Object.keys(errors).length > 0) {
+      setEditErrors(errors);
+      return;
+    }
+
     setActionLoading(true);
     try {
       const clinicId = userData?.clinicId || currentUser?.uid;
@@ -109,6 +144,8 @@ const PatientProfile = () => {
       const patientRef = doc(db, "patients", id);
       const dataToSave = {
         ...patientData,
+        fullName: patientData.fullName.trim(),
+        personalId: patientData.personalId ? patientData.personalId.replace(/\D/g, '') : "",
         phone: patientData.phone ? formatPhone(patientData.phone) : ""
       };
       await updateDoc(patientRef, dataToSave);
@@ -116,6 +153,7 @@ const PatientProfile = () => {
       // LOG ACTIVITY
       await logActivity(clinicId, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'patient_update', `განახლდა პაციენტის (${patientData.fullName}) მონაცემები`, { patientId: id, patientName: patientData.fullName });
 
+      setEditErrors({});
       setIsEditing(false);
     } catch (error) {
       console.error("Update error:", error);
@@ -125,6 +163,7 @@ const PatientProfile = () => {
   };
 
   const handleDelete = async () => {
+    if (!isAdmin) return;
     setActionLoading(true);
     try {
       const clinicId = userData?.clinicId || currentUser?.uid;
@@ -146,14 +185,14 @@ const PatientProfile = () => {
   };
 
   const handleToothUpdate = async (toothNumber, newStatus, comment = "") => {
+    if (isReceptionist) return;
+    const currentTooth = patientData.teethStatus?.[toothNumber];
+    const finalStatus = newStatus || currentTooth?.status || "healthy";
     const patientRef = doc(db, "patients", id);
     const updatedTeeth = {
       ...(patientData.teethStatus || {}),
       [toothNumber]: {
-        status:
-          newStatus ||
-          patientData.teethStatus?.[toothNumber]?.status ||
-          "healthy",
+        status: finalStatus,
         comment: comment,
         updatedAt: new Date().toISOString(),
       },
@@ -162,8 +201,15 @@ const PatientProfile = () => {
       const clinicId = userData?.clinicId || currentUser?.uid;
       await updateDoc(patientRef, { teethStatus: updatedTeeth });
       
-      // LOG ACTIVITY
-      await logActivity(clinicId, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'tooth_update', `შეიცვალა კბილის (#${toothNumber}) სტატუსი: ${newStatus || 'update'} პაციენტისთვის: ${patientData.fullName}`, { patientId: id, tooth: toothNumber, status: newStatus });
+      // LOG ACTIVITY with Georgian label
+      const statusLabel = STATUS_LABELS_KA[finalStatus] || finalStatus;
+      await logActivity(
+        clinicId, 
+        activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 
+        'tooth_update', 
+        `შეიცვალა კბილის (#${toothNumber}) სტატუსი: ${statusLabel} პაციენტისთვის: ${patientData.fullName}`, 
+        { patientId: id, tooth: toothNumber, status: finalStatus }
+      );
 
       setPatientData({ ...patientData, teethStatus: updatedTeeth });
       setIsStatusModalOpen(false);
@@ -202,7 +248,7 @@ const PatientProfile = () => {
               </button>
 
               <div className="flex gap-2 sm:gap-3">
-                {!isEditing && (
+                {!isEditing && isAdmin && (
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     className="p-3.5 sm:p-4 bg-surface border border-red-500/20 text-red-400 rounded-2xl hover:bg-red-500/10 transition-all shadow-sm cursor-pointer"
@@ -256,34 +302,46 @@ const PatientProfile = () => {
               </div>
               <div className="text-center md:text-left flex-1">
                 {isEditing ? (
-                  <input
-                    type="text"
-                    value={patientData.fullName}
-                    onChange={(e) =>
-                      setPatientData({
-                        ...patientData,
-                        fullName: transliterateToGeorgian(e.target.value),
-                      })
-                    }
-                    className="text-4xl font-black text-text-main italic tracking-tighter mb-3 bg-surface-soft border-b-2 border-brand-purple outline-none px-2 w-full max-w-md"
-                  />
+                  <div className="mb-3">
+                    <input
+                      type="text"
+                      value={patientData.fullName}
+                      onChange={(e) => {
+                        setPatientData({
+                          ...patientData,
+                          fullName: transliterateToGeorgian(e.target.value),
+                        });
+                        if (editErrors.fullName) setEditErrors(prev => ({ ...prev, fullName: undefined }));
+                      }}
+                      className={`text-3xl sm:text-4xl font-black text-text-main italic tracking-tighter bg-surface-soft border-b-2 rounded-xl outline-none px-3 py-1 w-full max-w-md ${editErrors.fullName ? 'border-red-500 bg-red-500/10' : 'border-brand-purple'}`}
+                    />
+                    {editErrors.fullName && <p className="text-[10px] font-black text-red-500 mt-1">{editErrors.fullName}</p>}
+                  </div>
                 ) : (
                   <h1 className="text-4xl font-black text-text-main italic tracking-tighter mb-3">
                     {patientData.fullName}
                   </h1>
                 )}
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                <div className="flex flex-wrap gap-3 justify-center md:justify-start items-center">
                   {isEditing ? (
-                    <input 
-                      type="text"
-                      maxLength={11}
-                      value={patientData.personalId}
-                      onChange={e => setPatientData({...patientData, personalId: e.target.value})}
-                      className="px-4 py-2 bg-surface-soft rounded-xl text-[10px] font-black uppercase text-brand-purple tracking-widest border border-brand-purple/20 outline-none w-32"
-                    />
+                    <div className="flex flex-col">
+                      <input 
+                        type="text"
+                        maxLength={11}
+                        placeholder="11 ციფრი"
+                        value={patientData.personalId || ""}
+                        onChange={e => {
+                          const clean = e.target.value.replace(/\D/g, '');
+                          setPatientData({...patientData, personalId: clean});
+                          if (editErrors.personalId) setEditErrors(prev => ({...prev, personalId: undefined}));
+                        }}
+                        className={`px-4 py-2 bg-surface-soft rounded-xl text-[10px] font-black uppercase tracking-widest border outline-none w-36 ${editErrors.personalId ? 'border-red-500 bg-red-500/10 text-red-500' : 'border-brand-purple/20 text-brand-purple'}`}
+                      />
+                      {editErrors.personalId && <span className="text-[9px] font-bold text-red-500 mt-1">{editErrors.personalId}</span>}
+                    </div>
                   ) : (
                     <span className="px-4 py-2 bg-surface-soft rounded-xl text-[10px] font-black uppercase text-text-muted tracking-widest border border-border-main italic">
-                      ID: {patientData.personalId}
+                      ID: {patientData.personalId || "—"}
                     </span>
                   )}
                   <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 rounded-xl text-[10px] font-black uppercase text-blue-500 tracking-widest border border-blue-500/20 italic text-nowrap	">
@@ -353,9 +411,14 @@ const PatientProfile = () => {
                     value={patientData.birthDate}
                     editable={isEditing}
                     type="date"
-                    onChange={(val) =>
-                      setPatientData({ ...patientData, birthDate: val })
-                    }
+                    max={new Date().toISOString().split("T")[0]}
+                    error={editErrors.birthDate}
+                    onChange={(val) => {
+                      setPatientData({ ...patientData, birthDate: val });
+                      if (editErrors.birthDate) {
+                        setEditErrors((prev) => ({ ...prev, birthDate: null }));
+                      }
+                    }}
                   />
                 </div>
 
@@ -364,9 +427,14 @@ const PatientProfile = () => {
                   icon={Phone}
                   value={patientData.phone}
                   editable={isEditing}
-                  onChange={(val) =>
-                    setPatientData({ ...patientData, phone: val })
-                  }
+                  type="phone"
+                  error={editErrors.phone}
+                  onChange={(val) => {
+                    setPatientData({ ...patientData, phone: val });
+                    if (editErrors.phone) {
+                      setEditErrors((prev) => ({ ...prev, phone: null }));
+                    }
+                  }}
                 />
 
                 <InfoBlock
@@ -405,8 +473,13 @@ const PatientProfile = () => {
                 >
                   <label className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-3 block italic flex items-center gap-2">
                     <ShieldAlert size={12} /> ალერგიები
+                    {isEditing && !canEditMedical && (
+                      <span className="text-[9px] text-text-muted font-normal lowercase tracking-normal">
+                        (მხოლოდ ექიმისთვის)
+                      </span>
+                    )}
                   </label>
-                  {isEditing ? (
+                  {isEditing && canEditMedical ? (
                     <textarea
                       value={patientData.allergies || ""}
                       onChange={(e) =>
@@ -430,8 +503,13 @@ const PatientProfile = () => {
                 <div className="bg-surface p-6 rounded-[28px] border border-border-main shadow-sm">
                   <label className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-3 block italic flex items-center gap-2">
                     <Activity size={12} /> ქრონიკული დაავადებები
+                    {isEditing && !canEditMedical && (
+                      <span className="text-[9px] text-text-muted font-normal lowercase tracking-normal">
+                        (მხოლოდ ექიმისთვის)
+                      </span>
+                    )}
                   </label>
-                  {isEditing ? (
+                  {isEditing && canEditMedical ? (
                     <textarea
                       value={patientData.diseases || ""}
                       onChange={(e) =>
@@ -464,7 +542,9 @@ const PatientProfile = () => {
                   <DentalChart
                     data={patientData.teethStatus || {}}
                     onToothUpdate={(num) => {
+                      if (isReceptionist) return;
                       setSelectedTooth(num);
+                      setToothComment(patientData.teethStatus?.[num]?.comment || "");
                       setIsStatusModalOpen(true);
                     }}
                   />
@@ -560,9 +640,14 @@ const PatientProfile = () => {
                         color: "bg-red-500/10 text-red-600",
                       },
                       {
+                        id: "filling",
+                        label: "ბჟენი",
+                        color: "bg-blue-500/10 text-blue-600",
+                      },
+                      {
                         id: "implant",
                         label: "იმპლანტი",
-                        color: "bg-blue-500/10 text-blue-600",
+                        color: "bg-indigo-500/10 text-indigo-600",
                       },
                       {
                         id: "missing",
@@ -665,14 +750,16 @@ const InfoBlock = ({
   onChange,
   type = "text",
   options = [],
+  error = null,
+  max = undefined,
 }) => {
   const isPhone = type === "phone" || (label && label.toLowerCase().includes("ტელეფონ"));
   const displayValue = isPhone && value ? formatPhone(value) : value;
 
   return (
-    <div className="bg-surface p-6 rounded-[28px] border border-border-main shadow-sm group">
+    <div className={`bg-surface p-6 rounded-[28px] border transition-all shadow-sm group ${error ? "border-red-500/50 bg-red-500/[0.02]" : "border-border-main"}`}>
       <div className="flex items-center justify-between mb-3">
-        <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block italic">
+        <label className={`text-[9px] font-black uppercase tracking-widest block italic ${error ? "text-red-500" : "text-text-muted"}`}>
           {label}
         </label>
         {isPhone && editable && value && (
@@ -684,7 +771,7 @@ const InfoBlock = ({
         )}
       </div>
       <div className="flex items-center gap-3">
-        <div className="p-2.5 bg-surface-soft rounded-xl text-text-muted group-focus-within:text-brand-purple transition-colors">
+        <div className={`p-2.5 bg-surface-soft rounded-xl transition-colors ${error ? "text-red-500" : "text-text-muted group-focus-within:text-brand-purple"}`}>
           <Icon size={18} />
         </div>
         {editable ? (
@@ -692,7 +779,7 @@ const InfoBlock = ({
             <select
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm cursor-pointer"
+              className={`w-full bg-surface-soft border-2 rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm cursor-pointer ${error ? "border-red-500" : "border-transparent focus:border-brand-purple"}`}
             >
               <option value="">აირჩიე...</option>
               {options.map((opt) => (
@@ -708,19 +795,20 @@ const InfoBlock = ({
               placeholder="5XX XX XX XX ან 032 2 11 00 11"
               value={formatPhone(value)}
               onChange={(e) => onChange(formatPhone(e.target.value))}
-              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm"
+              className={`w-full bg-surface-soft border-2 rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm ${error ? "border-red-500" : "border-transparent focus:border-brand-purple"}`}
             />
           ) : (
             <input
               type={type}
               value={value}
+              max={max}
               onClick={(e) => {
                 if (type === 'date' || type === 'time') {
                   try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
                 }
               }}
               onChange={(e) => onChange(e.target.value)}
-              className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm cursor-pointer"
+              className={`w-full bg-surface-soft border-2 rounded-xl px-4 py-2 outline-none font-bold text-text-main text-sm cursor-pointer ${error ? "border-red-500" : "border-transparent focus:border-brand-purple"}`}
             />
           )
         ) : (
@@ -729,6 +817,9 @@ const InfoBlock = ({
           </p>
         )}
       </div>
+      {error && (
+        <p className="text-[10px] font-bold text-red-500 mt-2 ml-1 italic">{error}</p>
+      )}
     </div>
   );
 };

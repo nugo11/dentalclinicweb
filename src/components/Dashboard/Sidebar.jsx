@@ -263,20 +263,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </nav>
 
       {/* --- Upgrade / Plan Section --- */}
-      <div className="mt-6 mb-6 px-2 shrink-0">
+      <div className="mt-auto mb-3 px-2 shrink-0">
         {isOpen ? (
-          <div className={`p-5 rounded-[32px] relative overflow-hidden transition-all duration-500 ${isFreePlan ? 'bg-gradient-to-br from-brand-purple to-purple-700 shadow-xl shadow-brand-purple/20' : 'bg-surface/5 border border-white/10'}`}>
+          <div 
+            onClick={() => isAdmin ? navigate('/settings/billing') : null}
+            className={`p-3.5 sm:p-5 rounded-[24px] sm:rounded-[32px] relative overflow-hidden transition-all duration-300 ${isAdmin ? 'cursor-pointer hover:brightness-105' : ''} ${isFreePlan ? 'bg-gradient-to-br from-brand-purple to-purple-700 shadow-xl shadow-brand-purple/20' : 'bg-surface/5 border border-white/10'}`}
+          >
             <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-1.5">
                 <Crown size={14} className={isFreePlan ? "text-white" : "text-brand-purple"} />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
-                   {clinicData?.plan === 'free' ? 'უფასო ტარიფი' : (clinicData?.plan || 'Solo') + ' პაკეტი'}
+                   {clinicData?.plan === 'free' ? 'უფასო ტარიფი' : (clinicData?.plan || 'Business') + ' პაკეტი'}
                 </span>
               </div>
               
-              <div className="mt-4 pt-4 border-t border-white/10">
-                 <p className="text-[10px] font-black text-white uppercase tracking-widest">{activeStaff?.fullName || userData?.fullName}</p>
-                 <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-1">
+              <div className="mt-2.5 pt-2.5 sm:mt-3.5 sm:pt-3.5 border-t border-white/10">
+                 <p className="text-[10px] font-black text-white uppercase tracking-widest truncate">{activeStaff?.fullName || userData?.fullName}</p>
+                 <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-0.5">
                     {getRoleLabel(role)}
                  </p>
               </div>

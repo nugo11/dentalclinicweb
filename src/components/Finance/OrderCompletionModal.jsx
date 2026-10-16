@@ -52,6 +52,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [customService, setCustomService] = useState({ name: "", price: "" });
   const [paidAmount, setPaidAmount] = useState(0);
+  const [isPaidAmountCustom, setIsPaidAmountCustom] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null); // შეცდომის state
   const [successMsg, setSuccessMsg] = useState(null); // წარმატების შეტყობინების state
@@ -84,6 +85,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   useEffect(() => {
     if (isOpen) {
       setApplyVat(Boolean(orderData?.applyVat || (orderData?.vatAmount && orderData.vatAmount > 0)));
+      setIsPaidAmountCustom(false);
     }
     if (isOpen && orderData?.clinicId) {
       // სერვისები
@@ -187,10 +189,12 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   const vatAmount = applyVat ? subTotal * 0.18 : 0;
   const totalAmount = subTotal + vatAmount;
 
-  // Sync paidAmount with totalAmount when it changes
+  // Sync paidAmount with totalAmount when it changes (only if not manually customized)
   useEffect(() => {
-    setPaidAmount(totalAmount);
-  }, [totalAmount]);
+    if (!isPaidAmountCustom) {
+      setPaidAmount(totalAmount);
+    }
+  }, [totalAmount, isPaidAmountCustom]);
 
   const handleDeleteOrder = async () => {
     if (
@@ -421,22 +425,39 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
       }
 
       // 3. ჯავშნის განახლება - ONLY RUNS IF EHR SUCCEEDS
+      const numericPaid = Number(paidAmount) || 0;
+      const debtAmount = Math.max(0, Number((totalAmount - numericPaid).toFixed(2)));
+      const paymentStatus = numericPaid >= totalAmount ? 'paid' : numericPaid > 0 ? 'partial' : 'unpaid';
+
       const appointmentRef = doc(db, "appointments", orderData.id);
-        await updateDoc(appointmentRef, {
-          status: "completed_and_billed",
-          billedServices: selectedServices,
-          extraMaterials: selectedExtraMaterials,
-          price: totalAmount,
-          paidAmount: Number(paidAmount),
-          vatAmount: vatAmount,
-          applyVat: applyVat,
-          materialCost: totalMaterialCost,
-          paymentMethod: paymentMethod,
-          payerType: payerType,
-          insuranceInfo: payerType === 'insurance' ? insuranceInfo : null,
-          finalizedAt: new Date().toISOString(),
-          ehrId: newEhrId || null,
-        });
+      await updateDoc(appointmentRef, {
+        status: "completed_and_billed",
+        billedServices: selectedServices,
+        extraMaterials: selectedExtraMaterials,
+        price: totalAmount,
+        paidAmount: numericPaid,
+        debtAmount: debtAmount,
+        paymentStatus: paymentStatus,
+        vatAmount: vatAmount,
+        applyVat: applyVat,
+        materialCost: totalMaterialCost,
+        paymentMethod: paymentMethod,
+        payerType: payerType,
+        insuranceInfo: payerType === 'insurance' ? insuranceInfo : null,
+        finalizedAt: new Date().toISOString(),
+        ehrId: newEhrId || null,
+      });
+
+      // პაციენტის ბოლო ვიზიტის განახლება
+      if (orderData.patientId) {
+        try {
+          await updateDoc(doc(db, "patients", orderData.patientId), {
+            lastVisit: new Date().toISOString()
+          });
+        } catch (patErr) {
+          console.warn("Could not update patient lastVisit:", patErr);
+        }
+      }
 
       // 4. საწყობის განახლება - აქ არის კრიტიკული ნაწილი!
       const inventoryUpdates = [];
@@ -475,7 +496,13 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
       }
 
       // LOG ACTIVITY
-      await logActivity(orderData.clinicId, userData || { uid: auth.currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'appointment_finalize', `დაიხურა ვიზიტი: ${orderData.patientName} (თანხა: ${totalAmount}₾)`, { patientId: orderData.patientId, patientName: orderData.patientName, amount: totalAmount });
+      await logActivity(
+        orderData.clinicId, 
+        activeStaff || userData || { uid: auth.currentUser?.uid, fullName: 'Unknown', role: 'unknown' }, 
+        'appointment_finalize', 
+        `დაიხურა ვიზიტი: ${orderData.patientName} (თანხა: ${totalAmount}₾, გადახდილი: ${numericPaid}₾${debtAmount > 0 ? `, ვალი: ${debtAmount}₾` : ''})`, 
+        { patientId: orderData.patientId, patientName: orderData.patientName, amount: totalAmount, paidAmount: numericPaid, debtAmount: debtAmount }
+      );
 
       if (syncEHR) {
         setSuccessMsg("ვიზიტი წარმატებით დაიხურა და სინქრონიზდა EHR-თან!");
@@ -945,9 +972,23 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
 
                 {/* გადახდილი თანხა */}
                 <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-700/80">
-                  <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
-                    გადახდილი თანხა:
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
+                      გადახდილი თანხა:
+                    </label>
+                    {isPaidAmountCustom && !isReadOnly && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPaidAmountCustom(false);
+                          setPaidAmount(totalAmount);
+                        }}
+                        className="text-[10px] font-black text-brand-purple hover:underline cursor-pointer"
+                      >
+                        სრული თანხა ({totalAmount.toFixed(2)} ₾)
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <CreditCard
                       className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-purple"
@@ -957,10 +998,19 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                       type="number"
                       disabled={isReadOnly}
                       value={paidAmount}
-                      onChange={(e) => setPaidAmount(e.target.value)}
+                      onChange={(e) => {
+                        setIsPaidAmountCustom(true);
+                        setPaidAmount(e.target.value);
+                      }}
                       className="w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/30 rounded-2xl py-3.5 pl-11 pr-4 outline-none font-black text-xl text-slate-900 dark:text-white shadow-inner transition-all"
                     />
                   </div>
+                  {totalAmount > Number(paidAmount || 0) && (
+                    <div className="flex justify-between items-center text-xs font-bold text-red-500 mt-2 px-1">
+                      <span>დარჩენილი დავალიანება (ვალი):</span>
+                      <span className="font-black text-sm">{(totalAmount - Number(paidAmount || 0)).toFixed(2)} ₾</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

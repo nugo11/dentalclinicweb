@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { db } from "../firebase";
 import { 
   collection, query, where, onSnapshot, 
-  addDoc, doc, updateDoc, deleteDoc 
+  addDoc, doc, updateDoc, deleteDoc, serverTimestamp 
 } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { PLANS } from "../config/plans";
@@ -13,7 +13,7 @@ import TopNav from "../components/Dashboard/TopNav";
 import { 
   Users, UserPlus, Mail, ShieldCheck, Trash2, 
   Loader2, Crown, Zap, X, Shield, UserCircle,
-  Eye, EyeOff
+  Eye, EyeOff, Wallet, CheckCircle2, AlertTriangle
 } from "lucide-react";
 import { logActivity } from "../utils/activityLogger";
 import useLockBodyScroll from "../hooks/useLockBodyScroll";
@@ -23,7 +23,7 @@ import { getRoleLabel } from "../utils/roleUtils";
 import { scrollToFirstError } from "../utils/scrollHelper";
 
 const Staff = () => {
-  const { userData, clinicData, activeStaff } = useAuth();
+  const { userData, clinicData, activeStaff, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [staff, setStaff] = useState([]);
@@ -33,6 +33,7 @@ const Staff = () => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [visiblePins, setVisiblePins] = useState({});
   const [staffErrors, setStaffErrors] = useState({});
+  const [paymentModal, setPaymentModal] = useState({ isOpen: false, member: null, amount: "" });
   
   const [newDoctor, setNewDoctor] = useState({
     fullName: "",
@@ -41,8 +42,9 @@ const Staff = () => {
     pin: "",
     role: "doctor",
     salaryAmount: "",
-    salaryPayDay: "",
+    salaryPayDay: "1",
     salaryType: "fixed",
+    commissionRate: "",
     personalId: "",
     birthDate: ""
   });
@@ -55,13 +57,14 @@ const Staff = () => {
     pin: "",
     role: "",
     salaryAmount: "",
-    salaryPayDay: "",
+    salaryPayDay: "1",
     salaryType: "fixed",
+    commissionRate: "",
     personalId: "",
     birthDate: ""
   });
 
-  useLockBodyScroll(Boolean(showAddModal || editTarget || deleteTargetId));
+  useLockBodyScroll(Boolean(showAddModal || editTarget || deleteTargetId || paymentModal.isOpen));
 
   const currentPlanIdRaw = (clinicData?.plan || "free").toLowerCase();
   const planId = (currentPlanIdRaw === "solo" || currentPlanIdRaw === "basic") ? "business" : 
@@ -72,7 +75,7 @@ const Staff = () => {
   if (currentPlan.id === 'custom' && clinicData?.customMaxDoctors) {
     maxDocs = clinicData.customMaxDoctors;
   }
-  const doctorLimitReached = staff.filter(s => s.role !== 'admin').length >= maxDocs;
+  const doctorLimitReached = staff.filter(s => s.role === 'doctor').length >= maxDocs;
 
   useEffect(() => {
     if (!userData?.clinicId) return;
@@ -116,6 +119,9 @@ const Staff = () => {
         errors.addPhone = phoneErr;
       }
     }
+    if (newDoctor.personalId && newDoctor.personalId.replace(/\D/g, '').length !== 11) {
+      errors.addPersonalId = "პირადი ნომერი უნდა შედგებოდეს 11 ციფრისგან";
+    }
 
     if (Object.keys(errors).length > 0) {
       setStaffErrors(errors);
@@ -134,9 +140,10 @@ const Staff = () => {
         pinHash: pinHash,
         role: newDoctor.role,
         salaryAmount: newDoctor.salaryType === 'fixed' ? (Number(newDoctor.salaryAmount) || 0) : 0,
+        commissionRate: newDoctor.salaryType === 'commission' ? (Number(newDoctor.commissionRate) || 0) : null,
         salaryPayDay: Number(newDoctor.salaryPayDay) || 1,
         salaryType: newDoctor.salaryType || "fixed",
-        personalId: newDoctor.personalId || "",
+        personalId: newDoctor.personalId ? newDoctor.personalId.replace(/\D/g, '') : "",
         birthDate: newDoctor.birthDate || "",
         clinicId: userData.clinicId,
         status: "active",
@@ -148,7 +155,7 @@ const Staff = () => {
 
       setShowAddModal(false);
       setStaffErrors({});
-      setNewDoctor({ fullName: "", email: "", phone: "", pin: "", role: "doctor", salaryAmount: "", salaryPayDay: "", salaryType: "fixed", personalId: "", birthDate: "" });
+      setNewDoctor({ fullName: "", email: "", phone: "", pin: "", role: "doctor", salaryAmount: "", salaryPayDay: "1", salaryType: "fixed", commissionRate: "", personalId: "", birthDate: "" });
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -165,8 +172,9 @@ const Staff = () => {
       phone: member.phone || "",
       pin: "",
       role: member.role || "doctor",
-      salaryAmount: member.salaryAmount || "",
-      salaryPayDay: member.salaryPayDay || "",
+      salaryAmount: member.salaryAmount !== undefined ? member.salaryAmount : "",
+      commissionRate: member.commissionRate !== undefined ? member.commissionRate : "",
+      salaryPayDay: member.salaryPayDay !== undefined ? member.salaryPayDay : "1",
       salaryType: member.salaryType || "fixed",
       personalId: member.personalId || "",
       birthDate: member.birthDate || ""
@@ -188,6 +196,9 @@ const Staff = () => {
         errors.editPhone = phoneErr;
       }
     }
+    if (editFormData.personalId && editFormData.personalId.replace(/\D/g, '').length !== 11) {
+      errors.editPersonalId = "პირადი ნომერი უნდა შედგებოდეს 11 ციფრისგან";
+    }
 
     if (Object.keys(errors).length > 0) {
       setStaffErrors(errors);
@@ -203,9 +214,10 @@ const Staff = () => {
         phone: editFormData.phone ? formatPhone(editFormData.phone) : "",
         role: editFormData.role,
         salaryAmount: editFormData.salaryType === 'fixed' ? (Number(editFormData.salaryAmount) || 0) : 0,
+        commissionRate: editFormData.salaryType === 'commission' ? (Number(editFormData.commissionRate) || 0) : null,
         salaryPayDay: Number(editFormData.salaryPayDay) || 1,
         salaryType: editFormData.salaryType || "fixed",
-        personalId: editFormData.personalId || "",
+        personalId: editFormData.personalId ? editFormData.personalId.replace(/\D/g, '') : "",
         birthDate: editFormData.birthDate || ""
       };
 
@@ -221,6 +233,41 @@ const Staff = () => {
       setEditTarget(null);
     } catch (error) {
       console.error("Error updating staff:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    const { member, amount } = paymentModal;
+    if (!member) return;
+    
+    const amountToPay = Number(amount);
+    if (isNaN(amountToPay) || amountToPay <= 0) {
+      alert("გთხოვთ შეიყვანოთ ვალიდური თანხა");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const newFinanceDoc = await addDoc(collection(db, "finance"), {
+        clinicId: userData.clinicId,
+        type: 'expense',
+        category: 'ხელფასი',
+        amount: amountToPay,
+        description: `ხელფასი: ${member.fullName} (${member.salaryType === 'commission' ? 'გამომუშავება' : 'ფიქსირებული'})`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        staffId: member.id,
+        paidMonth: new Date().toISOString().slice(0, 7)
+      });
+
+      // LOG ACTIVITY
+      await logActivity(userData.clinicId, activeStaff || userData, 'salary_payment', `გაიცა ხელფასი: ${member.fullName} (თანხა: ${amountToPay}₾)`, { financeId: newFinanceDoc.id, staffId: member.id, amount: amountToPay });
+
+      setPaymentModal({ isOpen: false, member: null, amount: "" });
+    } catch (error) {
+      console.error("Error paying salary:", error);
     } finally {
       setIsProcessing(false);
     }
@@ -248,6 +295,21 @@ const Staff = () => {
       setDeleteTargetId(null);
     }
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="h-screen w-full bg-surface-soft flex items-center justify-center font-nino text-text-main p-4">
+        <div className="bg-surface p-8 rounded-3xl border border-border-main text-center max-w-md shadow-lg">
+          <Shield className="mx-auto text-amber-500 mb-4" size={40} />
+          <h2 className="text-xl font-black mb-2">წვდომა შეზღუდულია</h2>
+          <p className="text-xs text-text-muted mb-6">პერსონალის მართვის გვერდი ხელმისაწვდომია მხოლოდ კლინიკის მთავარი ადმინისტრატორისთვის.</p>
+          <button onClick={() => navigate("/")} className="px-6 py-3 bg-brand-purple text-white rounded-xl text-xs font-black uppercase cursor-pointer">
+            მთავარზე დაბრუნება
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -289,14 +351,14 @@ const Staff = () => {
                     <div className="absolute top-6 right-6 flex items-center gap-2">
                         <button 
                           onClick={() => handleEditStaff(member)}
-                          className="p-2 text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all"
+                          className="p-2 text-text-muted hover:text-brand-purple hover:bg-brand-purple/10 rounded-xl transition-all cursor-pointer"
                           title="რედაქტირება"
                         >
                           <UserCircle size={16} />
                         </button>
                         <button 
                           onClick={() => handleDeleteStaff(member.id, member.role)}
-                          className={`p-2 rounded-xl transition-all ${member.role === 'admin' ? 'hidden' : 'text-text-muted hover:text-red-500 hover:bg-red-500/10'}`}
+                          className={`p-2 rounded-xl transition-all cursor-pointer ${member.role === 'admin' ? 'hidden' : 'text-text-muted hover:text-red-500 hover:bg-red-500/10'}`}
                           title="წაშლა"
                         >
                           <Trash2 size={16} />
@@ -321,20 +383,33 @@ const Staff = () => {
                       )}
                     </div>
 
-                      <div className="mb-6 p-4 bg-emerald-500/10/50 rounded-2xl border border-emerald-500/20">
+                      <div className="mb-4 p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
                         <div className="flex justify-between items-center">
                           <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">
                             {member.salaryType === 'commission' ? 'გამომუშავება' : 'ხელფასი'}
                           </span>
                           <span className="text-[11px] font-black text-emerald-700">
-                            {member.salaryType === 'commission' ? 'პროცენტი' : `₾${member.salaryAmount}`}
+                            {member.salaryType === 'commission' ? `${member.commissionRate || 0}%` : `₾${member.salaryAmount ?? 0}`}
                           </span>
                         </div>
                         <div className="flex justify-between items-center mt-1">
                           <span className="text-[8px] font-bold text-emerald-500/70 uppercase">რიცხვი</span>
-                          <span className="text-[9px] font-black text-emerald-600">{member.salaryPayDay}</span>
+                          <span className="text-[9px] font-black text-emerald-600">{member.salaryPayDay ?? 1}</span>
                         </div>
                       </div>
+
+                      {member.role !== 'admin' && (
+                        <button
+                          onClick={() => setPaymentModal({
+                            isOpen: true,
+                            member,
+                            amount: member.salaryType === 'fixed' ? (member.salaryAmount || "").toString() : ""
+                          })}
+                          className="w-full mb-6 py-2.5 px-3 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-600 hover:text-white rounded-xl font-black text-[9px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95"
+                        >
+                          <Wallet size={12} /> ხელფასის გაცემა
+                        </button>
+                      )}
                     <div className="pt-6 border-t border-border-main flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -417,8 +492,20 @@ const Staff = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-1 min-w-0">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">პირადი ნომერი</label>
-                      <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0" maxLength={11} value={newDoctor.personalId} onChange={e => setNewDoctor({...newDoctor, personalId: e.target.value})} placeholder="010XXXXXXXX" />
+                      <div className="flex justify-between items-center ml-4">
+                        <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">პირადი ნომერი</label>
+                        {staffErrors.addPersonalId && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addPersonalId}</span>}
+                      </div>
+                      <input 
+                        className={`w-full bg-surface-soft border-2 rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 ${staffErrors.addPersonalId ? 'border-red-500 bg-red-500/10' : 'border-transparent focus:border-brand-purple'}`} 
+                        maxLength={11} 
+                        value={newDoctor.personalId} 
+                        onChange={e => {
+                          setNewDoctor({...newDoctor, personalId: e.target.value.replace(/\D/g, '')});
+                          if (staffErrors.addPersonalId) setStaffErrors(prev => ({ ...prev, addPersonalId: undefined }));
+                        }} 
+                        placeholder="010XXXXXXXX" 
+                      />
                     </div>
                     <div className="space-y-1 min-w-0">
                       <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
@@ -487,7 +574,7 @@ const Staff = () => {
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ხელფასის ტიპი</label>
-                      <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all" value={newDoctor.salaryType} onChange={e => setNewDoctor({...newDoctor, salaryType: e.target.value})}>
+                      <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all cursor-pointer" value={newDoctor.salaryType} onChange={e => setNewDoctor({...newDoctor, salaryType: e.target.value})}>
                         <option value="fixed">ფიქსირებული</option>
                         <option value="commission">გამომუშავება</option>
                       </select>
@@ -497,10 +584,15 @@ const Staff = () => {
                       <input type="number" min="1" max="31" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.salaryPayDay} onChange={e => setNewDoctor({...newDoctor, salaryPayDay: e.target.value})} placeholder="1-31" />
                     </div>
                 </div>
-                {newDoctor.salaryType === 'fixed' && (
+                {newDoctor.salaryType === 'fixed' ? (
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ხელფასი (₾)</label>
                     <input type="number" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.salaryAmount} onChange={e => setNewDoctor({...newDoctor, salaryAmount: e.target.value})} placeholder="0" />
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">გამომუშავების პროცენტი (%)</label>
+                    <input type="number" min="0" max="100" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.commissionRate} onChange={e => setNewDoctor({...newDoctor, commissionRate: e.target.value})} placeholder="მაგ: 30" />
                   </div>
                 )}
                 <button disabled={isProcessing} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all mt-6">
@@ -542,8 +634,20 @@ const Staff = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1 min-w-0">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">პირადი ნომერი</label>
-                    <input className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0" maxLength={11} value={editFormData.personalId} onChange={e => setEditFormData({...editFormData, personalId: e.target.value})} placeholder="010XXXXXXXX" />
+                    <div className="flex justify-between items-center ml-4">
+                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">პირადი ნომერი</label>
+                      {staffErrors.editPersonalId && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.editPersonalId}</span>}
+                    </div>
+                    <input 
+                      className={`w-full bg-surface-soft border-2 rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 ${staffErrors.editPersonalId ? 'border-red-500 bg-red-500/10' : 'border-transparent focus:border-brand-purple'}`} 
+                      maxLength={11} 
+                      value={editFormData.personalId} 
+                      onChange={e => {
+                        setEditFormData({...editFormData, personalId: e.target.value.replace(/\D/g, '')});
+                        if (staffErrors.editPersonalId) setStaffErrors(prev => ({ ...prev, editPersonalId: undefined }));
+                      }} 
+                      placeholder="010XXXXXXXX" 
+                    />
                   </div>
                   <div className="space-y-1 min-w-0">
                     <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
@@ -613,7 +717,7 @@ const Staff = () => {
               <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ხელფასის ტიპი</label>
-                    <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all" value={editFormData.salaryType} onChange={e => setEditFormData({...editFormData, salaryType: e.target.value})}>
+                    <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all cursor-pointer" value={editFormData.salaryType} onChange={e => setEditFormData({...editFormData, salaryType: e.target.value})}>
                       <option value="fixed">ფიქსირებული</option>
                       <option value="commission">გამომუშავება</option>
                     </select>
@@ -623,16 +727,70 @@ const Staff = () => {
                     <input type="number" min="1" max="31" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.salaryPayDay} onChange={e => setEditFormData({...editFormData, salaryPayDay: e.target.value})} />
                   </div>
               </div>
-              {editFormData.salaryType === 'fixed' && (
+              {editFormData.salaryType === 'fixed' ? (
                 <div className="space-y-1">
                   <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ხელფასი (₾)</label>
                   <input type="number" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.salaryAmount} onChange={e => setEditFormData({...editFormData, salaryAmount: e.target.value})} />
                 </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">გამომუშავების პროცენტი (%)</label>
+                  <input type="number" min="0" max="100" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={editFormData.commissionRate} onChange={e => setEditFormData({...editFormData, commissionRate: e.target.value})} placeholder="მაგ: 30" />
+                </div>
               )}
-              <button disabled={isProcessing} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all mt-6">
+              <button disabled={isProcessing} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all mt-6 cursor-pointer">
                 {isProcessing ? <Loader2 className="animate-spin mx-auto" size={20} /> : "ცვლილებების შენახვა"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Salary Payment Modal */}
+      {paymentModal.isOpen && paymentModal.member && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <div className="app-overlay fixed inset-0 touch-none" onClick={() => setPaymentModal({ isOpen: false, member: null, amount: "" })} onTouchMove={(e) => e.preventDefault()} />
+          <div className="app-sheet bg-surface rounded-[32px] w-full max-w-sm p-8 relative z-10 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+              <Wallet size={24} />
+            </div>
+            <h3 className="text-xl font-black text-text-main italic mb-1">ხელფასის გაცემა</h3>
+            <p className="text-xs text-text-muted font-bold mb-6">
+              თანამშრომელი: <span className="text-text-main font-black">{paymentModal.member.fullName}</span>
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest block mb-2 ml-1">
+                  გასაცემი თანხა (₾)
+                </label>
+                <input 
+                  type="number"
+                  value={paymentModal.amount}
+                  onChange={(e) => setPaymentModal({ ...paymentModal, amount: e.target.value })}
+                  placeholder="0.00"
+                  className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-3.5 outline-none font-black text-lg transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentModal({ isOpen: false, member: null, amount: "" })}
+                  className="py-3.5 bg-surface-soft text-text-muted rounded-xl font-black text-[10px] uppercase tracking-widest cursor-pointer"
+                >
+                  გაუქმება
+                </button>
+                <button
+                  type="button"
+                  disabled={isProcessing || !paymentModal.amount}
+                  onClick={handleConfirmPayment}
+                  className="py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                >
+                  {isProcessing ? <Loader2 className="animate-spin mx-auto" size={16} /> : "დადასტურება"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

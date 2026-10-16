@@ -133,7 +133,7 @@ function AppContent() {
         } />
         
         <Route path="/services" element={
-          <PrivateRoute title="სერვისები" allowedRoles={['admin', 'manager']}>
+          <PrivateRoute title="სერვისები" allowedRoles={['admin']}>
             <Services />
           </PrivateRoute>
         } />
@@ -145,7 +145,7 @@ function AppContent() {
         } />
         
         <Route path="/staff" element={
-          <PrivateRoute title="თანამშრომლები" allowedRoles={['admin', 'manager', 'accountant']}>
+          <PrivateRoute title="თანამშრომლები" allowedRoles={['admin']}>
             <Staff />
           </PrivateRoute>
         } />
@@ -169,13 +169,13 @@ function AppContent() {
         } />
         
         <Route path="/settings" element={
-          <PrivateRoute title="პარამეტრები" allowedRoles={['admin', 'manager', 'doctor']}>
+          <PrivateRoute title="პარამეტრები" allowedRoles={['admin']}>
             <Settings />
           </PrivateRoute>
         } />
 
         <Route path="/activity-log" element={
-          <PrivateRoute title="აქტივობების ჟურნალი" allowedRoles={['admin', 'manager']}>
+          <PrivateRoute title="აქტივობების ჟურნალი" allowedRoles={['admin']}>
             <ActivityLog />
           </PrivateRoute>
         } />

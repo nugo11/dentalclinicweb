@@ -297,8 +297,19 @@ const OrderArchive = () => {
                           <td className="p-6 text-[11px] font-bold text-text-muted italic">
                             {order.finalizedAt ? new Date(order.finalizedAt).toLocaleDateString("ka-GE", { year: 'numeric', month: 'numeric', day: 'numeric' }) : "—"}
                           </td>
-                          <td className="p-6 font-black text-brand-purple">
-                            {order.price} ₾
+                          <td className="p-6">
+                            <div className="flex flex-col">
+                              <span className="font-black text-brand-purple">{order.price} ₾</span>
+                              {Number(order.debtAmount || 0) > 0 ? (
+                                <span className="text-[9px] font-black text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded-md mt-0.5 w-fit">
+                                  ვალი: {Number(order.debtAmount).toFixed(2)} ₾
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-black text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-md mt-0.5 w-fit">
+                                  გადახდილია
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td className="p-6 text-right whitespace-nowrap">
                              <div className="flex justify-end items-center gap-2">

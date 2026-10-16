@@ -2,7 +2,7 @@ import React from 'react';
 
 const Tooth = ({ number, status, onClick }) => {
   const statusConfig = {
-    healthy: { color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-100 shadow-sm', iconColor: 'text-emerald-500', label: 'ჯანსაღი' },
+    healthy: { color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-100 shadow-sm', iconColor: 'text-emerald-500', label: 'ჯანმრთელი' },
     caries: { color: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-100 shadow-sm', iconColor: 'text-amber-500', label: 'კარიესი' },
     pulpitis: { color: 'bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-100 shadow-sm', iconColor: 'text-red-500', label: 'პულპიტი' },
     filling: { color: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-100 shadow-sm', iconColor: 'text-blue-500', label: 'ბჟენი' },

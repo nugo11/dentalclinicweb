@@ -6,7 +6,8 @@ import { Image as ImageIcon, Download, Eye, Upload, Loader2, MessageSquare, X, C
 import { logActivity } from "../../utils/activityLogger";
 
 const PatientXRays = ({ patientId, patientName }) => {
-  const { userData, currentUser, activeStaff } = useAuth();
+  const { userData, currentUser, activeStaff, role } = useAuth();
+  const isReceptionist = role === 'receptionist';
   const [xrays, setXrays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -255,7 +256,7 @@ const PatientXRays = ({ patientId, patientName }) => {
   };
 
   const confirmDelete = async () => {
-    if (!imageToDelete) return;
+    if (!imageToDelete || isReceptionist) return;
     setIsDeleting(true);
     
     try {
@@ -345,13 +346,15 @@ const PatientXRays = ({ patientId, patientName }) => {
                 >
                   <Download size={18} />
                 </button>
-                <button 
-                  onClick={() => setImageToDelete(xray)}
-                  className="flex-1 xl:flex-none flex items-center justify-center p-3 xl:px-4 bg-surface border border-border-main text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm group/btn tooltip-trigger relative"
-                  title="წაშლა"
-                >
-                  <Trash2 size={18} />
-                </button>
+                {!isReceptionist && (
+                  <button 
+                    onClick={() => setImageToDelete(xray)}
+                    className="flex-1 xl:flex-none flex items-center justify-center p-3 xl:px-4 bg-surface border border-border-main text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm group/btn tooltip-trigger relative"
+                    title="წაშლა"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
               </div>
             </div>
           ))

@@ -116,12 +116,15 @@ const PatientsTable = ({ externalSearch = "" }) => {
     return () => unsubscribe();
   }, [userData?.clinicId]);
 
-  const filteredPatients = patients.filter(
-    (p) =>
-      (p.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.personalId?.includes(searchTerm) ||
-      (p.phone || "").includes(searchTerm),
-  );
+  const cleanSearchDigits = searchTerm.replace(/\D/g, '');
+  const filteredPatients = patients.filter((p) => {
+    if (!searchTerm.trim()) return true;
+    const nameMatch = (p.fullName || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const idMatch = cleanSearchDigits ? p.personalId?.replace(/\D/g, '').includes(cleanSearchDigits) : false;
+    const phoneMatch = cleanSearchDigits ? (p.phone || "").replace(/\D/g, '').includes(cleanSearchDigits) : false;
+    const emailMatch = (p.email || "").toLowerCase().includes(searchTerm.toLowerCase());
+    return nameMatch || idMatch || phoneMatch || emailMatch;
+  });
 
   const indexOfLastPatient = currentPage * patientsPerPage;
   const indexOfFirstPatient = indexOfLastPatient - patientsPerPage;
@@ -147,7 +150,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
 
   return (
     // დავამატეთ ref ამ დივზე
-    <div ref={tableTopRef} className="bg-surface rounded-[40px] border border-border-main shadow-sm overflow-hidden flex flex-col h-full relative font-nino">
+    <div ref={tableTopRef} className="bg-surface rounded-[32px] md:rounded-[40px] border border-border-main shadow-sm overflow-hidden flex flex-col h-full relative font-nino">
       
       {/* --- ფორმა 100-ის მოდალი --- */}
       {isModalOpen && (
@@ -207,7 +210,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
       )}
 
       {/* Table Header Controls */}
-      <div className="p-6 md:p-8 border-b border-border-main flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+      <div className="p-4 sm:p-6 md:p-8 border-b border-border-main flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
         <div className="relative w-full sm:max-w-md group">
           <Search
             className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors"
@@ -221,12 +224,13 @@ const PatientsTable = ({ externalSearch = "" }) => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-12 pr-4 py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm text-text-main focus:bg-surface focus:border-brand-purple border-2 border-transparent transition-all"
+            className="w-full pl-12 pr-4 py-3.5 md:py-4 bg-surface-soft rounded-2xl outline-none font-bold text-sm text-text-main focus:bg-surface focus:border-brand-purple border-2 border-transparent transition-all"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
+      {/* Desktop Table View */}
+      <div className="hidden md:block flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
         <table className="w-full text-left min-w-[1000px]">
           <thead className="bg-surface-soft/50 sticky top-0 z-10 backdrop-blur-md">
             <tr>
@@ -343,9 +347,74 @@ const PatientsTable = ({ externalSearch = "" }) => {
         </table>
       </div>
 
+      {/* Mobile Card View (< 768px) */}
+      <div className="block md:hidden flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+        {currentPatients.length > 0 ? (
+          currentPatients.map((patient) => (
+            <div key={patient.id} className="bg-surface-soft/40 p-4 rounded-2xl border border-border-main space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-brand-purple/10 text-brand-purple flex items-center justify-center font-black text-sm shrink-0">
+                    {(patient.fullName || "?")[0]}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-text-main text-sm leading-snug">{patient.fullName || "უცნობი პაციენტი"}</h4>
+                    <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider mt-0.5">
+                      ID: {patient.personalId || "N/A"}
+                    </p>
+                  </div>
+                </div>
+                {patient.allergies ? (
+                  <span className="inline-flex px-2 py-0.5 bg-red-500/10 text-red-500 rounded-md text-[8px] font-black uppercase tracking-widest border border-red-500/20 shrink-0">
+                    ⚠ ალერგია
+                  </span>
+                ) : (
+                  <span className="inline-flex px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-md text-[8px] font-black uppercase tracking-widest border border-emerald-500/20 shrink-0">
+                    ✓ ნორმა
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 py-2 border-y border-border-main/50 text-xs">
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-text-muted block">ტელეფონი</span>
+                  <a href={`tel:${patient.phone}`} className="font-bold text-text-main hover:text-brand-purple transition-colors flex items-center gap-1 mt-0.5">
+                    <Phone size={12} className="text-text-muted" /> {patient.phone || "N/A"}
+                  </a>
+                </div>
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-text-muted block">ბოლო ვიზიტი</span>
+                  <span className="font-bold text-text-main block mt-0.5 truncate">{patient.lastVisit || "არ ყოფილა"}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  onClick={() => openFormModal(patient)}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 active:scale-95"
+                >
+                  <FileText size={13} /> ფორმა 100
+                </button>
+                <button
+                  onClick={() => navigate(`/patients/${patient.id}`)}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-brand-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm active:scale-95"
+                >
+                  <User size={13} /> ბარათი
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="py-12 text-center">
+            <UserCircle2 size={40} className="mx-auto text-text-muted opacity-30 mb-2" />
+            <p className="font-black uppercase text-[10px] tracking-widest text-text-muted">პაციენტი ვერ მოიძებნა</p>
+          </div>
+        )}
+      </div>
+
       {/* --- Pagination Footer --- */}
       {totalPages > 1 && (
-        <div className="px-8 py-5 border-t border-border-main bg-surface-soft/30 flex items-center justify-between shrink-0">
+        <div className="px-4 md:px-8 py-4 md:py-5 border-t border-border-main bg-surface-soft/30 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">
             გვერდი {currentPage} / {totalPages} — სულ {filteredPatients.length} პაციენტი
           </p>

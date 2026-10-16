@@ -33,6 +33,7 @@ const Dashboard = () => {
   const [monthlyPatientsCount, setMonthlyPatientsCount] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(0);
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
+  const [incomeTrend, setIncomeTrend] = useState('+0%');
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -52,6 +53,8 @@ const Dashboard = () => {
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
     const currentMonthStr = now.toISOString().slice(0, 7);
 
     // ფინანსები: შემოსავალი მოდის appointments-იდან, ხარჯები ორივედან
@@ -63,19 +66,33 @@ const Dashboard = () => {
     );
 
     let aptInc = 0;
+    let prevAptInc = 0;
     let aptExp = 0;
     let finInc = 0;
+    let prevFinInc = 0;
     let finExp = 0;
     let paidIds = [];
 
     const updateFinancials = () => {
-      setMonthlyIncome(aptInc + finInc);
+      const curInc = aptInc + finInc;
+      const prevInc = prevAptInc + prevFinInc;
+      setMonthlyIncome(curInc);
       setMonthlyExpenses(aptExp + finExp);
       setPaidStaffIds(paidIds);
+
+      if (prevInc > 0) {
+        const diffPercent = Math.round(((curInc - prevInc) / prevInc) * 100);
+        setIncomeTrend(diffPercent >= 0 ? `+${diffPercent}%` : `${diffPercent}%`);
+      } else if (curInc > 0) {
+        setIncomeTrend('+100%');
+      } else {
+        setIncomeTrend('0%');
+      }
     };
 
     const unsubAptsFinance = onSnapshot(qAptsFinance, (snap) => {
       let inc = 0;
+      let pInc = 0;
       let exp = 0;
       snap.docs.forEach(doc => {
         const d = doc.data();
@@ -84,15 +101,19 @@ const Dashboard = () => {
         if (dt >= startOfMonth) {
           inc += Number(d.price || 0);
           exp += Number(d.materialCost || 0);
+        } else if (dt >= prevMonthStart && dt <= prevMonthEnd) {
+          pInc += Number(d.price || 0);
         }
       });
       aptInc = inc;
+      prevAptInc = pInc;
       aptExp = exp;
       updateFinancials();
     });
 
     const unsubFinance = onSnapshot(qFinance, (snap) => {
       let inc = 0;
+      let pInc = 0;
       let exp = 0;
       let pIds = [];
       snap.docs.forEach(doc => {
@@ -103,6 +124,8 @@ const Dashboard = () => {
         if (dt >= startOfMonth) {
           if (d.category === 'შემოსავალი' || d.type === 'income') inc += Number(d.amount || 0);
           if (d.category === 'ხელფასი' || d.type === 'expense') exp += Number(d.amount || 0);
+        } else if (dt >= prevMonthStart && dt <= prevMonthEnd) {
+          if (d.category === 'შემოსავალი' || d.type === 'income') pInc += Number(d.amount || 0);
         }
 
         if (d.category === 'ხელფასი' && d.paidMonth === currentMonthStr) {
@@ -110,6 +133,7 @@ const Dashboard = () => {
         }
       });
       finInc = inc;
+      prevFinInc = pInc;
       finExp = exp;
       paidIds = pIds;
       updateFinancials();
@@ -333,6 +357,7 @@ const Dashboard = () => {
                   inventoryAlerts={lowStockItems.length}
                   monthlyIncome={monthlyIncome}
                   monthlyExpenses={monthlyExpenses}
+                  incomeTrend={incomeTrend}
                   role={role}
                 />
 

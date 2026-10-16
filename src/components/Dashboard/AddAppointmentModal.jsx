@@ -7,6 +7,9 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
+  doc,
+  updateDoc,
+  increment,
 } from "firebase/firestore";
 import {
   X,
@@ -238,6 +241,35 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
 
       const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.duration) * 60000);
 
+      const targetDoctorId = canSelectDoctor ? formData.doctorId : (activeStaff?.id || userData?.uid);
+      const targetDoctorName = canSelectDoctor ? formData.doctorName : (activeStaff?.fullName || userData?.fullName);
+
+      // Overlap check for doctor
+      if (targetDoctorId && clinicId) {
+        const qOverlap = query(
+          collection(db, "appointments"),
+          where("clinicId", "==", clinicId),
+          where("doctorId", "==", targetDoctorId)
+        );
+        const overlapSnapshot = await getDocs(qOverlap);
+        const hasOverlap = overlapSnapshot.docs.some((docSnap) => {
+          const app = docSnap.data();
+          if (app.status === "cancelled") return false;
+          const existStart = new Date(app.start).getTime();
+          const existEnd = new Date(app.end).getTime();
+          const newStart = startDateTime.getTime();
+          const newEnd = endDateTime.getTime();
+          return newStart < existEnd && newEnd > existStart;
+        });
+
+        if (hasOverlap) {
+          setToast({ show: true, message: "არჩეულ დროს ექიმს უკვე აქვს სხვა ჩანაწერი!" });
+          setTimeout(() => setToast({ show: false, message: "" }), 4000);
+          setLoading(false);
+          return;
+        }
+      }
+
       let displayTitle = isExternal
         ? `${formData.externalPatientName} (${formData.externalClinicName})`
         : selectedPatient?.fullName;
@@ -246,8 +278,8 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         clinicId,
         patientId: isExternal ? "external" : selectedPatient?.id,
         patientName: displayTitle,
-        doctorId: canSelectDoctor ? formData.doctorId : (activeStaff?.id || userData?.uid),
-        doctorName: canSelectDoctor ? formData.doctorName : (activeStaff?.fullName || userData?.fullName),
+        doctorId: targetDoctorId,
+        doctorName: targetDoctorName,
         start: startDateTime.toISOString(),
         end: endDateTime.toISOString(),
         service: formData.service,
@@ -257,6 +289,17 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         color: isExternal ? "#94A3B8" : "#7C3AED",
         createdAt: serverTimestamp(),
       });
+
+      // პაციენტის ვიზიტების მთვლელის გაზრდა
+      if (!isExternal && selectedPatient?.id) {
+        try {
+          await updateDoc(doc(db, "patients", selectedPatient.id), {
+            appointmentCount: increment(1)
+          });
+        } catch (patErr) {
+          console.warn("Could not increment appointmentCount:", patErr);
+        }
+      }
 
       // SMS გაგზავნა ფასიანი პაკეტებისთვის
       const planKey = (clinicData?.plan || "free").toLowerCase();

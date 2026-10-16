@@ -25,7 +25,7 @@ import useLockBodyScroll from "../hooks/useLockBodyScroll";
 import { scrollToFirstError } from "../utils/scrollHelper";
 
 const Services = () => {
-  const { userData, clinicData } = useAuth();
+  const { userData, clinicData, isAdmin, activeStaff } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [services, setServices] = useState([]);
   const [inventory, setInventory] = useState([]);
@@ -106,12 +106,12 @@ const Services = () => {
         });
         
         // LOG ACTIVITY
-        await logActivity(userData?.clinicId || auth.currentUser.uid, userData, 'service_create', `დაემატა ახალი სერვისი: ${newService.name} (${newService.price}₾)`, { serviceId: docRef.id, name: newService.name, price: newService.price });
+        await logActivity(userData?.clinicId || auth.currentUser.uid, activeStaff || userData, 'service_create', `დაემატა ახალი სერვისი: ${newService.name} (${newService.price}₾)`, { serviceId: docRef.id, name: newService.name, price: newService.price });
       }
 
       // LOG ACTIVITY FOR UPDATE
       if (editingId) {
-        await logActivity(userData?.clinicId || auth.currentUser.uid, userData, 'service_update', `განახლდა სერვისი: ${newService.name} (${newService.price}₾)`, { serviceId: editingId, name: newService.name, price: newService.price });
+        await logActivity(userData?.clinicId || auth.currentUser.uid, activeStaff || userData, 'service_update', `განახლდა სერვისი: ${newService.name} (${newService.price}₾)`, { serviceId: editingId, name: newService.name, price: newService.price });
       }
 
       closeModal();
@@ -159,13 +159,13 @@ const Services = () => {
     setNewService({
       ...newService,
       materials: newService.materials.map(m => 
-        m.id === id ? { ...m, amount: Number(Math.max(0.1, m.amount + delta).toFixed(2)) } : m
+        m.id === id ? { ...m, amount: Number(Math.max(0.01, (Number(m.amount) || 0) + delta).toFixed(2)) } : m
       )
     });
   };
 
   // წვდომის შემოწმება
-  if (userData && userData.role !== 'admin') {
+  if (!isAdmin) {
     return (
       <div className="h-screen w-full bg-surface-soft flex overflow-hidden font-nino text-text-main">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
@@ -218,6 +218,22 @@ const Services = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-10">
               {loading ? (
                 <div className="col-span-full py-20 text-center"><Loader2 className="animate-spin mx-auto text-brand-purple" /></div>
+              ) : services.length === 0 ? (
+                <div className="col-span-full py-20 bg-surface rounded-[40px] border border-border-main text-center flex flex-col items-center justify-center p-8">
+                  <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mb-4">
+                    <Tag size={36} />
+                  </div>
+                  <h3 className="text-xl font-black text-text-main italic mb-1">სერვისები არ არის დამატებული</h3>
+                  <p className="text-text-muted text-xs font-bold uppercase tracking-widest max-w-sm mb-6">
+                    დაამატეთ თქვენი კლინიკის სამედიცინო მომსახურებები და მიაბით სახარჯი მასალები
+                  </p>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex items-center gap-2 bg-brand-purple text-white px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brand-deep transition-all shadow-lg shadow-brand-purple/20 cursor-pointer"
+                  >
+                    <Plus size={16} /> პირველი სერვისის დამატება
+                  </button>
+                </div>
               ) : services.map((s) => (
                 <div key={s.id} className="bg-surface p-8 rounded-[40px] border border-border-main shadow-sm hover:shadow-md transition-all group relative">
                   <div className="flex justify-between items-start mb-6">
@@ -235,7 +251,7 @@ const Services = () => {
                         onClick={async () => {
                           if (window.confirm("დარწმუნებული ხართ, რომ გსურთ ამ სერვისის წაშლა?")) {
                             await deleteDoc(doc(db, "services", s.id));
-                            await logActivity(userData?.clinicId || auth.currentUser.uid, userData, 'service_delete', `წაიშალა სერვისი: ${s.name}`, { serviceId: s.id, name: s.name });
+                            await logActivity(userData?.clinicId || auth.currentUser.uid, activeStaff || userData, 'service_delete', `წაიშალა სერვისი: ${s.name}`, { serviceId: s.id, name: s.name });
                           }
                         }}
                         className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all cursor-pointer"
@@ -354,9 +370,22 @@ const Services = () => {
                            <div key={mat.id} className="flex items-center justify-between p-4 bg-brand-purple/5 rounded-2xl border border-brand-purple/10">
                               <span className="font-black text-text-main text-xs">{mat.name}</span>
                               <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2 bg-surface rounded-xl px-2 py-1 shadow-sm border border-border-main">
+                                <div className="flex items-center gap-1.5 bg-surface rounded-xl px-2 py-1 shadow-sm border border-border-main">
                                   <button type="button" onClick={() => updateMaterialAmount(mat.id, -1)} className="p-1 text-text-muted hover:text-red-500 cursor-pointer"><Minus size={14}/></button>
-                                  <span className="text-xs font-black w-10 text-center">{mat.amount}</span>
+                                  <input 
+                                    type="number"
+                                    step="any"
+                                    min="0.01"
+                                    value={mat.amount}
+                                    onChange={(e) => {
+                                      const val = parseFloat(e.target.value);
+                                      setNewService({
+                                        ...newService,
+                                        materials: newService.materials.map(m => m.id === mat.id ? { ...m, amount: isNaN(val) ? '' : Math.max(0.01, val) } : m)
+                                      });
+                                    }}
+                                    className="w-12 text-center font-black text-xs bg-transparent outline-none p-0"
+                                  />
                                   <button type="button" onClick={() => updateMaterialAmount(mat.id, 1)} className="p-1 text-text-muted hover:text-emerald-500 cursor-pointer"><Plus size={14}/></button>
                                 </div>
                                 <span className="text-[10px] font-black text-text-muted uppercase w-8">{mat.unit}</span>

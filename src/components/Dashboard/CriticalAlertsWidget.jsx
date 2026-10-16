@@ -46,8 +46,7 @@ const CriticalAlertsWidget = ({ role, clinicData }) => {
         />
       )}
       <div 
-        className="fixed right-4 sm:right-8 z-50 font-nino"
-        style={{ bottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))' }}
+        className="fixed right-4 sm:right-8 z-40 font-nino bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6"
       >
         {/* Floating Alert Trigger Pill */}
         {!isOpen && (

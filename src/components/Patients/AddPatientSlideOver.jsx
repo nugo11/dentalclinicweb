@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { db, auth } from '../../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { 
   X, User, Phone, Mail, Calendar, FileText, Activity, 
@@ -34,6 +34,8 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
   });
   const [formErrors, setFormErrors] = useState({});
 
+  const cardNumber = useMemo(() => Math.floor(Math.random() * 9000) + 1000, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
@@ -62,6 +64,15 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
       errors.personalId = "პირადი ნომერი უნდა შედგებოდეს 11 ციფრისგან";
     }
 
+    if (formData.birthDate) {
+      const selectedDate = new Date(formData.birthDate);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (selectedDate > today) {
+        errors.birthDate = "დაბადების თარიღი არ შეიძლება იყოს მომავალში";
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       scrollToFirstError('.app-sheet');
@@ -81,8 +92,27 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
       if (!user) throw new Error("ავტორიზაცია საჭიროა");
       const clinicId = userData?.clinicId || user.uid;
 
+      // შევამოწმოთ უნიკალურია თუ არა პირადი ნომერი ამ კლინიკაში
+      if (formData.personalId) {
+        const cleanPid = formData.personalId.replace(/\D/g, '');
+        const pidQuery = query(
+          collection(db, "patients"),
+          where("clinicId", "==", clinicId),
+          where("personalId", "==", cleanPid)
+        );
+        const pidSnap = await getDocs(pidQuery);
+        if (!pidSnap.empty) {
+          setFormErrors({ personalId: "პაციენტი ამ პირადი ნომრით უკვე რეგისტრირებულია" });
+          scrollToFirstError('.app-sheet');
+          setLoading(false);
+          return;
+        }
+      }
+
       const newPatient = await addDoc(collection(db, "patients"), {
         ...formData,
+        fullName: formData.fullName.trim(),
+        personalId: formData.personalId ? formData.personalId.replace(/\D/g, '') : '',
         clinicId,
         createdAt: serverTimestamp(),
         lastVisit: null,
@@ -91,7 +121,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
       });
 
       // LOG ACTIVITY
-      await logActivity(clinicId, activeStaff || userData || { uid: user.uid, fullName: 'Unknown', role: 'unknown' }, 'patient_create', `დაემატა ახალი პაციენტი: ${formData.fullName}`, { patientId: newPatient.id, patientName: formData.fullName });
+      await logActivity(clinicId, activeStaff || userData || { uid: user.uid, fullName: 'Unknown', role: 'unknown' }, 'patient_create', `დაემატა ახალი პაციენტი: ${formData.fullName.trim()}`, { patientId: newPatient.id, patientName: formData.fullName.trim() });
 
       onClose();
       setFormData({ 
@@ -126,7 +156,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
             <div>
               <h2 className="text-2xl font-black text-text-main italic tracking-tighter">პაციენტის რეგისტრაცია</h2>
               <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.2em]">
-                სამედიცინო ბარათი #HUB-{Math.floor(Math.random() * 9000) + 1000}
+                სამედიცინო ბარათი #HUB-{cardNumber}
               </p>
             </div>
           </div>
@@ -176,9 +206,14 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                     type="date"
                     label="დაბადების თარიღი" 
                     icon={Calendar} 
+                    max={new Date().toISOString().split("T")[0]}
                     placeholder="mm/dd/yyyy"
                     value={formData.birthDate}
-                    onChange={val => setFormData({...formData, birthDate: val})}
+                    error={formErrors.birthDate}
+                    onChange={val => {
+                      setFormData({...formData, birthDate: val});
+                      if (formErrors.birthDate) setFormErrors(prev => ({ ...prev, birthDate: undefined }));
+                    }}
                   />
                 </div>
               </div>

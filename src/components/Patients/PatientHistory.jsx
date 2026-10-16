@@ -43,7 +43,34 @@ const PatientHistory = ({ patientId }) => {
       <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar relative z-10">
         {history.length > 0 ? (
           history.map((visit) => {
-            const isPast = new Date(visit.start) < new Date();
+            const isCompleted = visit.status === "completed_and_billed";
+            const isCancelled = visit.status === "cancelled";
+            const isFuture = new Date(visit.start) > new Date();
+
+            let statusBadge = {
+              label: "დასრულებული",
+              color: "bg-emerald-500/10 text-emerald-600",
+              iconBg: "bg-emerald-500/10 text-emerald-600"
+            };
+            if (isCancelled) {
+              statusBadge = {
+                label: "გაუქმებული",
+                color: "bg-red-500/10 text-red-600",
+                iconBg: "bg-red-500/10 text-red-600"
+              };
+            } else if (isFuture) {
+              statusBadge = {
+                label: "მომავალი",
+                color: "bg-blue-500/10 text-blue-600",
+                iconBg: "bg-blue-500/10 text-blue-600 group-hover:bg-brand-purple group-hover:text-white"
+              };
+            } else if (!isCompleted) {
+              statusBadge = {
+                label: "დაუხურავი",
+                color: "bg-amber-500/10 text-amber-600",
+                iconBg: "bg-amber-500/10 text-amber-600"
+              };
+            }
             
             return (
               <div 
@@ -51,7 +78,7 @@ const PatientHistory = ({ patientId }) => {
                 onClick={() => setSelectedVisit(visit)}
                 className="bg-surface-soft/50 border border-transparent p-4 rounded-[20px] hover:bg-surface hover:border-brand-purple/10 hover:shadow-xl transition-all group flex items-center gap-3 relative cursor-pointer"
               >
-                <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center transition-all ${isPast ? 'bg-emerald-500/10 text-emerald-600' : 'bg-blue-500/10 text-blue-600 group-hover:bg-brand-purple group-hover:text-white'}`}>
+                <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center transition-all ${statusBadge.iconBg}`}>
                   <Calendar size={18} />
                 </div>
                 
@@ -60,8 +87,8 @@ const PatientHistory = ({ patientId }) => {
                     <p className="text-xs font-black text-text-main truncate group-hover:text-brand-purple transition-colors">
                       {visit.service}
                     </p>
-                    <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md ${isPast ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {isPast ? 'დასრულებული' : 'მომავალი'}
+                    <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md ${statusBadge.color}`}>
+                      {statusBadge.label}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-[9px] text-text-muted font-bold uppercase tracking-widest flex-wrap">

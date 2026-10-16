@@ -33,7 +33,7 @@ const rows = [
   { label: "ფინანსური ანალიტიკა",   free: true,   business: true,   custom: true },
   { label: "EHR სინქრონიზაცია",     free: false,  business: true,   custom: true },
   { label: "SMS შეხსენებები",       free: false,  business: true,   custom: true },
-  { label: "სადაზღვეო სინქ.",       free: false,  business: true,   custom: true },
+  { label: "სადაზღვევო სინქ.",     free: false,  business: true,   custom: true },
   { label: "კლინიკის კატალოგი",     free: "Basic",business: "VIP",  custom: "VIP" },
   { label: "ტექ. მხარდაჭერა",       free: false,  business: true,   custom: true },
 ];
@@ -204,7 +204,7 @@ const Billing = () => {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 relative z-10 shrink-0">
-                <a href="tel:+99555102030"
+                <a href="tel:+995555102030"
                   className="flex items-center gap-3 bg-surface/10 hover:bg-surface/20 border border-white/20 px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all text-white no-underline">
                   <Phone size={16} /> +995 555 10 20 30
                 </a>

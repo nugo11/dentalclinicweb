@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../../firebase';
 import { collection, addDoc, query, where, onSnapshot, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { X, Plus, Trash2, Tag, DollarSign, Loader2, Package, Minus, Search } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 import { scrollToFirstError } from '../../utils/scrollHelper';
 
 const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
   useLockBodyScroll(isOpen);
+  const { userData } = useAuth();
   const [services, setServices] = useState([]);
   const [inventory, setInventory] = useState([]); // საწყობის სია
   const [loading, setLoading] = useState(false);
@@ -22,15 +24,16 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
   useEffect(() => {
     const user = auth.currentUser;
     if (!user || !isOpen) return;
+    const clinicId = userData?.clinicId || user.uid;
 
     // სერვისების წამოღება
-    const qServices = query(collection(db, "services"), where("clinicId", "==", user.uid));
+    const qServices = query(collection(db, "services"), where("clinicId", "==", clinicId));
     const unsubServices = onSnapshot(qServices, (snapshot) => {
       setServices(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
     // საწყობის წამოღება
-    const qInv = query(collection(db, "inventory"), where("clinicId", "==", user.uid));
+    const qInv = query(collection(db, "inventory"), where("clinicId", "==", clinicId));
     const unsubInv = onSnapshot(qInv, (snapshot) => {
       setInventory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -39,7 +42,7 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
       unsubServices();
       unsubInv();
     };
-  }, [isOpen]);
+  }, [isOpen, userData?.clinicId]);
 
   const addMaterialToService = (item) => {
     if (newService.materials.find(m => m.id === item.id)) return;
@@ -54,7 +57,7 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
     setNewService({
       ...newService,
       materials: newService.materials.map(m => 
-        m.id === id ? { ...m, amount: Math.max(0.1, m.amount + delta) } : m
+        m.id === id ? { ...m, amount: Number(Math.max(0.01, (Number(m.amount) || 0) + delta).toFixed(2)) } : m
       )
     });
   };
@@ -86,11 +89,12 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       const user = auth.currentUser;
+      const clinicId = userData?.clinicId || user.uid;
       await addDoc(collection(db, "services"), {
-        clinicId: user.uid,
+        clinicId,
         name: newService.name.trim(),
         price: Number(newService.price),
-        materials: newService.materials, // მასალების მასივი
+        materials: newService.materials.map(m => ({ ...m, amount: Number(m.amount) || 1 })),
         createdAt: serverTimestamp()
       });
       setNewService({ name: '', price: '', materials: [] });
@@ -218,13 +222,26 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
                         <div key={mat.id} className="flex items-center justify-between p-3 bg-brand-purple/5 rounded-xl border border-brand-purple/10">
                           <span className="text-[12px] font-black text-text-main">{mat.name}</span>
                           <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-surface rounded-lg px-2 py-1 shadow-sm border border-border-main">
-                              <button type="button" onClick={() => updateMaterialAmount(mat.id, -1)} className="text-text-muted hover:text-red-500"><Minus size={14}/></button>
-                              <span className="text-[11px] font-black w-8 text-center">{mat.amount}</span>
-                              <button type="button" onClick={() => updateMaterialAmount(mat.id, 1)} className="text-text-muted hover:text-emerald-500"><Plus size={14}/></button>
+                            <div className="flex items-center gap-1.5 bg-surface rounded-lg px-2 py-1 shadow-sm border border-border-main">
+                              <button type="button" onClick={() => updateMaterialAmount(mat.id, -1)} className="p-0.5 text-text-muted hover:text-red-500 cursor-pointer"><Minus size={13}/></button>
+                              <input 
+                                type="number" 
+                                step="any"
+                                min="0.01" 
+                                value={mat.amount} 
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  setNewService({
+                                    ...newService,
+                                    materials: newService.materials.map(m => m.id === mat.id ? { ...m, amount: isNaN(val) ? '' : Math.max(0.01, val) } : m)
+                                  });
+                                }}
+                                className="w-12 text-center font-black text-xs bg-transparent outline-none p-0"
+                              />
+                              <button type="button" onClick={() => updateMaterialAmount(mat.id, 1)} className="p-0.5 text-text-muted hover:text-emerald-500 cursor-pointer"><Plus size={13}/></button>
                             </div>
                             <span className="text-[9px] font-bold text-text-muted uppercase w-8">{mat.unit}</span>
-                            <button type="button" onClick={() => removeMaterial(mat.id)} className="text-red-300 hover:text-red-500 transition-colors"><Trash2 size={14}/></button>
+                            <button type="button" onClick={() => removeMaterial(mat.id)} className="text-red-300 hover:text-red-500 transition-colors cursor-pointer"><Trash2 size={14}/></button>
                           </div>
                         </div>
                       ))}

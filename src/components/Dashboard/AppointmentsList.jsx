@@ -78,16 +78,21 @@ const AppointmentsList = () => {
       });
   }, [todayAppointments, searchTerm]);
 
-  const getTimeStatus = (startTime) => {
+  const getTimeStatus = (app) => {
+    if (app.status === "completed_and_billed") {
+      return { text: "დასრულდა", color: "bg-brand-purple" };
+    }
     const now = new Date();
-    const start = new Date(startTime);
+    const start = new Date(app.start);
+    const end = app.end ? new Date(app.end) : new Date(start.getTime() + 3600000);
     const diffMins = Math.round((start - now) / 60000);
 
     if (diffMins > 0) {
       return { text: diffMins < 60 ? `${diffMins} წთ-ში` : `${Math.floor(diffMins/60)}სთ-ში`, color: "bg-emerald-500" };
+    } else if (now >= start && now <= end) {
+      return { text: "მიმდინარეობს", color: "bg-amber-500" };
     } else {
-      const passedMins = Math.abs(diffMins);
-      return { text: passedMins < 60 ? "მიმდინარეობს" : "დასრულდა", color: "bg-slate-400" };
+      return { text: "დაუხურავი", color: "bg-slate-400" };
     }
   };
 
@@ -116,7 +121,7 @@ const AppointmentsList = () => {
         ) : filteredAndSorted.length > 0 ? (
           <div className="space-y-0 relative before:absolute before:left-[27px] before:top-4 before:bottom-4 before:w-0.5 before:bg-surface-soft">
             {filteredAndSorted.map((app, idx) => {
-              const status = getTimeStatus(app.start);
+              const status = getTimeStatus(app);
               const isNext = new Date(app.start) > new Date() && (new Date(app.start) - new Date() < 1800000);
               const timeStr = new Date(app.start).toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' });
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { X, Loader2, Trash2, Edit3, AlertTriangle, Check } from 'lucide-react';
 import { transliterateToGeorgian } from '../../utils/transliterateKa';
 import { useAuth } from '../../context/AuthContext';
@@ -69,18 +69,48 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
     const [year, month, day] = formData.date.split("-");
     const selected = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     
-    if (selected < today && role !== "admin") {
-      setToast({ show: true, message: "წარსულში ჯავშნის უფლება აქვს მხოლოდ ადმინისტრატორს" });
+    const isExternal = appointmentData.isExternal || appointmentData.extendedProps?.isExternal;
+    if (selected < today && !isExternal) {
+      setToast({ show: true, message: "შიდა ჯავშნის წარსულში გადატანა აკრძალულია" });
       setTimeout(() => setToast({ show: false, message: "" }), 3000);
       return;
     }
 
     setLoading(true);
     try {
-      const [year, month, day] = formData.date.split('-');
-      const [hours, minutes] = formData.startTime.split(':');
-      const startDateTime = new Date(year, month - 1, day, hours, minutes);
+      const [yearStr, monthStr, dayStr] = formData.date.split('-');
+      const [hoursStr, minutesStr] = formData.startTime.split(':');
+      const startDateTime = new Date(yearStr, monthStr - 1, dayStr, hoursStr, minutesStr);
       const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.duration) * 60000);
+
+      // Overlap check for doctor
+      const doctorId = appointmentData.doctorId || appointmentData.extendedProps?.doctorId;
+      const clinicId = appointmentData.clinicId || appointmentData.extendedProps?.clinicId;
+      if (doctorId && clinicId) {
+        const qOverlap = query(
+          collection(db, "appointments"),
+          where("clinicId", "==", clinicId),
+          where("doctorId", "==", doctorId)
+        );
+        const overlapSnapshot = await getDocs(qOverlap);
+        const hasOverlap = overlapSnapshot.docs.some((docSnap) => {
+          if (docSnap.id === appointmentData.id) return false;
+          const app = docSnap.data();
+          if (app.status === "cancelled") return false;
+          const existStart = new Date(app.start).getTime();
+          const existEnd = new Date(app.end).getTime();
+          const newStart = startDateTime.getTime();
+          const newEnd = endDateTime.getTime();
+          return newStart < existEnd && newEnd > existStart;
+        });
+
+        if (hasOverlap) {
+          setToast({ show: true, message: "არჩეულ დროს ექიმს უკვე აქვს სხვა ჩანაწერი!" });
+          setTimeout(() => setToast({ show: false, message: "" }), 4000);
+          setLoading(false);
+          return;
+        }
+      }
 
       await updateDoc(doc(db, "appointments", appointmentData.id), {
         start: startDateTime.toISOString(),

@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { collection, query, where, onSnapshot, orderBy, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import Sidebar from "../components/Dashboard/Sidebar";
 import TopNav from "../components/Dashboard/TopNav";
-import { Wallet, History, Search, Filter, Download, ArrowLeft, Edit, X, Loader2, Printer, FileDown } from "lucide-react";
+import { Wallet, History, Search, Filter, Download, ArrowLeft, Edit, X, Loader2, Printer, FileDown, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logActivity } from "../utils/activityLogger";
 
 const SalaryArchive = () => {
-  const { userData, isAdmin, role, clinicData } = useAuth();
+  const { userData, isAdmin, role, clinicData, activeStaff } = useAuth();
   const navigate = useNavigate();
   // ... (states remain same)
 
@@ -107,6 +107,23 @@ const SalaryArchive = () => {
   const [newAmount, setNewAmount] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const [staffList, setStaffList] = useState([]);
+  const [payModal, setPayModal] = useState({ isOpen: false, staffId: "", amount: "" });
+  const [isPaying, setIsPaying] = useState(false);
+
+  useEffect(() => {
+    if (!userData?.clinicId) return;
+    const qStaff = query(
+      collection(db, "users"),
+      where("clinicId", "==", userData.clinicId)
+    );
+    const unsub = onSnapshot(qStaff, (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(s => s.role !== 'admin');
+      setStaffList(list);
+    });
+    return () => unsub();
+  }, [userData?.clinicId]);
+
   useEffect(() => {
     if (!userData?.clinicId) return;
 
@@ -141,7 +158,13 @@ const SalaryArchive = () => {
       });
       
       // LOG ACTIVITY
-      await logActivity(userData?.clinicId, userData || { uid: auth.currentUser.uid, fullName: 'Unknown', role: 'unknown' }, 'salary_update', `შეიცვალა ხელფასის თანხა (${editTarget.description}): ${editTarget.amount}₾ -> ${newAmount}₾`, { salaryId: editTarget.id, oldAmount: editTarget.amount, newAmount: Number(newAmount) });
+      await logActivity(
+        userData?.clinicId, 
+        activeStaff || userData || { uid: auth.currentUser?.uid, fullName: 'Unknown', role: 'unknown' }, 
+        'salary_update', 
+        `შეიცვალა ხელფასის თანხა (${editTarget.description}): ${editTarget.amount}₾ -> ${newAmount}₾`, 
+        { salaryId: editTarget.id, oldAmount: editTarget.amount, newAmount: Number(newAmount) }
+      );
       
       // მყისიერი განახლება ლოკალურ სთეითში უკეთესი UX-სთვის
       setHistory(prev => prev.map(item => 
@@ -154,6 +177,44 @@ const SalaryArchive = () => {
       alert("ჩასწორება ვერ მოხერხდა");
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleIssueSalary = async (e) => {
+    e.preventDefault();
+    const targetStaff = staffList.find(s => s.id === payModal.staffId);
+    if (!targetStaff) return;
+    const amt = Number(payModal.amount);
+    if (isNaN(amt) || amt <= 0) {
+      alert("გთხოვთ შეიყვანოთ ვალიდური თანხა");
+      return;
+    }
+    setIsPaying(true);
+    try {
+      const docRef = await addDoc(collection(db, "finance"), {
+        clinicId: userData.clinicId,
+        type: 'expense',
+        category: 'ხელფასი',
+        amount: amt,
+        description: `ხელფასი: ${targetStaff.fullName} (${targetStaff.salaryType === 'commission' ? 'გამომუშავება' : 'ფიქსირებული'})`,
+        date: new Date().toISOString(),
+        createdAt: serverTimestamp(),
+        staffId: targetStaff.id,
+        paidMonth: new Date().toISOString().slice(0, 7)
+      });
+      await logActivity(
+        userData.clinicId,
+        activeStaff || userData,
+        'salary_payment',
+        `გაიცა ხელფასი: ${targetStaff.fullName} (თანხა: ${amt}₾)`,
+        { financeId: docRef.id, staffId: targetStaff.id, amount: amt }
+      );
+      setPayModal({ isOpen: false, staffId: "", amount: "" });
+    } catch (err) {
+      console.error(err);
+      alert("ხელფასის გაცემა ვერ მოხერხდა");
+    } finally {
+      setIsPaying(false);
     }
   };
 
@@ -192,15 +253,32 @@ const SalaryArchive = () => {
                 </p>
               </div>
 
-              <div className="relative group w-full md:w-80">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors" size={18} />
-                <input 
-                  type="text"
-                  placeholder="ძებნა (სახელი ან თვე)..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-14 pr-6 py-4 bg-surface border border-border-main rounded-2xl outline-none font-bold text-sm shadow-sm focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/5 transition-all"
-                />
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                <div className="relative group w-full sm:w-80">
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-brand-purple transition-colors" size={18} />
+                  <input 
+                    type="text"
+                    placeholder="ძებნა (სახელი ან თვე)..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-14 pr-6 py-4 bg-surface border border-border-main rounded-2xl outline-none font-bold text-sm shadow-sm focus:border-brand-purple focus:ring-4 focus:ring-brand-purple/5 transition-all"
+                  />
+                </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      const first = staffList[0];
+                      setPayModal({
+                        isOpen: true,
+                        staffId: first?.id || "",
+                        amount: first?.salaryAmount ? first.salaryAmount.toString() : ""
+                      });
+                    }}
+                    className="flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all cursor-pointer whitespace-nowrap active:scale-95 shrink-0"
+                  >
+                    <Plus size={16} /> ხელფასის გაცემა
+                  </button>
+                )}
               </div>
             </div>
 
@@ -349,6 +427,82 @@ const SalaryArchive = () => {
                    </button>
                 </div>
              </div>
+          </div>
+        </div>
+      )}
+
+      {/* Issue Salary Modal */}
+      {payModal.isOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <div className="app-overlay fixed inset-0 touch-none" onClick={() => setPayModal({ isOpen: false, staffId: "", amount: "" })} />
+          <div className="bg-surface rounded-[40px] w-full max-w-md p-8 sm:p-10 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-emerald-500/10 text-emerald-600 rounded-2xl flex items-center justify-center">
+                  <Wallet size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-text-main italic">ხელფასის გაცემა</h3>
+                  <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest mt-0.5">ახალი ტრანზაქცია</p>
+                </div>
+              </div>
+              <button onClick={() => setPayModal({ isOpen: false, staffId: "", amount: "" })} className="p-2 text-text-muted hover:text-text-main cursor-pointer">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleIssueSalary} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">თანამშრომელი</label>
+                <select
+                  value={payModal.staffId}
+                  onChange={(e) => {
+                    const sel = staffList.find(s => s.id === e.target.value);
+                    setPayModal({
+                      ...payModal,
+                      staffId: e.target.value,
+                      amount: sel?.salaryAmount ? sel.salaryAmount.toString() : ""
+                    });
+                  }}
+                  className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-bold text-sm text-text-main cursor-pointer"
+                >
+                  {staffList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.fullName} ({s.salaryType === 'commission' ? 'გამომუშავება' : `₾${s.salaryAmount ?? 0}`})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">თანხა (₾)</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="0.00"
+                  value={payModal.amount}
+                  onChange={(e) => setPayModal({ ...payModal, amount: e.target.value })}
+                  className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-5 py-4 outline-none font-black text-xl text-text-main transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setPayModal({ isOpen: false, staffId: "", amount: "" })}
+                  className="py-4 bg-surface-soft text-text-muted rounded-2xl font-black text-[10px] uppercase tracking-widest cursor-pointer"
+                >
+                  გაუქმება
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPaying || !payModal.amount}
+                  className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isPaying ? <Loader2 className="animate-spin mx-auto" size={18} /> : "გაცემა"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
