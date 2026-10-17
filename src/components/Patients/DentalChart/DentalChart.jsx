@@ -50,16 +50,16 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
   const inspectedStatus = STATUS_CONFIG[inspectedData.status] || STATUS_CONFIG.healthy;
   const inspectedName = TOOTH_NAMES_KA[inspectedNumber] || `კბილი #${inspectedNumber}`;
 
-  // SVG viewBox დინამიური რეგულირება ხედვის რეჟიმის მიხედვით
+  // SVG viewBox დინამიური რეგულირება ხედვის რეჟიმის მიხედვით (ცენტრი X=400, Y=400)
   const getViewBox = () => {
     switch (viewMode) {
       case 'upper':
-        return '130 15 700 375';
+        return '80 30 640 375';
       case 'lower':
-        return '130 425 700 380';
+        return '80 395 640 375';
       case 'all':
       default:
-        return '120 15 720 805';
+        return '80 30 640 740';
     }
   };
 
@@ -287,13 +287,13 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
         </div>
       ) : (
         /* ანატომიური რკალის ვექტორული SVG ტილო */
-        <div className="relative bg-surface-soft/40 rounded-[36px] border border-border-main p-2 sm:p-6 flex flex-col items-center justify-center overflow-hidden transition-all duration-300">
+        <div className="relative bg-surface-soft/40 rounded-[36px] border border-border-main p-2 sm:p-6 flex flex-col items-center justify-center overflow-hidden">
           
           {/* რკალის ფონური დეკორაციები */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.04),transparent_70%)] pointer-events-none" />
 
           {/* მასშტაბირებადი SVG რკალი */}
-          <div className="w-full max-w-[680px] aspect-[720/805] max-h-[640px] flex items-center justify-center">
+          <div className="w-full max-w-[620px] aspect-[640/740] flex items-center justify-center">
             <svg
               viewBox={getViewBox()}
               className="w-full h-full select-none"
@@ -315,20 +315,20 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
 
               {/* 1. ანატომიური ალვეოლარული ძვლის/ღრძილის რკალის კონტურები */}
               {(viewMode === 'all' || viewMode === 'upper') && (
-                <g className="transition-opacity duration-300 pointer-events-none">
+                <g className="pointer-events-none">
                   {/* ზედა რკალის ალვეოლარული ლენტი */}
                   <path
-                    d="M 145 365 C 160 220, 260 85, 480 30 C 700 85, 800 220, 815 365 C 755 330, 690 230, 580 135 C 530 95, 430 95, 380 135 C 270 230, 205 330, 145 365 Z"
+                    d="M 105 385 C 120 220, 230 70, 400 48 C 570 70, 680 220, 695 385 C 640 350, 565 210, 480 120 C 440 98, 360 98, 320 120 C 235 210, 160 350, 105 385 Z"
                     fill="url(#upperGumGradient)"
-                    stroke="rgba(124, 58, 237, 0.18)"
-                    strokeWidth="1.5"
+                    stroke="rgba(124, 58, 237, 0.16)"
+                    strokeWidth="1.2"
                     strokeDasharray="4 4"
                   />
                   {/* ზედა სასის კონტური */}
                   <path
-                    d="M 240 330 Q 480 160 720 330"
+                    d="M 200 350 Q 400 180 600 350"
                     fill="none"
-                    stroke="rgba(124, 58, 237, 0.12)"
+                    stroke="rgba(124, 58, 237, 0.1)"
                     strokeWidth="1"
                     strokeDasharray="3 3"
                   />
@@ -336,20 +336,20 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
               )}
 
               {(viewMode === 'all' || viewMode === 'lower') && (
-                <g className="transition-opacity duration-300 pointer-events-none">
+                <g className="pointer-events-none">
                   {/* ქვედა რკალის ალვეოლარული ლენტი */}
                   <path
-                    d="M 160 455 C 175 595, 275 735, 480 790 C 685 735, 785 595, 800 455 C 740 490, 675 590, 575 685 C 525 725, 435 725, 385 685 C 285 590, 220 490, 160 455 Z"
+                    d="M 115 415 C 130 580, 240 730, 400 752 C 560 730, 670 580, 685 415 C 630 450, 555 590, 470 680 C 435 700, 365 700, 330 680 C 245 590, 170 450, 115 415 Z"
                     fill="url(#lowerGumGradient)"
-                    stroke="rgba(124, 58, 237, 0.18)"
-                    strokeWidth="1.5"
+                    stroke="rgba(124, 58, 237, 0.16)"
+                    strokeWidth="1.2"
                     strokeDasharray="4 4"
                   />
                   {/* ქვედა ენისქვეშა რკალის კონტური */}
                   <path
-                    d="M 255 490 Q 480 660 705 490"
+                    d="M 210 450 Q 400 620 590 450"
                     fill="none"
-                    stroke="rgba(124, 58, 237, 0.12)"
+                    stroke="rgba(124, 58, 237, 0.1)"
                     strokeWidth="1"
                     strokeDasharray="3 3"
                   />
@@ -361,19 +361,19 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
                 <g className="pointer-events-none opacity-40">
                   {/* ვერტიკალური შუახაზი (Sagittal Midline) */}
                   <line 
-                    x1="480" y1="35" x2="480" y2="350" 
+                    x1="400" y1="50" x2="400" y2="350" 
                     stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" 
                     className="text-brand-purple"
                   />
                   <line 
-                    x1="480" y1="470" x2="480" y2="785" 
+                    x1="400" y1="445" x2="400" y2="750" 
                     stroke="currentColor" strokeWidth="1" strokeDasharray="3 3" 
                     className="text-brand-purple"
                   />
 
                   {/* ჰორიზონტალური ოკლუზიური გამყოფი ხაზი */}
                   <line 
-                    x1="220" y1="410" x2="740" y2="410" 
+                    x1="180" y1="400" x2="620" y2="400" 
                     stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" 
                     className="text-border-main"
                   />
@@ -384,22 +384,22 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
               {viewMode === 'all' && (
                 <g className="pointer-events-none select-none">
                   {/* პაციენტის მარჯვენა მხარე (Viewer's Left) */}
-                  <g transform="translate(160, 410)">
-                    <rect x="-18" y="-12" width="36" height="24" rx="8" fill="rgba(124, 58, 237, 0.1)" stroke="rgba(124, 58, 237, 0.3)" strokeWidth="1" />
-                    <text x="0" y="4.5" textAnchor="middle" className="text-[12px] font-black fill-brand-purple">R</text>
+                  <g transform="translate(130, 400)">
+                    <rect x="-16" y="-11" width="32" height="22" rx="7" fill="rgba(124, 58, 237, 0.1)" stroke="rgba(124, 58, 237, 0.3)" strokeWidth="1" />
+                    <text x="0" y="4" textAnchor="middle" className="text-[11px] font-black fill-brand-purple">R</text>
                   </g>
 
                   {/* პაციენტის მარცხენა მხარე (Viewer's Right) */}
-                  <g transform="translate(800, 410)">
-                    <rect x="-18" y="-12" width="36" height="24" rx="8" fill="rgba(124, 58, 237, 0.1)" stroke="rgba(124, 58, 237, 0.3)" strokeWidth="1" />
-                    <text x="0" y="4.5" textAnchor="middle" className="text-[12px] font-black fill-brand-purple">L</text>
+                  <g transform="translate(670, 400)">
+                    <rect x="-16" y="-11" width="32" height="22" rx="7" fill="rgba(124, 58, 237, 0.1)" stroke="rgba(124, 58, 237, 0.3)" strokeWidth="1" />
+                    <text x="0" y="4" textAnchor="middle" className="text-[11px] font-black fill-brand-purple">L</text>
                   </g>
 
                   {/* კვადრანტების კლინიკური სახელწოდებები */}
-                  <text x="250" y="375" textAnchor="middle" className="text-[10px] font-bold fill-text-muted opacity-60">Q1 · ზედა მარჯვენა</text>
-                  <text x="710" y="375" textAnchor="middle" className="text-[10px] font-bold fill-text-muted opacity-60">Q2 · ზედა მარცხენა</text>
-                  <text x="250" y="450" textAnchor="middle" className="text-[10px] font-bold fill-text-muted opacity-60">Q4 · ქვედა მარჯვენა</text>
-                  <text x="710" y="450" textAnchor="middle" className="text-[10px] font-bold fill-text-muted opacity-60">Q3 · ქვედა მარცხენა</text>
+                  <text x="230" y="372" textAnchor="middle" className="text-[10px] font-bold fill-text-muted opacity-60">Q1 · ზედა მარჯვენა</text>
+                  <text x="570" y="372" textAnchor="middle" className="text-[10px] font-bold fill-text-muted opacity-60">Q2 · ზედა მარცხენა</text>
+                  <text x="230" y="432" textAnchor="middle" className="text-[10px] font-bold fill-text-muted opacity-60">Q4 · ქვედა მარჯვენა</text>
+                  <text x="570" y="432" textAnchor="middle" className="text-[10px] font-bold fill-text-muted opacity-60">Q3 · ქვედა მარცხენა</text>
                 </g>
               )}
 
@@ -433,41 +433,49 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
         </div>
       )}
 
-      {/* 4. არჩეული/ინსპექტირებული კბილის დეტალური ბარათი (Live Inspector) */}
-      <div className="bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 transition-all">
-        <div className="flex items-center gap-4">
+      {/* 4. არჩეული/ინსპექტირებული კბილის დეტალური ბარათი (ფიქსირებული ზომა - არ დახტის!) */}
+      <div className="bg-surface rounded-3xl p-4 sm:p-5 border border-border-main shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 min-h-[104px]">
+        <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
           {/* FDI ნომრის დიდი სამკერდე ნიშანი */}
-          <div className="w-14 h-14 rounded-2xl bg-surface-soft border-2 border-border-main flex flex-col items-center justify-center shrink-0 shadow-inner">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-text-muted leading-none">კბილი</span>
-            <span className="text-xl font-black text-brand-purple leading-tight">#{inspectedNumber}</span>
+          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-surface-soft border-2 border-border-main flex flex-col items-center justify-center shrink-0 shadow-inner">
+            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-text-muted leading-none">კბილი</span>
+            <span className="text-lg sm:text-xl font-black text-brand-purple leading-tight">#{inspectedNumber}</span>
           </div>
 
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h4 className="text-base font-black text-text-main">
+          <div className="space-y-0.5 min-w-0 flex-1">
+            {/* სათაურის ხაზი (ფიქსირებული სიმაღლე) */}
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <h4 className="text-sm sm:text-base font-black text-text-main truncate max-w-[260px] sm:max-w-md">
                 {inspectedName}
               </h4>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${inspectedStatus.badgeBg} ${inspectedStatus.badgeText} ${inspectedStatus.badgeBorder}`}>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider border shrink-0 ${inspectedStatus.badgeBg} ${inspectedStatus.badgeText} ${inspectedStatus.badgeBorder}`}>
                 {inspectedStatus.label}
               </span>
             </div>
 
             {/* კვადრანტისა და ტიპის ინფორმაცია */}
-            <p className="text-xs text-text-muted flex items-center gap-2">
+            <p className="text-[11px] sm:text-xs text-text-muted truncate">
               <span>კვადრანტი: Q{inspectedCoord?.quad || 1}</span>
-              <span>•</span>
+              <span className="mx-1.5">•</span>
               <span>ტიპი: {inspectedCoord?.type === 'molar' ? 'მოლარი' : inspectedCoord?.type === 'premolar' ? 'პრემოლარი' : inspectedCoord?.type === 'canine' ? 'ეშვი' : 'საჭრელი'}</span>
-              <span>•</span>
+              <span className="mx-1.5">•</span>
               <span>ყბა: {inspectedCoord?.jaw === 'upper' ? 'ზედა' : 'ქვედა'}</span>
             </p>
 
-            {/* კომენტარი თუ არსებობს */}
-            {inspectedData.comment && (
-              <div className="flex items-center gap-2 pt-1 text-xs text-brand-purple font-medium">
-                <MessageSquare size={13} className="shrink-0" />
-                <span className="italic">"{inspectedData.comment}"</span>
-              </div>
-            )}
+            {/* კომენტარის რეზერვირებული ხაზი (ყოველთვის h-5, ამიტომ ბარათის ზომა არასდროს არ დახტის!) */}
+            <div className="h-5 flex items-center gap-1.5 text-xs pt-0.5">
+              {inspectedData.comment ? (
+                <span className="text-brand-purple font-medium truncate flex items-center gap-1.5">
+                  <MessageSquare size={13} className="shrink-0" />
+                  <span className="italic truncate">"{inspectedData.comment}"</span>
+                </span>
+              ) : (
+                <span className="text-text-muted/40 text-[11px] font-medium flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-border-main shrink-0" />
+                  <span>შენიშვნა არ არის</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -476,7 +484,7 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
           <button
             type="button"
             onClick={() => onToothUpdate && onToothUpdate(inspectedNumber)}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-purple text-white text-xs font-black hover:bg-brand-purple/90 transition-all shadow-md active:scale-95 cursor-pointer"
+            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-brand-purple text-white text-xs font-black hover:bg-brand-purple/90 transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
           >
             <Edit3 size={15} />
             <span>სტატუსის შეცვლა (#{inspectedNumber})</span>

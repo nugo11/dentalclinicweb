@@ -125,47 +125,47 @@ export const STATUS_CONFIG = {
   },
 };
 
-// 32 კბილის ანატომიური კოორდინატები და რკალის გეომეტრია (viewBox 0 0 960 820)
+// 32 კბილის ანატომიური კოორდინატები და რკალის გეომეტრია (viewBox 80 30 640 740, ცენტრი X=400, Y=400)
 export const TEETH_COORDINATES = {
-  // ზედა ყბა (Maxilla) - Q1 (18-11)
-  18: { x: 180, y: 345, rot: -50, jaw: 'upper', quad: 1, type: 'molar', name: '18 · მე-3 მოლარი' },
-  17: { x: 198, y: 292, rot: -46, jaw: 'upper', quad: 1, type: 'molar', name: '17 · მე-2 მოლარი' },
-  16: { x: 220, y: 240, rot: -42, jaw: 'upper', quad: 1, type: 'molar', name: '16 · 1-ლი მოლარი' },
-  15: { x: 248, y: 188, rot: -36, jaw: 'upper', quad: 1, type: 'premolar', name: '15 · მე-2 პრემოლარი' },
-  14: { x: 284, y: 142, rot: -30, jaw: 'upper', quad: 1, type: 'premolar', name: '14 · 1-ლი პრემოლარი' },
-  13: { x: 330, y: 104, rot: -22, jaw: 'upper', quad: 1, type: 'canine', name: '13 · ეშვი' },
-  12: { x: 385, y: 76,  rot: -12, jaw: 'upper', quad: 1, type: 'incisor', name: '12 · გვერდითი საჭრელი' },
-  11: { x: 446, y: 62,  rot: -4,  jaw: 'upper', quad: 1, type: 'incisor', name: '11 · ცენტრალური საჭრელი' },
+  // ზედა ყბა (Maxilla) - Q1 (18-11) - პაციენტის მარჯვენა, ეკრანის მარცხენა
+  18: { x: 138, y: 366, rot: -78, jaw: 'upper', quad: 1, type: 'molar', name: '18 · მე-3 მოლარი (სიბრძნის)' },
+  17: { x: 150, y: 308, rot: -72, jaw: 'upper', quad: 1, type: 'molar', name: '17 · მე-2 მოლარი' },
+  16: { x: 168, y: 252, rot: -62, jaw: 'upper', quad: 1, type: 'molar', name: '16 · 1-ლი მოლარი' },
+  15: { x: 192, y: 200, rot: -50, jaw: 'upper', quad: 1, type: 'premolar', name: '15 · მე-2 პრემოლარი' },
+  14: { x: 226, y: 154, rot: -38, jaw: 'upper', quad: 1, type: 'premolar', name: '14 · 1-ლი პრემოლარი' },
+  13: { x: 270, y: 118, rot: -24, jaw: 'upper', quad: 1, type: 'canine', name: '13 · ეშვი' },
+  12: { x: 320, y: 94,  rot: -12, jaw: 'upper', quad: 1, type: 'incisor', name: '12 · გვერდითი საჭრელი' },
+  11: { x: 372, y: 82,  rot: -4,  jaw: 'upper', quad: 1, type: 'incisor', name: '11 · ცენტრალური საჭრელი' },
 
-  // ზედა ყბა (Maxilla) - Q2 (21-28)
-  21: { x: 514, y: 62,  rot: 4,   jaw: 'upper', quad: 2, type: 'incisor', name: '21 · ცენტრალური საჭრელი' },
-  22: { x: 575, y: 76,  rot: 12,  jaw: 'upper', quad: 2, type: 'incisor', name: '22 · გვერდითი საჭრელი' },
-  23: { x: 630, y: 104, rot: 22,  jaw: 'upper', quad: 2, type: 'canine', name: '23 · ეშვი' },
-  24: { x: 676, y: 142, rot: 30,  jaw: 'upper', quad: 2, type: 'premolar', name: '24 · 1-ლი პრემოლარი' },
-  25: { x: 712, y: 188, rot: 36,  jaw: 'upper', quad: 2, type: 'premolar', name: '25 · მე-2 პრემოლარი' },
-  26: { x: 740, y: 240, rot: 42,  jaw: 'upper', quad: 2, type: 'molar', name: '26 · 1-ლი მოლარი' },
-  27: { x: 762, y: 292, rot: 46,  jaw: 'upper', quad: 2, type: 'molar', name: '27 · მე-2 მოლარი' },
-  28: { x: 780, y: 345, rot: 50,  jaw: 'upper', quad: 2, type: 'molar', name: '28 · მე-3 მოლარი' },
+  // ზედა ყბა (Maxilla) - Q2 (21-28) - პაციენტის მარცხენა, ეკრანის მარჯვენა
+  21: { x: 428, y: 82,  rot: 4,   jaw: 'upper', quad: 2, type: 'incisor', name: '21 · ცენტრალური საჭრელი' },
+  22: { x: 480, y: 94,  rot: 12,  jaw: 'upper', quad: 2, type: 'incisor', name: '22 · გვერდითი საჭრელი' },
+  23: { x: 530, y: 118, rot: 24,  jaw: 'upper', quad: 2, type: 'canine', name: '23 · ეშვი' },
+  24: { x: 574, y: 154, rot: 38,  jaw: 'upper', quad: 2, type: 'premolar', name: '24 · 1-ლი პრემოლარი' },
+  25: { x: 608, y: 200, rot: 50,  jaw: 'upper', quad: 2, type: 'premolar', name: '25 · მე-2 პრემოლარი' },
+  26: { x: 632, y: 252, rot: 62,  jaw: 'upper', quad: 2, type: 'molar', name: '26 · 1-ლი მოლარი' },
+  27: { x: 650, y: 308, rot: 72,  jaw: 'upper', quad: 2, type: 'molar', name: '27 · მე-2 მოლარი' },
+  28: { x: 662, y: 366, rot: 78,  jaw: 'upper', quad: 2, type: 'molar', name: '28 · მე-3 მოლარი (სიბრძნის)' },
 
-  // ქვედა ყბა (Mandible) - Q4 (48-41)
-  48: { x: 195, y: 475, rot: 50,  jaw: 'lower', quad: 4, type: 'molar', name: '48 · მე-3 მოლარი' },
-  47: { x: 212, y: 528, rot: 46,  jaw: 'lower', quad: 4, type: 'molar', name: '47 · მე-2 მოლარი' },
-  46: { x: 232, y: 580, rot: 42,  jaw: 'lower', quad: 4, type: 'molar', name: '46 · 1-ლი მოლარი' },
-  45: { x: 258, y: 632, rot: 36,  jaw: 'lower', quad: 4, type: 'premolar', name: '45 · მე-2 პრემოლარი' },
-  44: { x: 292, y: 678, rot: 30,  jaw: 'lower', quad: 4, type: 'premolar', name: '44 · 1-ლი პრემოლარი' },
-  43: { x: 336, y: 716, rot: 22,  jaw: 'lower', quad: 4, type: 'canine', name: '43 · ეშვი' },
-  42: { x: 388, y: 744, rot: 12,  jaw: 'lower', quad: 4, type: 'incisor', name: '42 · გვერდითი საჭრელი' },
-  41: { x: 446, y: 758, rot: 4,   jaw: 'lower', quad: 4, type: 'incisor', name: '41 · ცენტრალური საჭრელი' },
+  // ქვედა ყბა (Mandible) - Q4 (48-41) - პაციენტის მარჯვენა, ეკრანის მარცხენა
+  48: { x: 150, y: 434, rot: 78,  jaw: 'lower', quad: 4, type: 'molar', name: '48 · მე-3 მოლარი (სიბრძნის)' },
+  47: { x: 162, y: 492, rot: 72,  jaw: 'lower', quad: 4, type: 'molar', name: '47 · მე-2 მოლარი' },
+  46: { x: 180, y: 548, rot: 62,  jaw: 'lower', quad: 4, type: 'molar', name: '46 · 1-ლი მოლარი' },
+  45: { x: 204, y: 600, rot: 50,  jaw: 'lower', quad: 4, type: 'premolar', name: '45 · მე-2 პრემოლარი' },
+  44: { x: 236, y: 646, rot: 38,  jaw: 'lower', quad: 4, type: 'premolar', name: '44 · 1-ლი პრემოლარი' },
+  43: { x: 278, y: 682, rot: 24,  jaw: 'lower', quad: 4, type: 'canine', name: '43 · ეშვი' },
+  42: { x: 326, y: 706, rot: 12,  jaw: 'lower', quad: 4, type: 'incisor', name: '42 · გვერდითი საჭრელი' },
+  41: { x: 375, y: 718, rot: 4,   jaw: 'lower', quad: 4, type: 'incisor', name: '41 · ცენტრალური საჭრელი' },
 
-  // ქვედა ყბა (Mandible) - Q3 (31-38)
-  31: { x: 514, y: 758, rot: -4,  jaw: 'lower', quad: 3, type: 'incisor', name: '31 · ცენტრალური საჭრელი' },
-  32: { x: 572, y: 744, rot: -12, jaw: 'lower', quad: 3, type: 'incisor', name: '32 · გვერდითი საჭრელი' },
-  33: { x: 624, y: 716, rot: -22, jaw: 'lower', quad: 3, type: 'canine', name: '33 · ეშვი' },
-  34: { x: 668, y: 678, rot: -30, jaw: 'lower', quad: 3, type: 'premolar', name: '34 · 1-ლი პრემოლარი' },
-  35: { x: 702, y: 632, rot: -36, jaw: 'lower', quad: 3, type: 'premolar', name: '35 · მე-2 პრემოლარი' },
-  36: { x: 728, y: 580, rot: -42, jaw: 'lower', quad: 3, type: 'molar', name: '36 · 1-ლი მოლარი' },
-  37: { x: 748, y: 528, rot: -46, jaw: 'lower', quad: 3, type: 'molar', name: '37 · მე-2 მოლარი' },
-  38: { x: 765, y: 475, rot: -50, jaw: 'lower', quad: 3, type: 'molar', name: '38 · მე-3 მოლარი' }
+  // ქვედა ყბა (Mandible) - Q3 (31-38) - პაციენტის მარცხენა, ეკრანის მარჯვენა
+  31: { x: 425, y: 718, rot: -4,  jaw: 'lower', quad: 3, type: 'incisor', name: '31 · ცენტრალური საჭრელი' },
+  32: { x: 474, y: 706, rot: -12, jaw: 'lower', quad: 3, type: 'incisor', name: '32 · გვერდითი საჭრელი' },
+  33: { x: 522, y: 682, rot: -24, jaw: 'lower', quad: 3, type: 'canine', name: '33 · ეშვი' },
+  34: { x: 564, y: 646, rot: -38, jaw: 'lower', quad: 3, type: 'premolar', name: '34 · 1-ლი პრემოლარი' },
+  35: { x: 596, y: 600, rot: -50, jaw: 'lower', quad: 3, type: 'premolar', name: '35 · მე-2 პრემოლარი' },
+  36: { x: 620, y: 548, rot: -62, jaw: 'lower', quad: 3, type: 'molar', name: '36 · 1-ლი მოლარი' },
+  37: { x: 638, y: 492, rot: -72, jaw: 'lower', quad: 3, type: 'molar', name: '37 · მე-2 მოლარი' },
+  38: { x: 650, y: 434, rot: -78, jaw: 'lower', quad: 3, type: 'molar', name: '38 · მე-3 მოლარი (სიბრძნის)' }
 };
 
 // ანატომიური კბილის SVG ფორმა რკალში
@@ -187,26 +187,26 @@ export const SvgTooth = ({
   const isMissing = status === 'missing';
 
   // ანატომიური ზომები კბილის ტიპის მიხედვით
-  let width = 46;
-  let height = 44;
-  let rx = 12;
+  let width = 44;
+  let height = 42;
+  let rx = 10;
 
   if (coord.type === 'premolar') {
     width = 38;
-    height = 38;
-    rx = 10;
-  } else if (coord.type === 'canine') {
-    width = 36;
-    height = 42;
+    height = 36;
     rx = 9;
-  } else if (coord.type === 'incisor') {
+  } else if (coord.type === 'canine') {
     width = 34;
-    height = 40;
+    height = 38;
     rx = 8;
+  } else if (coord.type === 'incisor') {
+    width = coord.jaw === 'lower' ? 28 : 32;
+    height = 36;
+    rx = 7;
   }
 
   // ნომრის პოზიციონირება კბილის გარეთ (რკალის გარე პერიმეტრზე)
-  const labelDistance = isUpper ? -36 : 36;
+  const labelDistance = isUpper ? -30 : 30;
 
   return (
     <g
@@ -214,21 +214,20 @@ export const SvgTooth = ({
       onClick={() => onClick && onClick(number)}
       onMouseEnter={() => onHover && onHover(number)}
       onMouseLeave={() => onHover && onHover(null)}
-      className="cursor-pointer group select-none transition-all duration-300"
+      className="cursor-pointer select-none"
       style={{
         opacity: isDimmed ? 0.25 : 1,
-        transformOrigin: `${coord.x}px ${coord.y}px`,
       }}
     >
       {/* ჰოვერის/მონიშვნის ჰალო */}
       <ellipse
         cx="0"
         cy="0"
-        rx={width / 2 + 10}
-        ry={height / 2 + 10}
+        rx={width / 2 + 7}
+        ry={height / 2 + 7}
         fill={currentStatus.stroke}
         opacity={isHovered || isHighlighted ? 0.35 : 0}
-        className="transition-opacity duration-300 filter blur-xs pointer-events-none"
+        className="pointer-events-none transition-opacity duration-150"
       />
 
       {/* კბილის ანატომიური გვირგვინი */}
@@ -239,13 +238,12 @@ export const SvgTooth = ({
         height={height}
         rx={rx}
         ry={rx}
-        className="transition-all duration-300"
         style={{
           fill: isMissing ? 'transparent' : 'var(--tooth-fill, #FFFFFF)',
           stroke: currentStatus.stroke,
-          strokeWidth: isHovered || isHighlighted ? 3 : 2,
+          strokeWidth: isHovered || isHighlighted ? 2.5 : 1.8,
           strokeDasharray: isMissing ? '4 3' : 'none',
-          filter: isHovered ? 'drop-shadow(0 6px 12px rgba(0,0,0,0.18))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.06))',
+          filter: isHovered ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' : 'drop-shadow(0 1px 3px rgba(0,0,0,0.08))',
         }}
       />
 
@@ -256,13 +254,13 @@ export const SvgTooth = ({
             <>
               {/* ჯვარედინი ღარები */}
               <path d={`M ${-width / 2 + 8} 0 L ${width / 2 - 8} 0 M 0 ${-height / 2 + 7} L 0 ${height / 2 - 7}`} strokeWidth="1.4" strokeLinecap="round" />
-              <circle cx="0" cy="0" r="2.5" fill={currentStatus.stroke} />
+              <circle cx="0" cy="0" r="2.2" fill={currentStatus.stroke} />
             </>
           )}
 
           {coord.type === 'premolar' && (
             <>
-              <line x1={-width / 2 + 8} y1="0" x2={width / 2 - 8} y2="0" strokeWidth="1.4" strokeLinecap="round" />
+              <line x1={-width / 2 + 7} y1="0" x2={width / 2 - 7} y2="0" strokeWidth="1.4" strokeLinecap="round" />
               <circle cx="-5" cy="0" r="1.5" fill={currentStatus.stroke} />
               <circle cx="5" cy="0" r="1.5" fill={currentStatus.stroke} />
             </>
@@ -270,15 +268,15 @@ export const SvgTooth = ({
 
           {coord.type === 'canine' && (
             <>
-              <line x1="0" y1={-height / 2 + 8} x2="0" y2={height / 2 - 8} strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="0" cy="0" r="2" fill={currentStatus.stroke} />
+              <line x1="0" y1={-height / 2 + 7} x2="0" y2={height / 2 - 7} strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="0" cy="0" r="1.8" fill={currentStatus.stroke} />
             </>
           )}
 
           {coord.type === 'incisor' && (
             <>
-              <line x1={-width / 2 + 6} y1={isUpper ? -6 : 6} x2={width / 2 - 6} y2={isUpper ? -6 : 6} strokeWidth="2" strokeLinecap="round" />
-              <line x1="0" y1={-height / 2 + 8} x2="0" y2={height / 2 - 8} strokeWidth="1" strokeDasharray="2 3" />
+              <line x1={-width / 2 + 5} y1={isUpper ? -5 : 5} x2={width / 2 - 5} y2={isUpper ? -5 : 5} strokeWidth="1.8" strokeLinecap="round" />
+              <line x1="0" y1={-height / 2 + 6} x2="0" y2={height / 2 - 6} strokeWidth="1" strokeDasharray="2 3" />
             </>
           )}
         </g>
@@ -286,31 +284,31 @@ export const SvgTooth = ({
 
       {/* სტატუსის სპეციფიკური ინდიკატორები */}
       {status === 'caries' && (
-        <circle cx="0" cy="0" r="5.5" fill="#D97706" className="animate-pulse" />
+        <circle cx="0" cy="0" r="5" fill="#D97706" />
       )}
 
       {status === 'pulpitis' && (
         <g>
-          <circle cx="0" cy="0" r="7" fill="#EF4444" opacity="0.3" className="animate-ping" />
-          <circle cx="0" cy="0" r="5.5" fill="#DC2626" />
+          <circle cx="0" cy="0" r="6.5" fill="#EF4444" opacity="0.3" />
+          <circle cx="0" cy="0" r="5" fill="#DC2626" />
         </g>
       )}
 
       {status === 'filling' && (
-        <rect x="-8" y="-7" width="16" height="14" rx="4" fill="#2563EB" opacity="0.85" />
+        <rect x="-7" y="-6" width="14" height="12" rx="3" fill="#2563EB" opacity="0.85" />
       )}
 
       {status === 'implant' && (
         <g stroke="#6366F1" strokeWidth="1.5">
-          <circle cx="0" cy="0" r="6" fill="#4F46E5" opacity="0.3" />
-          <line x1="-5" y1="-4" x2="5" y2="-4" />
-          <line x1="-5" y1="0" x2="5" y2="0" />
-          <line x1="-5" y1="4" x2="5" y2="4" />
+          <circle cx="0" cy="0" r="5.5" fill="#4F46E5" opacity="0.3" />
+          <line x1="-4.5" y1="-3.5" x2="4.5" y2="-3.5" />
+          <line x1="-4.5" y1="0" x2="4.5" y2="0" />
+          <line x1="-4.5" y1="3.5" x2="4.5" y2="3.5" />
         </g>
       )}
 
       {isMissing && (
-        <path d="M -9 -9 L 9 9 M -9 9 L 9 -9" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M -8 -8 L 8 8 M -8 8 L 8 -8" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" />
       )}
 
       {/* კომენტარის ინდიკატორი */}
@@ -318,7 +316,7 @@ export const SvgTooth = ({
         <circle 
           cx={width / 2 - 4} 
           cy={-height / 2 + 4} 
-          r="4" 
+          r="3.5" 
           className="fill-brand-purple stroke-white dark:stroke-slate-900 stroke-1" 
         />
       )}
@@ -326,23 +324,23 @@ export const SvgTooth = ({
       {/* FDI ნომრის ბეიჯი (რკალის გარეთ, მუდმივად ჰორიზონტალური და იოლად წასაკითხი) */}
       <g transform={`translate(0, ${labelDistance}) rotate(${-coord.rot})`}>
         <rect
-          x="-14"
-          y="-11"
-          width="28"
-          height="22"
-          rx="8"
-          className={`transition-all duration-200 ${
+          x="-13"
+          y="-10"
+          width="26"
+          height="20"
+          rx="6"
+          className={`transition-colors duration-150 ${
             isHovered || isHighlighted
               ? 'fill-brand-purple stroke-white dark:stroke-slate-900 shadow-md'
               : 'fill-surface-soft stroke-border-main'
           }`}
-          strokeWidth="1.5"
+          strokeWidth="1.2"
         />
         <text
           x="0"
-          y="4.5"
+          y="4"
           textAnchor="middle"
-          className={`text-[11px] font-black tracking-tight select-none pointer-events-none transition-colors ${
+          className={`text-[10px] font-black tracking-tight select-none pointer-events-none transition-colors ${
             isHovered || isHighlighted
               ? 'fill-white'
               : 'fill-text-main'
