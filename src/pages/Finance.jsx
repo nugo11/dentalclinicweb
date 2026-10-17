@@ -13,6 +13,7 @@ import {
   Tag,
   PieChart,
   Wallet,
+  Settings,
 } from "lucide-react";
 import ServiceSettingsSlideOver from "../components/Finance/ServiceSettingsSlideOver";
 import { generateInvoice } from "../utils/generateInvoice";
@@ -79,7 +80,7 @@ const Finance = () => {
         paid,
         vat: totalVat,
         expenses,
-        netProfit: paid - expenses
+        netProfit: (paid - totalVat) - expenses
       });
     });
   }, [userData]);
@@ -99,7 +100,7 @@ const Finance = () => {
           <div className="max-w-[1600px] mx-auto space-y-8 pb-10">
             
             {/* Header Section */}
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
               <div>
                 <h1 className="text-3xl font-black text-text-main italic tracking-tighter">
                   ფინანსური მიმოხილვა
@@ -109,7 +110,14 @@ const Finance = () => {
                 </p>
               </div>
 
-            
+              <button
+                type="button"
+                onClick={() => setIsServiceModalOpen(true)}
+                className="flex items-center gap-2 px-5 py-3 bg-brand-purple text-white rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-brand-deep transition-all shadow-lg shadow-brand-purple/20 cursor-pointer active:scale-95 whitespace-nowrap"
+              >
+                <Settings size={16} />
+                <span>სერვისების ფასები და ხარჯები</span>
+              </button>
             </div>
 
             {/* Stats Grid - 4 Cards for better insight */}

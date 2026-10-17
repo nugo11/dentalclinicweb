@@ -60,11 +60,11 @@ const Inventory = () => {
   });
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!userData?.clinicId) return;
 
     const q = query(
       collection(db, "inventory"),
-      where("clinicId", "==", userData?.clinicId || currentUser.uid),
+      where("clinicId", "==", userData.clinicId),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -77,7 +77,7 @@ const Inventory = () => {
     });
 
     return () => unsubscribe();
-  }, [clinicData, userData, currentUser]);
+  }, [userData?.clinicId]);
 
   // ლიმიტის შემოწმება (მხოლოდ ახალი ნივთის დამატებისას)
   const isLimitReached = !editingItem && !canAddInventoryItem(clinicData?.plan, items.length);
@@ -109,6 +109,12 @@ const Inventory = () => {
       return;
     }
 
+    const effectiveClinicId = userData?.clinicId;
+    if (!effectiveClinicId) {
+      setFormErrors({ general: "კლინიკის იდენტიფიკატორი ვერ მოიძებნა." });
+      return;
+    }
+
     // 2. ლიმიტის შემოწმება
     if (!editingItem && !canAddInventoryItem(clinicData?.plan, items.length)) {
       setFormErrors({ general: "ლიმიტი ამოწურულია. გადადით პრემიუმ პაკეტზე." });
@@ -121,7 +127,7 @@ const Inventory = () => {
       await setDoc(doc(db, "inventory", docId), {
         ...formData,
         name: formData.name.trim(),
-        clinicId: userData?.clinicId || currentUser.uid,
+        clinicId: effectiveClinicId,
         quantity: Math.max(0, Number(formData.quantity)),
         minThreshold: Math.max(0, Number(formData.minThreshold || 0)),
         pricePerUnit: Math.max(0, Number(formData.pricePerUnit)),
@@ -135,7 +141,7 @@ const Inventory = () => {
         ? `განახლდა მარაგი: ${formData.name.trim()} (რაოდენობა: ${formData.quantity} ${formData.unit})`
         : `დაემატა ახალი მარაგი: ${formData.name.trim()} (რაოდენობა: ${formData.quantity} ${formData.unit})`;
       
-      await logActivity(userData?.clinicId || currentUser.uid, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, action, details, { itemId: docId, name: formData.name.trim() });
+      await logActivity(effectiveClinicId, activeStaff || userData || { uid: currentUser.uid, fullName: 'Unknown', role: 'unknown' }, action, details, { itemId: docId, name: formData.name.trim() });
 
       setIsModalOpen(false);
       setEditingItem(null);

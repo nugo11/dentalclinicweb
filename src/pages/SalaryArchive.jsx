@@ -61,7 +61,7 @@ const SalaryArchive = () => {
             </div>
             <div class="amount-box">
               <div class="label" style="margin:0">გადახდილი თანხა</div>
-              <div class="value" style="font-size: 24px; color: #10b981;">${h.amount} GEL</div>
+              <div class="value" style="font-size: 24px; color: #10b981;">${h.amount} ₾</div>
             </div>
 
             ${clinicData?.stampUrl ? `<img src="${clinicData.stampUrl}" class="stamp" />` : ''}

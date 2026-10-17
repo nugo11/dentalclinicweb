@@ -19,6 +19,24 @@ import {
   Copy, Check
 } from "lucide-react";
 
+// დამხმარე უსაფრთხო ფუნქცია: თანამშრომლის საჯარო მონაცემების გაფილტვრა (არ გამოაქვს პირადი ნომერი, ხელფასი და PIN ჰეში)
+const extractSafeStaff = (docSnap) => {
+  const d = docSnap.data();
+  return {
+    id: docSnap.id,
+    fullName: d.fullName || "თანამშრომელი",
+    role: d.role || "staff",
+    avatarUrl: d.avatarUrl || null,
+  };
+};
+
+// დამხმარე ფუნქცია: OTP კოდის უსაფრთხო ჰეშირება (რათა localStorage-ში ღია ტექსტი არ შეინახოს)
+const hashOtp = async (phoneNum, rawOtp) => {
+  const enc = new TextEncoder();
+  const buff = await crypto.subtle.digest("SHA-256", enc.encode(`${cleanPhone(phoneNum)}:${rawOtp}:aident_otp_salt`));
+  return Array.from(new Uint8Array(buff)).map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 const AuthPage = () => {
   const location = useLocation();
   const [isLogin, setIsLogin] = useState(
@@ -39,7 +57,7 @@ const AuthPage = () => {
         const fetchStaff = async () => {
             const q = query(collection(db, "users"), where("clinicId", "==", clinicData.id));
             const snap = await getDocs(q);
-            const staff = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const staff = snap.docs.map(extractSafeStaff);
             setStaffList(staff);
             setAuthStep("staff_select");
         };
@@ -69,18 +87,19 @@ const AuthPage = () => {
 
   useLockBodyScroll(showSmsModal);
   React.useEffect(() => {
-    // შემოწმება localStorage-დან
-    const lastSent = localStorage.getItem(`sms_cooldown_${phone}`);
-    const savedOtp = localStorage.getItem(`sms_otp_${phone}`);
+    // შემოწმება localStorage-დან (მხოლოდ დაცული ჰეში)
+    const cleaned = cleanPhone(phone);
+    const lastSent = localStorage.getItem(`sms_cooldown_${cleaned}`);
+    const savedOtpHash = localStorage.getItem(`sms_otp_hash_${cleaned}`);
     
-    if (savedOtp) setGeneratedOtp(savedOtp);
+    if (savedOtpHash) setGeneratedOtp(savedOtpHash);
 
     if (lastSent) {
       const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
       if (remaining > 0) setResendTimer(remaining);
       else {
-          localStorage.removeItem(`sms_cooldown_${phone}`);
-          localStorage.removeItem(`sms_otp_${phone}`);
+          localStorage.removeItem(`sms_cooldown_${cleaned}`);
+          localStorage.removeItem(`sms_otp_hash_${cleaned}`);
       }
     }
 
@@ -187,7 +206,7 @@ const AuthPage = () => {
         
         const q = query(collection(db, "users"), where("clinicId", "==", clinicSnap.docs[0].id));
         const snap = await getDocs(q);
-        const staff = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const staff = snap.docs.map(extractSafeStaff);
         setStaffList(staff);
         setAuthStep("staff_select");
       } catch (err) {
@@ -324,6 +343,21 @@ const AuthPage = () => {
     setIsLoading(true);
     try {
       if (isLogin) {
+        if (!selectedStaff?.id) {
+          setFormErrors({ pin: "გთხოვთ აირჩიოთ თანამშრომელი" });
+          setIsLoading(false);
+          return;
+        }
+
+        // უსაფრთხოდ ვიღებთ თანამშრომლის ჩანაწერს მხოლოდ პინის შეყვანისას
+        const staffDocSnap = await getDoc(doc(db, "users", selectedStaff.id));
+        if (!staffDocSnap.exists()) {
+          setFormErrors({ pin: "თანამშრომელი ვერ მოიძებნა" });
+          setIsLoading(false);
+          return;
+        }
+        const staffFullData = staffDocSnap.data();
+
         // ჰეშირებული პინის შედარება
         const encoder = new TextEncoder();
         const pinData = encoder.encode(pin);
@@ -332,24 +366,30 @@ const AuthPage = () => {
         const pinHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
         let isValid = false;
-        if (selectedStaff.adminPinHash) {
-          if (pinHash === selectedStaff.adminPinHash) isValid = true;
-        } else if (selectedStaff.pinHash) {
-          if (pinHash === selectedStaff.pinHash) isValid = true;
-        } else if (selectedStaff.pin === pin) {
+        if (staffFullData.adminPinHash) {
+          if (pinHash === staffFullData.adminPinHash) isValid = true;
+        } else if (staffFullData.pinHash) {
+          if (pinHash === staffFullData.pinHash) isValid = true;
+        } else if (staffFullData.pin === pin) {
           // ძველი პინების მხარდაჭერა (დროებითი)
           isValid = true;
         }
 
         if (isValid) {
-          const { pin, pinHash: pHash, adminPinHash, ...safeStaff } = selectedStaff;
-          staffLogin(safeStaff);
+          const { pin: _p, pinHash: _ph, adminPinHash: _aph, salaryAmount: _sa, commissionRate: _cr, personalId: _pid, ...safeStaff } = staffFullData;
+          staffLogin({ id: selectedStaff.id, ...safeStaff });
           navigate("/dashboard");
         } else {
           setFormErrors({ pin: "PIN კოდი არასწორია" });
         }
       } else {
-        // რეგისტრაციის ნაწილი
+        // რეგისტრაციის ნაწილი: SMS ვალიდაციის სავალდებულო შემოწმება
+        if (smsStatus !== "verified") {
+          setFormErrors({ general: "რეგისტრაციისთვის აუცილებელია მობილურის SMS დადასტურება." });
+          setAuthStep("credentials");
+          setIsLoading(false);
+          return;
+        }
         const lowEmail = email.toLowerCase();
         const userCredential = await createUserWithEmailAndPassword(auth, lowEmail, password);
         const uid = userCredential.user.uid;
@@ -450,7 +490,8 @@ const AuthPage = () => {
     
     // ვქმნით 6 ნიშნა კოდს
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(otp);
+    const otpHash = await hashOtp(cleaned, otp);
+    setGeneratedOtp(otpHash);
     
     try {
       const apiKey = import.meta.env.VITE_UBILL_API_KEY;
@@ -476,8 +517,8 @@ const AuthPage = () => {
           throw new Error(`UBill შეცდომა: ${data.message || "უცნობი შეცდომა"}`);
       }
       
-      localStorage.setItem(`sms_cooldown_${phone}`, Date.now().toString());
-      localStorage.setItem(`sms_otp_${phone}`, otp);
+      localStorage.setItem(`sms_cooldown_${cleaned}`, Date.now().toString());
+      localStorage.setItem(`sms_otp_hash_${cleaned}`, otpHash);
       setSmsStatus("sent");
       setResendTimer(120); // 2 წუთი
     } catch (err) {
@@ -1131,11 +1172,13 @@ const AuthPage = () => {
                     />
 
                     <button 
-                        onClick={() => {
-                            if (userOtp === generatedOtp && userOtp.length > 0) {
+                        onClick={async () => {
+                            const enteredHash = await hashOtp(phone, userOtp.trim());
+                            if (enteredHash === generatedOtp && userOtp.trim().length === 6) {
                                 setSmsStatus("verified");
                                 setFormErrors(prev => ({...prev, otp: undefined}));
                                 setResendTimer(0);
+                                localStorage.removeItem(`sms_otp_hash_${cleanPhone(phone)}`);
                                 // ვაჩვენებთ დადასტურებულს წამიერად და მერე ვხურავთ მოდალს
                                 setTimeout(() => {
                                     setShowSmsModal(false);

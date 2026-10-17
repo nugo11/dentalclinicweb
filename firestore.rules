@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // დამხმარე უსაფრთხოების ფუნქციები
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userClinicId() {
+      return getUserData().clinicId;
+    }
+
+    function isClinicMember(clinicId) {
+      return isAuthenticated() && (userClinicId() == clinicId || request.auth.uid == clinicId);
+    }
+
+    function isClinicAdmin(clinicId) {
+      return isClinicMember(clinicId) && (getUserData().role == 'admin' || request.auth.uid == clinicId);
+    }
+
+    // კლინიკები (Clinics)
+    match /clinics/{clinicId} {
+      allow read: if resource.data.isPublic == true || isClinicMember(clinicId);
+      allow create: if isAuthenticated();
+      allow update, delete: if isClinicAdmin(clinicId);
+    }
+
+    // მომხმარებლები და პერსონალი (Users / Staff)
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isClinicMember(resource.data.clinicId));
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isClinicAdmin(resource.data.clinicId));
+      allow delete: if isAuthenticated() && isClinicAdmin(resource.data.clinicId);
+    }
+
+    // პაციენტები (Patients)
+    match /patients/{patientId} {
+      allow read, create, update: if isAuthenticated() && isClinicMember(resource.data.clinicId);
+      allow delete: if isAuthenticated() && isClinicAdmin(resource.data.clinicId);
+    }
+
+    // ვიზიტები და ჯავშნები (Appointments)
+    match /appointments/{appointmentId} {
+      allow read, create, update: if isAuthenticated() && (
+        isClinicMember(resource.data.clinicId) ||
+        resource.data.doctorId == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && isClinicAdmin(resource.data.clinicId);
+    }
+
+    // საწყობი და მარაგი (Inventory)
+    match /inventory/{itemId} {
+      allow read, create, update: if isAuthenticated() && isClinicMember(resource.data.clinicId);
+      allow delete: if isAuthenticated() && isClinicAdmin(resource.data.clinicId);
+    }
+
+    // მომსახურებები და ტარიფები (Services)
+    match /services/{serviceId} {
+      allow read: if isAuthenticated() && isClinicMember(resource.data.clinicId);
+      allow create, update, delete: if isAuthenticated() && isClinicAdmin(resource.data.clinicId);
+    }
+
+    // ფინანსები და ხელფასები (Finance)
+    match /finance/{financeId} {
+      allow read, create, update, delete: if isAuthenticated() && isClinicAdmin(resource.data.clinicId);
+    }
+
+    // აქტივობების ლოგი (Audit Log) - ჩანაწერები არის უცვლელი (Immutable)
+    match /activity/{activityId} {
+      allow read: if isAuthenticated() && isClinicMember(resource.data.clinicId);
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // აუდიტის ლოგის წაშლა ან შეცვლა დაუშვებელია!
+    }
+  }
+}

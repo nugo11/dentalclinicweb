@@ -119,7 +119,9 @@ const CalendarPage = () => {
                 backgroundColor,
                 borderColor: "transparent",
                 allDay: false,
-                extendedProps: { ...data, isInternal },
+                extendedProps: isInternal 
+                  ? { ...data, isInternal: true }
+                  : { isInternal: false, doctorName: data.doctorName || "" },
               };
             });
           setEvents(allEvents);
@@ -231,6 +233,10 @@ const CalendarPage = () => {
                 expandRows={true}
                 stickyHeaderDates={true}
                 eventClick={(info) => {
+                  if (!info.event.extendedProps?.isInternal) {
+                    // სხვა კლინიკის ჩანაწერის დეტალების ნახვა ან რედაქტირება დაუშვებელია
+                    return;
+                  }
                   setSelectedAppointment({
                     id: info.event.id,
                     title: info.event.title,

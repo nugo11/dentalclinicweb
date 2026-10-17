@@ -136,7 +136,7 @@ const PatientProfile = () => {
 
     setActionLoading(true);
     try {
-      const clinicId = userData?.clinicId || currentUser?.uid;
+      const clinicId = userData?.clinicId;
       if (!clinicId || patientData?.clinicId !== clinicId) {
         navigate("/patients");
         return;
@@ -166,7 +166,7 @@ const PatientProfile = () => {
     if (!isAdmin) return;
     setActionLoading(true);
     try {
-      const clinicId = userData?.clinicId || currentUser?.uid;
+      const clinicId = userData?.clinicId;
       if (!clinicId || patientData?.clinicId !== clinicId) {
         navigate("/patients");
         return;
@@ -198,7 +198,8 @@ const PatientProfile = () => {
       },
     };
     try {
-      const clinicId = userData?.clinicId || currentUser?.uid;
+      const clinicId = userData?.clinicId;
+      if (!clinicId) return;
       await updateDoc(patientRef, { teethStatus: updatedTeeth });
       
       // LOG ACTIVITY with Georgian label

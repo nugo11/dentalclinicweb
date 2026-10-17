@@ -38,6 +38,7 @@ const PatientsTable = ({ externalSearch = "" }) => {
 
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [searchTerm, setSearchTerm] = useState(externalSearch);
 
   // Update search term if external prop changes
@@ -105,10 +106,12 @@ const PatientsTable = ({ externalSearch = "" }) => {
           ...doc.data(),
         }));
         setPatients(patientsData);
+        setFetchError(null);
         setLoading(false);
       },
       (error) => {
         console.error("Error fetching patients:", error);
+        setFetchError(error.message || "მონაცემების ჩატვირთვა ვერ მოხერხდა");
         setLoading(false);
       },
     );
@@ -143,6 +146,20 @@ const PatientsTable = ({ externalSearch = "" }) => {
           <p className="text-[10px] font-black uppercase tracking-widest text-text-muted">
             მონაცემები იტვირთება...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-surface rounded-[40px] border border-red-500/20 p-8">
+        <div className="flex flex-col items-center gap-3 text-center max-w-md">
+          <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center">
+            <X size={24} />
+          </div>
+          <h4 className="text-base font-black text-text-main">მონაცემების ჩატვირთვა ვერ მოხერხდა</h4>
+          <p className="text-xs text-text-muted">გადაამოწმეთ ინტერნეტ კავშირი ან ბაზის წვდომის პარამეტრები.</p>
         </div>
       </div>
     );
