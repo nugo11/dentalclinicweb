@@ -34,7 +34,11 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isClinicMember(resource.data.clinicId));
       allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isClinicAdmin(resource.data.clinicId));
+      allow update: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        isClinicAdmin(resource.data.clinicId) ||
+        (isClinicMember(resource.data.clinicId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['failedPinAttempts', 'pinLockedUntil']))
+      );
       allow delete: if isAuthenticated() && isClinicAdmin(resource.data.clinicId);
     }
 

@@ -7,7 +7,7 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { doc, setDoc, collection, getDoc, query, where, getDocs } from "firebase/firestore";
+import { doc, setDoc, collection, getDoc, updateDoc, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 import { useLockBodyScroll } from "../hooks/useLockBodyScroll";
 import { formatPhone, cleanPhone, validatePhone } from "../utils/phoneFormatter";
@@ -16,7 +16,7 @@ import {
   Activity, Mail, Lock, ArrowRight, Loader2, Eye, EyeOff, 
   Building2, ShieldCheck, ChevronLeft, User, 
   Phone, Sparkles, Rocket, Shield, Users,
-  Copy, Check
+  Copy, Check, AlertTriangle
 } from "lucide-react";
 
 // დამხმარე უსაფრთხო ფუნქცია: თანამშრომლის საჯარო მონაცემების გაფილტვრა (არ გამოაქვს პირადი ნომერი, ხელფასი და PIN ჰეში)
@@ -27,6 +27,8 @@ const extractSafeStaff = (docSnap) => {
     fullName: d.fullName || "თანამშრომელი",
     role: d.role || "staff",
     avatarUrl: d.avatarUrl || null,
+    pinLockedUntil: d.pinLockedUntil || null,
+    failedPinAttempts: d.failedPinAttempts || 0,
   };
 };
 
@@ -84,6 +86,31 @@ const AuthPage = () => {
   const [resendTimer, setResendTimer] = useState(0);
   const [recoveredLoginName, setRecoveredLoginName] = useState("");
   const [copied, setCopied] = useState(false);
+  const [lockoutRemaining, setLockoutRemaining] = useState(0); // დარჩენილი წუთები 30-წუთიანი ბლოკისას
+  const [lockoutEndTime, setLockoutEndTime] = useState(null);
+
+  // 30-წუთიანი ბლოკის ავტომატური ათვლა (Countdown)
+  React.useEffect(() => {
+    if (!lockoutEndTime) return;
+    const checkLock = () => {
+      const now = Date.now();
+      if (now >= lockoutEndTime) {
+        setLockoutEndTime(null);
+        setLockoutRemaining(0);
+        setFormErrors(prev => {
+          const updated = { ...prev };
+          delete updated.pin;
+          return updated;
+        });
+      } else {
+        const remainingMinutes = Math.max(1, Math.ceil((lockoutEndTime - now) / 60000));
+        setLockoutRemaining(remainingMinutes);
+      }
+    };
+    checkLock();
+    const interval = setInterval(checkLock, 5000);
+    return () => clearInterval(interval);
+  }, [lockoutEndTime]);
 
   useLockBodyScroll(showSmsModal);
   React.useEffect(() => {
@@ -122,7 +149,11 @@ const AuthPage = () => {
   React.useEffect(() => {
     setPin("");
     setConfirmPin("");
-    setFormErrors({});
+    if (authStep !== "staff_pin") {
+      setFormErrors({});
+      setLockoutRemaining(0);
+      setLockoutEndTime(null);
+    }
   }, [authStep]);
 
   // დინამიური სათაურის (document.title) განახლება
@@ -322,10 +353,45 @@ const AuthPage = () => {
     }
   };
 
-  const handleStaffSelect = (staffMember) => {
+  const handleStaffSelect = async (staffMember) => {
     setSelectedStaff(staffMember);
     setPin("");
+    setFormErrors({});
+
+    const now = Date.now();
+    const localLock = parseInt(localStorage.getItem(`pin_lock_${staffMember.id}`) || "0", 10);
+    const serverLock = staffMember.pinLockedUntil ? new Date(staffMember.pinLockedUntil).getTime() : 0;
+    const initialLock = Math.max(localLock, serverLock);
+
+    if (initialLock > now) {
+      const remainingMinutes = Math.max(1, Math.ceil((initialLock - now) / 60000));
+      setLockoutEndTime(initialLock);
+      setLockoutRemaining(remainingMinutes);
+      setFormErrors({ pin: `🔒 ანგარიში დაბლოკილია 4 არასწორი მცდელობის გამო. დარჩენილია ${remainingMinutes} წუთი.` });
+    } else {
+      setLockoutEndTime(null);
+      setLockoutRemaining(0);
+    }
+
     setAuthStep("staff_pin");
+
+    // რეალურ დროში Firestore-დან უახლესი სტატუსის დადასტურება
+    try {
+      const sDoc = await getDoc(doc(db, "users", staffMember.id));
+      if (sDoc.exists()) {
+        const data = sDoc.data();
+        const sLock = data.pinLockedUntil ? new Date(data.pinLockedUntil).getTime() : 0;
+        const sNow = Date.now();
+        if (sLock > sNow) {
+          const remainingMinutes = Math.max(1, Math.ceil((sLock - sNow) / 60000));
+          setLockoutEndTime(sLock);
+          setLockoutRemaining(remainingMinutes);
+          setFormErrors({ pin: `🔒 ანგარიში დაბლოკილია 4 არასწორი მცდელობის გამო. დარჩენილია ${remainingMinutes} წუთი.` });
+        }
+      }
+    } catch (err) {
+      console.warn("Error verifying staff lock status:", err);
+    }
   };
 
   const handleFinalAuth = async (e) => {
@@ -350,13 +416,29 @@ const AuthPage = () => {
         }
 
         // უსაფრთხოდ ვიღებთ თანამშრომლის ჩანაწერს მხოლოდ პინის შეყვანისას
-        const staffDocSnap = await getDoc(doc(db, "users", selectedStaff.id));
+        const staffDocRef = doc(db, "users", selectedStaff.id);
+        const staffDocSnap = await getDoc(staffDocRef);
         if (!staffDocSnap.exists()) {
           setFormErrors({ pin: "თანამშრომელი ვერ მოიძებნა" });
           setIsLoading(false);
           return;
         }
         const staffFullData = staffDocSnap.data();
+
+        // 1. ბრუტფორსის საწინააღმდეგო შემოწმება: არის თუ არა დაბლოკილი ანგარიში?
+        const now = Date.now();
+        const serverLockTime = staffFullData.pinLockedUntil ? new Date(staffFullData.pinLockedUntil).getTime() : 0;
+        const localLockTime = parseInt(localStorage.getItem(`pin_lock_${selectedStaff.id}`) || "0", 10);
+        const effectiveLockUntil = Math.max(serverLockTime, localLockTime);
+
+        if (effectiveLockUntil > now) {
+          const remainingMinutes = Math.max(1, Math.ceil((effectiveLockUntil - now) / 60000));
+          setLockoutEndTime(effectiveLockUntil);
+          setLockoutRemaining(remainingMinutes);
+          setFormErrors({ pin: `🔒 ანგარიში დაბლოკილია 4 არასწორი მცდელობის გამო. დარჩენილია ${remainingMinutes} წუთი.` });
+          setIsLoading(false);
+          return;
+        }
 
         // ჰეშირებული პინის შედარება
         const encoder = new TextEncoder();
@@ -376,11 +458,64 @@ const AuthPage = () => {
         }
 
         if (isValid) {
+          // წარმატებული ავტორიზაცია -> მცდელობების მთვლელისა და ბლოკის განულება
+          try {
+            await updateDoc(staffDocRef, {
+              failedPinAttempts: 0,
+              pinLockedUntil: null
+            });
+          } catch (e) {
+            console.warn("Failed to reset pin attempts in firestore:", e);
+          }
+          localStorage.removeItem(`pin_lock_${selectedStaff.id}`);
+          localStorage.removeItem(`pin_attempts_${selectedStaff.id}`);
+          setLockoutEndTime(null);
+          setLockoutRemaining(0);
+
           const { pin: _p, pinHash: _ph, adminPinHash: _aph, salaryAmount: _sa, commissionRate: _cr, personalId: _pid, ...safeStaff } = staffFullData;
           staffLogin({ id: selectedStaff.id, ...safeStaff });
           navigate("/dashboard");
         } else {
-          setFormErrors({ pin: "PIN კოდი არასწორია" });
+          // არასწორი PIN კოდი: მცდელობის გაზრდა (4 არასწორი მცდელობის შემდეგ 30 წუთიანი ბლოკი)
+          const currentDbAttempts = Number(staffFullData.failedPinAttempts) || 0;
+          const currentLocalAttempts = parseInt(localStorage.getItem(`pin_attempts_${selectedStaff.id}`) || "0", 10);
+          const newAttempts = Math.max(currentDbAttempts, currentLocalAttempts) + 1;
+
+          if (newAttempts >= 4) {
+            // 4 არასწორი მცდელობა -> 30 წუთიანი ბლოკი!
+            const lockDurationMs = 30 * 60 * 1000;
+            const lockedUntilDate = new Date(now + lockDurationMs).toISOString();
+
+            try {
+              await updateDoc(staffDocRef, {
+                failedPinAttempts: newAttempts,
+                pinLockedUntil: lockedUntilDate
+              });
+            } catch (e) {
+              console.warn("Failed to set lock in firestore:", e);
+            }
+
+            localStorage.setItem(`pin_lock_${selectedStaff.id}`, String(now + lockDurationMs));
+            localStorage.setItem(`pin_attempts_${selectedStaff.id}`, String(newAttempts));
+            setLockoutEndTime(now + lockDurationMs);
+            setLockoutRemaining(30);
+            setPin("");
+            setFormErrors({ pin: "🔒 4 არასწორი მცდელობა! ანგარიში დაიბლოკა 30 წუთით." });
+          } else {
+            // დარჩენილი მცდელობები
+            const remaining = 4 - newAttempts;
+            try {
+              await updateDoc(staffDocRef, {
+                failedPinAttempts: newAttempts
+              });
+            } catch (e) {
+              console.warn("Failed to update attempts in firestore:", e);
+            }
+
+            localStorage.setItem(`pin_attempts_${selectedStaff.id}`, String(newAttempts));
+            setPin("");
+            setFormErrors({ pin: `არასწორი PIN კოდი! დარჩენილია ${remaining} მცდელობა.` });
+          }
         }
       } else {
         // რეგისტრაციის ნაწილი: SMS ვალიდაციის სავალდებულო შემოწმება
@@ -774,19 +909,33 @@ const AuthPage = () => {
                   <p className="text-text-muted text-[10px] font-black uppercase tracking-widest">აირჩიეთ თქვენი პროფილი სამუშაოდ</p>
                </div>
                <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {staffList.map((member) => (
-                    <button 
-                      key={member.id}
-                      onClick={() => handleStaffSelect(member)}
-                      className="p-6 bg-surface-soft border-2 border-transparent hover:border-brand-purple hover:bg-surface rounded-[32px] transition-all group text-left"
-                    >
-                       <div className="w-12 h-12 bg-brand-purple/10 text-brand-purple rounded-2xl flex items-center justify-center mb-4 group-hover:bg-brand-purple group-hover:text-white transition-all font-black text-xl">
-                          {member.fullName ? member.fullName[0] : "?"}
-                       </div>
-                       <h4 className="font-black text-text-main text-sm leading-tight">{member.fullName}</h4>
-                       <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest mt-1">{getRoleLabel(member.role)}</p>
-                    </button>
-                  ))}
+                  {staffList.map((member) => {
+                    const isLocked = member.pinLockedUntil && new Date(member.pinLockedUntil).getTime() > Date.now();
+                    return (
+                      <button 
+                        key={member.id}
+                        onClick={() => handleStaffSelect(member)}
+                        className={`p-6 bg-surface-soft border-2 rounded-[32px] transition-all group text-left relative overflow-hidden ${
+                          isLocked ? "border-red-500/30 hover:border-red-500 bg-red-500/5" : "border-transparent hover:border-brand-purple hover:bg-surface"
+                        }`}
+                      >
+                         {isLocked && (
+                           <div className="absolute top-4 right-4 text-red-500 bg-red-500/10 px-2 py-0.5 rounded-full flex items-center gap-1 text-[8px] font-black uppercase">
+                             <Lock size={10} /> 30 წთ
+                           </div>
+                         )}
+                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all font-black text-xl ${
+                           isLocked 
+                             ? "bg-red-500/10 text-red-500 group-hover:bg-red-500 group-hover:text-white" 
+                             : "bg-brand-purple/10 text-brand-purple group-hover:bg-brand-purple group-hover:text-white"
+                         }`}>
+                            {member.fullName ? member.fullName[0] : "?"}
+                         </div>
+                         <h4 className="font-black text-text-main text-sm leading-tight">{member.fullName}</h4>
+                         <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest mt-1">{getRoleLabel(member.role)}</p>
+                      </button>
+                    );
+                  })}
                </div>
                <button 
                 onClick={() => { auth.signOut(); setAuthStep("credentials"); }}
@@ -803,7 +952,9 @@ const AuthPage = () => {
                 <ChevronLeft size={16} /> სხვა პროფილი
               </button>
               <div className="text-center mb-12">
-                <div className="w-24 h-24 bg-brand-purple/10 rounded-[38px] flex items-center justify-center mx-auto mb-8 text-brand-purple font-black text-3xl">
+                <div className={`w-24 h-24 rounded-[38px] flex items-center justify-center mx-auto mb-8 font-black text-3xl ${
+                  lockoutRemaining > 0 ? "bg-red-500/10 text-red-500" : "bg-brand-purple/10 text-brand-purple"
+                }`}>
                   {selectedStaff?.fullName ? selectedStaff.fullName[0] : "?"}
                 </div>
                 <h3 className="text-4xl font-black text-text-main tracking-tighter italic uppercase">შეიყვანეთ PIN</h3>
@@ -811,11 +962,55 @@ const AuthPage = () => {
               </div>
               <form onSubmit={handleFinalAuth} className="space-y-10">
                 <div className="flex justify-center">
-                  <input type="password" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} className="w-full max-w-64 py-5 sm:py-6 text-center text-5xl sm:text-6xl tracking-[0.35em] sm:tracking-[0.5em] pl-[0.35em] sm:pl-[0.5em] font-black text-text-main bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[28px] sm:rounded-[36px] outline-none transition-all" placeholder="••••" />
+                  <input 
+                    type="password" 
+                    maxLength={4} 
+                    value={pin} 
+                    disabled={lockoutRemaining > 0 || isLoading}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} 
+                    className={`w-full max-w-64 py-5 sm:py-6 text-center text-5xl sm:text-6xl tracking-[0.35em] sm:tracking-[0.5em] pl-[0.35em] sm:pl-[0.5em] font-black text-text-main bg-surface-soft border-2 rounded-[28px] sm:rounded-[36px] outline-none transition-all ${
+                      lockoutRemaining > 0 
+                        ? "opacity-40 cursor-not-allowed border-red-500/40 bg-red-500/5 text-red-500" 
+                        : "border-transparent focus:border-brand-purple"
+                    }`}
+                    placeholder="••••" 
+                  />
                 </div>
-                {formErrors.pin && <p className="text-center text-[10px] text-red-500 font-black uppercase tracking-widest">{formErrors.pin}</p>}
-                <button disabled={isLoading} className="w-full bg-brand-purple text-white py-7 rounded-[28px] font-black text-xs uppercase tracking-[0.3em] hover:brightness-110 transition-all shadow-xl active:scale-[0.98] disabled:opacity-50">
-                  {isLoading ? <Loader2 className="animate-spin mx-auto" size={24} /> : "სისტემაში შესვლა"}
+
+                {lockoutRemaining > 0 ? (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-[28px] p-6 text-center space-y-3 animate-in fade-in zoom-in-95">
+                    <div className="w-12 h-12 bg-red-500/20 text-red-500 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                      <Lock size={22} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-red-500">ანგარიში დაბლოკილია</h4>
+                      <p className="text-[11px] font-bold text-red-400 mt-1">
+                        4 არასწორი მცდელობის გამო ანგარიში დაიბლოკა 30 წუთით.
+                      </p>
+                    </div>
+                    <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-500 px-4 py-1.5 rounded-full text-[11px] font-black tracking-widest uppercase">
+                      დარჩენილია: {lockoutRemaining} წუთი
+                    </div>
+                  </div>
+                ) : formErrors.pin && (
+                  <div className="text-center space-y-1">
+                    <p className="text-center text-[10px] text-red-500 font-black uppercase tracking-widest flex items-center justify-center gap-1.5">
+                      <AlertTriangle size={14} /> {formErrors.pin}
+                    </p>
+                  </div>
+                )}
+
+                <button 
+                  disabled={isLoading || lockoutRemaining > 0} 
+                  className="w-full bg-brand-purple text-white py-7 rounded-[28px] font-black text-xs uppercase tracking-[0.3em] hover:brightness-110 transition-all shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <Loader2 className="animate-spin mx-auto" size={24} />
+                  ) : lockoutRemaining > 0 ? (
+                    `დაბლოკილია (${lockoutRemaining} წთ)`
+                  ) : (
+                    "სისტემაში შესვლა"
+                  )}
                 </button>
               </form>
             </div>

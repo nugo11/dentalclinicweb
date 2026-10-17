@@ -13,7 +13,7 @@ import TopNav from "../components/Dashboard/TopNav";
 import { 
   Users, UserPlus, Mail, ShieldCheck, Trash2, 
   Loader2, Crown, Zap, X, Shield, UserCircle,
-  Eye, EyeOff, Wallet, CheckCircle2, AlertTriangle
+  Eye, EyeOff, Wallet, CheckCircle2, AlertTriangle, Lock
 } from "lucide-react";
 import { logActivity } from "../utils/activityLogger";
 import useLockBodyScroll from "../hooks/useLockBodyScroll";
@@ -147,6 +147,8 @@ const Staff = () => {
         birthDate: newDoctor.birthDate || "",
         clinicId: userData.clinicId,
         status: "active",
+        failedPinAttempts: 0,
+        pinLockedUntil: null,
         createdAt: new Date().toISOString(),
       });
       
@@ -223,6 +225,8 @@ const Staff = () => {
 
       if (editFormData.pin && editFormData.pin.length === 4) {
         updates.pinHash = await hashPin(editFormData.pin);
+        updates.failedPinAttempts = 0;
+        updates.pinLockedUntil = null;
       }
 
       await updateDoc(doc(db, "users", editTarget), updates);
@@ -235,6 +239,22 @@ const Staff = () => {
       console.error("Error updating staff:", error);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleUnlockStaff = async (staffId, staffName) => {
+    if (!window.confirm(`ნამდვილად გსურთ ${staffName}-ის ანგარიშის განბლოკვა?`)) return;
+    try {
+      await updateDoc(doc(db, "users", staffId), {
+        failedPinAttempts: 0,
+        pinLockedUntil: null
+      });
+      localStorage.removeItem(`pin_lock_${staffId}`);
+      localStorage.removeItem(`pin_attempts_${staffId}`);
+      await logActivity(userData.clinicId, activeStaff || userData || { uid: userData?.uid, fullName: 'Unknown', role: 'admin' }, 'staff_unlock', `თანამშრომელი ${staffName} განბლოკილია ადმინის მიერ`, { staffId, name: staffName });
+    } catch (err) {
+      console.error("Unlock error:", err);
+      alert("განბლოკვისას დაფიქსირდა შეცდომა");
     }
   };
 
@@ -382,6 +402,20 @@ const Staff = () => {
                         </div>
                       )}
                     </div>
+
+                      {member.pinLockedUntil && new Date(member.pinLockedUntil).getTime() > Date.now() && (
+                        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 text-red-500 text-[10px] font-black uppercase tracking-wider">
+                            <Lock size={12} /> 30 წთ დაბლოკილია
+                          </div>
+                          <button
+                            onClick={() => handleUnlockStaff(member.id, member.fullName)}
+                            className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[9px] font-black uppercase transition-all shadow-xs cursor-pointer active:scale-95"
+                          >
+                            განბლოკვა
+                          </button>
+                        </div>
+                      )}
 
                       <div className="mb-4 p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
                         <div className="flex justify-between items-center">
