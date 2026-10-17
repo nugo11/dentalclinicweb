@@ -168,33 +168,45 @@ export const TEETH_COORDINATES = {
   38: { x: 650, y: 434, rot: -78, jaw: 'lower', quad: 3, type: 'molar', name: '38 · მე-3 მოლარი (სიბრძნის)' }
 };
 
-// ანატომიური გვირგვინის ვექტორული კონტური კბილის ტიპის მიხედვით
+// ანატომიური გვირგვინის ვექტორული კონტური კბილის ტიპის მიხედვით (ბუნებრივი ბიოლოგიური ფორმები)
 export const getAnatomicalCrownPath = (type, isUpper, number) => {
   if (type === 'molar') {
-    // მოლარი: 4-5 ბორცვიანი ბუნებრივი გვირგვინი მომრგვალებული კუთხეებითა და ბორცვთაშორისი ჩაღრმავებებით
-    return "M -17 -16 C -9 -21, 9 -21, 17 -16 C 22 -9, 22 9, 17 16 C 9 21, -9 21, -17 16 C -22 9, -22 -9, -17 -16 Z";
-  }
-  if (type === 'premolar') {
-    // პრემოლარი: ორბორცვიანი ელიფსურ-ოვალური გვირგვინი
-    return "M -15 -14 C -6 -18, 6 -18, 15 -14 C 19 -5, 19 5, 15 14 C 6 18, -6 18, -15 14 C -19 5, -19 -5, -15 -14 Z";
-  }
-  if (type === 'canine') {
-    // ეშვი: წამახვილებული ეშვის ფორმა, წვერო მიმართულია გარეთ (ტუჩისკენ)
+    // მოლარი: 4 გამოკვეთილი მომრგვალებული ბორცვი ბუნებრივი ბორცვთაშორისი ჩანაჭდევებით (Mesio-buccal, Disto-buccal, Disto-palatal/lingual, Mesio-palatal/lingual)
     if (isUpper) {
-      return "M 0 -19 C 7 -15, 14 -7, 15 2 C 15 11, 9 18, 0 18 C -9 18, -15 11, -15 2 C -14 -7, -7 -15, 0 -19 Z";
+      return "M -17 0 C -17 -8 -14 -18 -8 -18 C -3 -18 -1 -15 0 -15 C 1 -15 3 -18 8 -18 C 14 -18 18 -12 18 -3 C 18 4 15 16 8 17 C 3 17 2 15 0 15 C -2 15 -4 18 -9 18 C -15 18 -18 10 -17 0 Z";
     } else {
-      return "M 0 19 C 7 15, 14 7, 15 -2 C 15 -11, 9 -18, 0 -18 C -9 -18, -15 -11, -15 -2 C -14 7, -7 15, 0 19 Z";
+      return "M -18 0 C -18 -8 -14 -17 -8 -17 C -3 -17 -1 -15 0 -15 C 1 -15 3 -17 8 -17 C 14 -17 18 -10 18 0 C 18 8 14 18 8 18 C 3 18 1 15 0 15 C -1 15 -3 18 -8 18 C -15 18 -18 9 -18 0 Z";
     }
   }
-  // incisor (საჭრელი): ბრტყელი საჭრელი კიდე გარეთა მხარეს
+
+  if (type === 'premolar') {
+    // პრემოლარი: ორბორცვიანი ბუნებრივი ოვალური გვირგვინი გამოხატული ბუკალური და ლინგვალური ბორცვებით
+    if (isUpper) {
+      return "M -13 0 C -14 -8 -8 -17 0 -17 C 8 -17 14 -8 13 0 C 14 7 8 16 0 16 C -8 16 -14 7 -13 0 Z";
+    } else {
+      return "M -13 0 C -14 8 -8 17 0 17 C 8 17 14 8 13 0 C 14 -7 8 -16 0 -16 C -8 -16 -14 -7 -13 0 Z";
+    }
+  }
+
+  if (type === 'canine') {
+    // ეშვი: გამოკვეთილი წამახვილებული ეშვის ფორმა, წვერო მიმართულია გარეთ (ტუჩისკენ), მძლავრი ფუძით
+    if (isUpper) {
+      return "M 0 -21 C 6 -17 15 -10 15 1 C 15 9 9 17 0 17 C -9 17 -15 9 -15 1 C -15 -10 -6 -17 0 -21 Z";
+    } else {
+      return "M 0 21 C 6 17 15 10 15 -1 C 15 -9 9 -17 0 -17 C -9 -17 -15 -9 -15 -1 C -15 10 -6 17 0 21 Z";
+    }
+  }
+
+  // incisor (საჭრელი): ბრტყელი საჭრელი კიდე მამელონებით და ანატომიური შევიწროება
   const isCentral = number === 11 || number === 21 || number === 41 || number === 31;
-  const w = isCentral ? 14 : 12;
-  const h = 15;
   if (isUpper) {
-    return `M -${w} -${h} L ${w} -${h} C ${w + 2} -7, ${w} 7, 8 ${h} C 3 ${h + 2}, -3 ${h + 2}, -8 ${h} C -${w} 7, -${w + 2} -7, -${w} -${h} Z`;
+    return isCentral
+      ? "M -14 -12 C -9 -14 -3 -13.5 0 -14 C 3 -13.5 9 -14 14 -12 C 16 -6 13 6 8 14 C 4 17 -4 17 -8 14 C -13 6 -16 -6 -14 -12 Z"
+      : "M -12 -11 C -7 -13 0 -13 12 -11 C 14 -5 12 5 7 13 C 3 16 -3 16 -7 13 C -12 5 -14 -5 -12 -11 Z";
   } else {
-    const lw = isCentral ? 11 : 12;
-    return `M -${lw} ${h} L ${lw} ${h} C ${lw + 2} 7, ${lw} -7, 7 -${h} C 3 -${h + 2}, -3 -${h + 2}, -7 -${h} C -${lw} -7, -${lw + 2} 7, -${lw} ${h} Z`;
+    return isCentral
+      ? "M -10 11 C -5 12.5 0 12.5 10 11 C 11 5 9 -4 6 -12 C 3 -15 -3 -15 -6 -12 C -9 -4 -11 5 -10 11 Z"
+      : "M -11 11 C -6 13 0 13 11 11 C 12 5 10 -4 6.5 -12 C 3 -15 -3 -15 -6.5 -12 C -10 -4 -12 5 -11 11 Z";
   }
 };
 
@@ -221,11 +233,11 @@ export const SvgTooth = ({
   let haloRy = 22;
 
   if (coord.type === 'premolar') {
-    haloRx = 21;
-    haloRy = 20;
+    haloRx = 20;
+    haloRy = 21;
   } else if (coord.type === 'canine') {
-    haloRx = 19;
-    haloRy = 22;
+    haloRx = 20;
+    haloRy = 24;
   } else if (coord.type === 'incisor') {
     haloRx = 18;
     haloRy = 20;
@@ -256,7 +268,7 @@ export const SvgTooth = ({
         className="pointer-events-none transition-opacity duration-150"
       />
 
-      {/* რეალური ანატომიური კბილის გვირგვინი */}
+      {/* რეალური ანატომიური კბილის გვირგვინი (ბუნებრივი კონტურით) */}
       <path
         d={getAnatomicalCrownPath(coord.type, isUpper, number)}
         style={{
@@ -265,90 +277,191 @@ export const SvgTooth = ({
           strokeWidth: isHovered || isHighlighted ? 2.5 : 1.8,
           strokeDasharray: isMissing ? '4 3' : 'none',
           strokeLinejoin: 'round',
-          filter: isHovered ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.22))' : 'drop-shadow(0 1px 3px rgba(0,0,0,0.08))',
+          strokeLinecap: 'round',
+          filter: isHovered 
+            ? 'drop-shadow(0 4px 10px rgba(0,0,0,0.22))' 
+            : 'drop-shadow(0 1.5px 3.5px rgba(0,0,0,0.08))',
         }}
       />
 
-      {/* ოკლუზიური ანატომიური ღარები და ბორცვები (Realistic Fissures & Ridges) */}
+      {/* ოკლუზიური მაგიდის შიდა მინანქრის საზღვარი (Enamel Marginal Shelf) */}
       {!isMissing && (
-        <g opacity={isHovered ? 0.65 : 0.4} stroke={currentStatus.stroke} fill="none">
+        <path
+          d={
+            coord.type === 'molar'
+              ? (isUpper
+                  ? "M -12 0 C -12 -5 -9 -12 -5 -12 C -2 -12 -1 -10 0 -10 C 1 -10 2 -12 5 -12 C 9 -12 12 -7 12 -2 C 12 3 10 11 5 12 C 2 12 1 10 0 10 C -1 10 -2 12 -6 12 C -10 12 -12 6 -12 0 Z"
+                  : "M -12 0 C -12 -5 -9 -11 -5 -11 C -2 -11 -1 -10 0 -10 C 1 -10 2 -11 5 -11 C 9 -11 12 -6 12 0 C 12 5 9 12 5 12 C 2 12 1 10 0 10 C -1 10 -2 12 -5 12 C -10 12 -12 6 -12 0 Z")
+              : coord.type === 'premolar'
+              ? (isUpper
+                  ? "M -9 0 C -10 -5 -5 -11 0 -11 C 5 -11 10 -5 9 0 C 10 5 5 11 0 11 C -5 11 -10 5 -9 0 Z"
+                  : "M -9 0 C -10 5 -5 11 0 11 C 5 11 10 5 9 0 C 10 -5 5 -11 0 -11 C -5 -11 -10 -5 -9 0 Z")
+              : coord.type === 'canine'
+              ? (isUpper
+                  ? "M 0 -14 C 4 -11 10 -6 10 1 C 10 6 6 11 0 12 C -6 11 -10 6 -10 1 C -10 -6 -4 -11 0 -14 Z"
+                  : "M 0 14 C 4 11 10 6 10 -1 C 10 -6 6 -11 0 -12 C -6 -11 -10 -6 -10 -1 C -10 6 -4 11 0 14 Z")
+              : (isUpper
+                  ? "M -9 -8 C -4 -9.5 4 -9.5 9 -8 C 10 -3 8 4 5 9 C 2 11 -2 11 -5 9 C -8 4 -10 -3 -9 -8 Z"
+                  : "M -7 7 C -3 8.5 3 8.5 7 7 C 8 3 6 -3 4 -8 C 2 -10 -2 -10 -4 -8 C -6 -3 -8 3 -7 7 Z")
+          }
+          fill="none"
+          stroke={currentStatus.stroke}
+          strokeWidth="0.8"
+          opacity={isHovered ? 0.35 : 0.22}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+
+      {/* ოკლუზიური ანატომიური ღარები, ბორცვები და რელიეფი (Authentic Fissures, Ridges & Cusps) */}
+      {!isMissing && (
+        <g opacity={isHovered ? 0.75 : 0.5} stroke={currentStatus.stroke} fill="none">
           {coord.type === 'molar' && (
             <>
-              {/* ოკლუზიური მაგიდის კონტური */}
-              <rect x="-10" y="-9" width="20" height="18" rx="5" strokeWidth="0.8" opacity="0.3" />
-              {/* ჯვარედინი ანატომიური ღარები */}
-              <path d="M -11 0 L 11 0 M 0 -9 L 0 9" strokeWidth="1.3" strokeLinecap="round" />
+              {/* მთავარი ანატომიური ჯვარედინი ღარი ბუნებრივი სიმრუდით */}
+              <path
+                d="M -11 0 C -5 -0.5 5 0.5 11 0 M 0 -10 C -0.5 -4 0.5 4 0 10"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+              />
+              {/* სამკუთხა ფოსოების განშტოებები (Triangular fossae fissures) */}
+              <path
+                d="M -11 0 L -13 -4 M -11 0 L -13 4 M 11 0 L 13 -4 M 11 0 L 13 4"
+                strokeWidth="0.9"
+                strokeLinecap="round"
+                opacity="0.6"
+              />
+              {/* ირიბი ქედი (Oblique ridge) ზედა მოლარებისთვის */}
+              {isUpper && (
+                <path
+                  d="M -6 7 C -2 3 3 -2 7 -6"
+                  strokeWidth="0.8"
+                  strokeDasharray="2 2"
+                  opacity="0.4"
+                />
+              )}
               {/* ცენტრალური ფოსო (Central Fossa Pit) */}
-              <circle cx="0" cy="0" r="2" fill={currentStatus.stroke} />
-              {/* გვერდითი ბორცვების წერტილები */}
-              <circle cx="-6" cy="-5" r="1.2" fill={currentStatus.stroke} opacity="0.6" />
-              <circle cx="6" cy="-5" r="1.2" fill={currentStatus.stroke} opacity="0.6" />
-              <circle cx="-6" cy="5" r="1.2" fill={currentStatus.stroke} opacity="0.6" />
-              <circle cx="6" cy="5" r="1.2" fill={currentStatus.stroke} opacity="0.6" />
+              <circle cx="0" cy="0" r="2.2" fill={currentStatus.stroke} />
+              {/* 4 ბორცვის ანატომიური წვერო (Cusp apices) */}
+              <circle cx="-7" cy="-7" r="1.1" fill={currentStatus.stroke} opacity="0.6" />
+              <circle cx="7" cy="-7" r="1.1" fill={currentStatus.stroke} opacity="0.6" />
+              <circle cx="-7" cy="7" r="1.1" fill={currentStatus.stroke} opacity="0.6" />
+              <circle cx="7" cy="7" r="1.1" fill={currentStatus.stroke} opacity="0.6" />
             </>
           )}
 
           {coord.type === 'premolar' && (
             <>
-              {/* პრემოლარის ცენტრალური ღარი ბორცვთაშორის */}
-              <path d="M -8 0 L 8 0 M -8 0 L -11 -3 M -8 0 L -11 3 M 8 0 L 11 -3 M 8 0 L 11 3" strokeWidth="1.3" strokeLinecap="round" />
+              {/* ბორცვთაშორისი ცენტრალური ღარი და სამკუთხა განშტოებები */}
+              <path
+                d="M -8 0 C -4 -0.5 4 0.5 8 0 M -8 0 L -10 -3 M -8 0 L -10 3 M 8 0 L 10 -3 M 8 0 L 10 3"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+              />
+              {/* ბორცვების ქედები და მცირე ფოსოები */}
               <circle cx="-4" cy="0" r="1.4" fill={currentStatus.stroke} />
               <circle cx="4" cy="0" r="1.4" fill={currentStatus.stroke} />
+              <path
+                d={isUpper ? "M 0 -11 L 0 -5 M 0 11 L 0 5" : "M 0 11 L 0 5 M 0 -11 L 0 -5"}
+                strokeWidth="0.9"
+                opacity="0.4"
+                strokeLinecap="round"
+              />
             </>
           )}
 
           {coord.type === 'canine' && (
             <>
-              {/* ეშვის წამახვილებული ქედი და წვერო */}
-              <line x1="0" y1={isUpper ? -16 : 16} x2="0" y2={isUpper ? 11 : -11} strokeWidth="1.6" strokeLinecap="round" />
-              <circle cx="0" cy={isUpper ? -5 : 5} r="1.8" fill={currentStatus.stroke} />
+              {/* ეშვის გამოკვეთილი გრძივი ქედი წვეროდან ძირამდე */}
+              <path
+                d={`M 0 ${isUpper ? -17 : 17} C 0 ${isUpper ? -8 : 8} 0 ${isUpper ? 2 : -2} 0 ${isUpper ? 11 : -11}`}
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+              {/* ეშვის წვეროს ბუნებრივი რელიეფი */}
+              <circle cx="0" cy={isUpper ? -6 : 6} r="2" fill={currentStatus.stroke} />
+              <path
+                d={isUpper ? "M -9 -2 C -4 4 4 4 9 -2" : "M -9 2 C -4 -4 4 -4 9 2"}
+                strokeWidth="0.8"
+                opacity="0.35"
+              />
             </>
           )}
 
           {coord.type === 'incisor' && (
             <>
               {/* საჭრელი კიდის ბრტყელი ფასეტი */}
-              <line x1="-9" y1={isUpper ? -11 : 11} x2="9" y2={isUpper ? -11 : 11} strokeWidth="1.8" strokeLinecap="round" />
-              <line x1="0" y1={isUpper ? -11 : 11} x2="0" y2={isUpper ? 6 : -6} strokeWidth="1" strokeDasharray="2 3" opacity="0.5" />
+              <path
+                d={isUpper ? "M -10 -9 C -4 -10 4 -10 10 -9" : "M -8 8 C -3 9.5 3 9.5 8 8"}
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              {/* მამელონების განმყოფელი გრძივი ღარები */}
+              <path
+                d={isUpper 
+                  ? "M -4 -8 L -4 1 M 4 -8 L 4 1" 
+                  : "M -3 7 L -3 -1 M 3 7 L 3 -1"}
+                strokeWidth="0.9"
+                opacity="0.35"
+                strokeDasharray="1.5 2"
+              />
+              {/* ცინგულუმის რელიეფი */}
+              <circle cx="0" cy={isUpper ? 7 : -7} r="1.5" fill={currentStatus.stroke} opacity="0.4" />
             </>
           )}
         </g>
       )}
 
-      {/* სტატუსის სპეციფიკური ინდიკატორები */}
+      {/* სტატუსის სპეციფიკური ინდიკატორები (ბუნებრივი ანატომიური რესტავრაციები და პათოლოგიები) */}
       {status === 'caries' && (
-        <circle cx="0" cy="0" r="5" fill="#D97706" />
+        /* კარიესი: ორგანული ანატომიური ლაქა ცენტრალურ ფოსოში/ღარში */
+        <g>
+          <path
+            d="M -3 -2 C 0 -4 4 -3 5 0 C 6 3 2 5 -1 4 C -4 3 -5 -1 -3 -2 Z"
+            fill="#D97706"
+            opacity="0.95"
+          />
+          <circle cx="0.5" cy="0.5" r="2" fill="#92400E" />
+        </g>
       )}
 
       {status === 'pulpitis' && (
+        /* პულპიტი: ანთებითი პულპური ჰიპერემიის სიღრმისეული ნათება */
         <g>
-          <circle cx="0" cy="0" r="6.5" fill="#EF4444" opacity="0.3" />
-          <circle cx="0" cy="0" r="5" fill="#DC2626" />
+          <circle cx="0" cy="0" r="7.5" fill="#EF4444" opacity="0.25" />
+          <circle cx="0" cy="0" r="5" fill="#DC2626" opacity="0.85" />
+          <circle cx="0" cy="0" r="2.5" fill="#991B1B" />
         </g>
       )}
 
       {status === 'filling' && (
-        <rect x="-7" y="-6" width="14" height="12" rx="3" fill="#2563EB" opacity="0.85" />
+        /* ბჟენი: ანატომიური ოკლუზიური რესტავრაცია (Class I composite restoration), რომელიც იმეორებს ღარებს და არა ოთხკუთხედს! */
+        <path
+          d="M -7 -1 C -4 -2 -2 -5 0 -5 C 2 -5 4 -2 7 -1 C 8 1 6 4 3 3 C 2 5 -2 5 -3 3 C -6 4 -8 2 -7 -1 Z"
+          fill="#2563EB"
+          opacity="0.9"
+        />
       )}
 
       {status === 'implant' && (
-        <g stroke="#6366F1" strokeWidth="1.5">
-          <circle cx="0" cy="0" r="5.5" fill="#4F46E5" opacity="0.3" />
-          <line x1="-4.5" y1="-3.5" x2="4.5" y2="-3.5" />
-          <line x1="-4.5" y1="0" x2="4.5" y2="0" />
-          <line x1="-4.5" y1="3.5" x2="4.5" y2="3.5" />
+        /* იმპლანტი: თანამედროვე ტიტანის ჰექსაგონალური აბატმენტი და ხრახნის პროფილი */
+        <g stroke="#6366F1" strokeWidth="1.5" strokeLinecap="round">
+          <circle cx="0" cy="0" r="6" fill="#4F46E5" opacity="0.25" />
+          <polygon points="0,-4.5 3.9,-2.25 3.9,2.25 0,4.5 -3.9,2.25 -3.9,-2.25" fill="#4F46E5" opacity="0.75" />
+          <circle cx="0" cy="0" r="1.8" fill="#FFFFFF" />
         </g>
       )}
 
       {isMissing && (
-        <path d="M -8 -8 L 8 8 M -8 8 L 8 -8" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" />
+        /* ამოღებული კბილი: კლინიკური დიაგონალური გადახაზვა */
+        <path d="M -9 -9 L 9 9 M -9 9 L 9 -9" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" />
       )}
 
       {/* კომენტარის ინდიკატორი */}
       {comment && (
         <circle 
-          cx={width / 2 - 4} 
-          cy={-height / 2 + 4} 
+          cx={haloRx - 6} 
+          cy={-haloRy + 6} 
           r="3.5" 
           className="fill-brand-purple stroke-white dark:stroke-slate-900 stroke-1" 
         />
@@ -386,17 +499,28 @@ export const SvgTooth = ({
   );
 };
 
-// კბილის ტრადიციული ბარათი (კომპაქტური ცხრილის ხედისთვის)
+// კბილის ტრადიციული ბარათი (კომპაქტური ცხრილის ხედისთვის - რეალური ფესვიანი ანატომიური პროფილით)
 const Tooth = ({ number, status, onClick }) => {
   const current = STATUS_CONFIG[status] || STATUS_CONFIG.healthy;
   const isMissing = status === 'missing';
 
+  // ანატომიური პროფილის ვექტორები (გვირგვინი + ფესვები)
   const getToothShape = (num) => {
     const lastDigit = parseInt(num.toString().slice(-1));
-    if (lastDigit === 1 || lastDigit === 2) return "M8.5 2C7.1 2 6 3.1 6 4.5V9C6 14 8 22 12 22C16 22 18 14 18 9V4.5C18 3.1 16.9 2 15.5 2H8.5Z";
-    if (lastDigit === 3) return "M12 2C9.5 4 6.5 6 6.5 9V10C6.5 15 8.5 22 12 22C15.5 22 17.5 15 17.5 10V9C17.5 6 14.5 4 12 2Z";
-    if (lastDigit === 4 || lastDigit === 5) return "M7 2.5C7 2.5 9 1 12 2C15 1 17 2.5 17 2.5C18.5 3.5 19 5.5 19 7C19 11 17 12.5 16 15C15 17.5 15 20.5 14 21.5C13 22.5 11 22.5 10 21.5C9 20.5 9 17.5 8 15C7 12.5 5 11 5 7C5 5.5 5.5 3.5 7 2.5Z";
-    return "M5.5 3.5C6.5 2 9 2.5 12 3.5C15 2.5 17.5 2 18.5 3.5C19.5 5 19.5 8 19 10.5C18.5 13 17.5 14 17 16V20.5C17 21.5 15 22 14.5 21C14 20 14 17.5 13.5 16C12.5 15 11.5 15 10.5 16C10 17.5 10 20 9.5 21C9 22 7 21.5 7 20.5V16C6.5 14 5.5 13 5 10.5C4.5 8 4.5 5 5.5 3.5Z";
+    // 1, 2: საჭრელი - ბრტყელი გვირგვინი, ერთი კონუსური ფესვი
+    if (lastDigit === 1 || lastDigit === 2) {
+      return "M7 3 C9 2.5 15 2.5 17 3 C18 6 17.5 10 16 12 C15 14 13.5 18 12 22 C10.5 18 9 14 8 12 C6.5 10 6 6 7 3 Z";
+    }
+    // 3: ეშვი - წამახვილებული გვირგვინი, მძლავრი გრძელი ფესვი
+    if (lastDigit === 3) {
+      return "M12 2 C14.5 4 17.5 7 17 11 C16.5 14 14.5 17 12 22 C9.5 17 7.5 14 7 11 C6.5 7 9.5 4 12 2 Z";
+    }
+    // 4, 5: პრემოლარი - ორბორცვიანი გვირგვინი, წაგრძელებული ფესვი
+    if (lastDigit === 4 || lastDigit === 5) {
+      return "M6.5 3 C9 2 15 2 17.5 3 C19 6 18 11 16.5 13 C15 15 14 18 13.5 21.5 C13 22 11 22 10.5 21.5 C10 18 9 15 7.5 13 C6 11 5 6 6.5 3 Z";
+    }
+    // 6, 7, 8: მოლარი - მრავალბორცვიანი განიერი გვირგვინი და ორმაგი/სამმაგი დივერგენტული ფესვები
+    return "M5.5 3.5 C8 2 16 2 18.5 3.5 C19.5 6 19 11 17.5 13 C16.5 14 16 16.5 16.5 21 C16.5 22 14.5 22 14 20 C13.5 18 13 16 12 16 C11 16 10.5 18 10 20 C9.5 22 7.5 22 7.5 21 C8 16.5 7.5 14 6.5 13 C5 11 4.5 6 5.5 3.5 Z";
   };
 
   return (
