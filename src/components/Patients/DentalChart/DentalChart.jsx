@@ -442,27 +442,28 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
             <span className="text-lg sm:text-xl font-black text-brand-purple leading-tight">#{inspectedNumber}</span>
           </div>
 
-          <div className="space-y-0.5 min-w-0 flex-1">
-            {/* სათაურის ხაზი (ფიქსირებული სიმაღლე) */}
-            <div className="flex items-center gap-2 flex-wrap min-w-0">
-              <h4 className="text-sm sm:text-base font-black text-text-main truncate max-w-[260px] sm:max-w-md">
-                {inspectedName}
-              </h4>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider border shrink-0 ${inspectedStatus.badgeBg} ${inspectedStatus.badgeText} ${inspectedStatus.badgeBorder}`}>
+          <div className="space-y-1 min-w-0 flex-1">
+            {/* ხაზი 1: კბილის სრული სახელი (მარტო საკუთარ ხაზზე, არაფერი არ ემატება და არ იხვევა!) */}
+            <h4 className="text-sm sm:text-base font-black text-text-main truncate">
+              {inspectedName}
+            </h4>
+
+            {/* ხაზი 2: სტატუსის ბეიჯი და კვადრანტის ინფორმაცია (სტატუსი ყოველთვის აქ დგას, ამიტომ კბილის სახელის სიგრძე მას ვერასდროს ვერ ამოძრავებს!) */}
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider border shrink-0 ${inspectedStatus.badgeBg} ${inspectedStatus.badgeText} ${inspectedStatus.badgeBorder}`}>
                 {inspectedStatus.label}
               </span>
+              <span className="text-text-muted/40 shrink-0">•</span>
+              <p className="text-[11px] sm:text-xs text-text-muted truncate">
+                <span>კვადრანტი: Q{inspectedCoord?.quad || 1}</span>
+                <span className="mx-1.5">•</span>
+                <span>ტიპი: {inspectedCoord?.type === 'molar' ? 'მოლარი' : inspectedCoord?.type === 'premolar' ? 'პრემოლარი' : inspectedCoord?.type === 'canine' ? 'ეშვი' : 'საჭრელი'}</span>
+                <span className="mx-1.5">•</span>
+                <span>ყბა: {inspectedCoord?.jaw === 'upper' ? 'ზედა' : 'ქვედა'}</span>
+              </p>
             </div>
 
-            {/* კვადრანტისა და ტიპის ინფორმაცია */}
-            <p className="text-[11px] sm:text-xs text-text-muted truncate">
-              <span>კვადრანტი: Q{inspectedCoord?.quad || 1}</span>
-              <span className="mx-1.5">•</span>
-              <span>ტიპი: {inspectedCoord?.type === 'molar' ? 'მოლარი' : inspectedCoord?.type === 'premolar' ? 'პრემოლარი' : inspectedCoord?.type === 'canine' ? 'ეშვი' : 'საჭრელი'}</span>
-              <span className="mx-1.5">•</span>
-              <span>ყბა: {inspectedCoord?.jaw === 'upper' ? 'ზედა' : 'ქვედა'}</span>
-            </p>
-
-            {/* კომენტარის რეზერვირებული ხაზი (ყოველთვის h-5, ამიტომ ბარათის ზომა არასდროს არ დახტის!) */}
+            {/* ხაზი 3: კომენტარის რეზერვირებული ხაზი (ყოველთვის h-5, ფიქსირებული) */}
             <div className="h-5 flex items-center gap-1.5 text-xs pt-0.5">
               {inspectedData.comment ? (
                 <span className="text-brand-purple font-medium truncate flex items-center gap-1.5">

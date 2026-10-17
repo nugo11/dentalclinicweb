@@ -168,6 +168,36 @@ export const TEETH_COORDINATES = {
   38: { x: 650, y: 434, rot: -78, jaw: 'lower', quad: 3, type: 'molar', name: '38 · მე-3 მოლარი (სიბრძნის)' }
 };
 
+// ანატომიური გვირგვინის ვექტორული კონტური კბილის ტიპის მიხედვით
+export const getAnatomicalCrownPath = (type, isUpper, number) => {
+  if (type === 'molar') {
+    // მოლარი: 4-5 ბორცვიანი ბუნებრივი გვირგვინი მომრგვალებული კუთხეებითა და ბორცვთაშორისი ჩაღრმავებებით
+    return "M -17 -16 C -9 -21, 9 -21, 17 -16 C 22 -9, 22 9, 17 16 C 9 21, -9 21, -17 16 C -22 9, -22 -9, -17 -16 Z";
+  }
+  if (type === 'premolar') {
+    // პრემოლარი: ორბორცვიანი ელიფსურ-ოვალური გვირგვინი
+    return "M -15 -14 C -6 -18, 6 -18, 15 -14 C 19 -5, 19 5, 15 14 C 6 18, -6 18, -15 14 C -19 5, -19 -5, -15 -14 Z";
+  }
+  if (type === 'canine') {
+    // ეშვი: წამახვილებული ეშვის ფორმა, წვერო მიმართულია გარეთ (ტუჩისკენ)
+    if (isUpper) {
+      return "M 0 -19 C 7 -15, 14 -7, 15 2 C 15 11, 9 18, 0 18 C -9 18, -15 11, -15 2 C -14 -7, -7 -15, 0 -19 Z";
+    } else {
+      return "M 0 19 C 7 15, 14 7, 15 -2 C 15 -11, 9 -18, 0 -18 C -9 -18, -15 -11, -15 -2 C -14 7, -7 15, 0 19 Z";
+    }
+  }
+  // incisor (საჭრელი): ბრტყელი საჭრელი კიდე გარეთა მხარეს
+  const isCentral = number === 11 || number === 21 || number === 41 || number === 31;
+  const w = isCentral ? 14 : 12;
+  const h = 15;
+  if (isUpper) {
+    return `M -${w} -${h} L ${w} -${h} C ${w + 2} -7, ${w} 7, 8 ${h} C 3 ${h + 2}, -3 ${h + 2}, -8 ${h} C -${w} 7, -${w + 2} -7, -${w} -${h} Z`;
+  } else {
+    const lw = isCentral ? 11 : 12;
+    return `M -${lw} ${h} L ${lw} ${h} C ${lw + 2} 7, ${lw} -7, 7 -${h} C 3 -${h + 2}, -3 -${h + 2}, -7 -${h} C -${lw} -7, -${lw + 2} 7, -${lw} ${h} Z`;
+  }
+};
+
 // ანატომიური კბილის SVG ფორმა რკალში
 export const SvgTooth = ({ 
   number, 
@@ -186,23 +216,19 @@ export const SvgTooth = ({
   const isUpper = coord.jaw === 'upper';
   const isMissing = status === 'missing';
 
-  // ანატომიური ზომები კბილის ტიპის მიხედვით
-  let width = 44;
-  let height = 42;
-  let rx = 10;
+  // ანატომიური ზომები ჰალოსთვის
+  let haloRx = 23;
+  let haloRy = 22;
 
   if (coord.type === 'premolar') {
-    width = 38;
-    height = 36;
-    rx = 9;
+    haloRx = 21;
+    haloRy = 20;
   } else if (coord.type === 'canine') {
-    width = 34;
-    height = 38;
-    rx = 8;
+    haloRx = 19;
+    haloRy = 22;
   } else if (coord.type === 'incisor') {
-    width = coord.jaw === 'lower' ? 28 : 32;
-    height = 36;
-    rx = 7;
+    haloRx = 18;
+    haloRy = 20;
   }
 
   // ნომრის პოზიციონირება კბილის გარეთ (რკალის გარე პერიმეტრზე)
@@ -223,60 +249,67 @@ export const SvgTooth = ({
       <ellipse
         cx="0"
         cy="0"
-        rx={width / 2 + 7}
-        ry={height / 2 + 7}
+        rx={haloRx}
+        ry={haloRy}
         fill={currentStatus.stroke}
         opacity={isHovered || isHighlighted ? 0.35 : 0}
         className="pointer-events-none transition-opacity duration-150"
       />
 
-      {/* კბილის ანატომიური გვირგვინი */}
-      <rect
-        x={-width / 2}
-        y={-height / 2}
-        width={width}
-        height={height}
-        rx={rx}
-        ry={rx}
+      {/* რეალური ანატომიური კბილის გვირგვინი */}
+      <path
+        d={getAnatomicalCrownPath(coord.type, isUpper, number)}
         style={{
           fill: isMissing ? 'transparent' : 'var(--tooth-fill, #FFFFFF)',
           stroke: currentStatus.stroke,
           strokeWidth: isHovered || isHighlighted ? 2.5 : 1.8,
           strokeDasharray: isMissing ? '4 3' : 'none',
-          filter: isHovered ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' : 'drop-shadow(0 1px 3px rgba(0,0,0,0.08))',
+          strokeLinejoin: 'round',
+          filter: isHovered ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.22))' : 'drop-shadow(0 1px 3px rgba(0,0,0,0.08))',
         }}
       />
 
-      {/* ოკლუზიური ანატომიური ღარები (Fissures) */}
+      {/* ოკლუზიური ანატომიური ღარები და ბორცვები (Realistic Fissures & Ridges) */}
       {!isMissing && (
-        <g opacity={isHovered ? 0.6 : 0.35} stroke={currentStatus.stroke} fill="none">
+        <g opacity={isHovered ? 0.65 : 0.4} stroke={currentStatus.stroke} fill="none">
           {coord.type === 'molar' && (
             <>
-              {/* ჯვარედინი ღარები */}
-              <path d={`M ${-width / 2 + 8} 0 L ${width / 2 - 8} 0 M 0 ${-height / 2 + 7} L 0 ${height / 2 - 7}`} strokeWidth="1.4" strokeLinecap="round" />
-              <circle cx="0" cy="0" r="2.2" fill={currentStatus.stroke} />
+              {/* ოკლუზიური მაგიდის კონტური */}
+              <rect x="-10" y="-9" width="20" height="18" rx="5" strokeWidth="0.8" opacity="0.3" />
+              {/* ჯვარედინი ანატომიური ღარები */}
+              <path d="M -11 0 L 11 0 M 0 -9 L 0 9" strokeWidth="1.3" strokeLinecap="round" />
+              {/* ცენტრალური ფოსო (Central Fossa Pit) */}
+              <circle cx="0" cy="0" r="2" fill={currentStatus.stroke} />
+              {/* გვერდითი ბორცვების წერტილები */}
+              <circle cx="-6" cy="-5" r="1.2" fill={currentStatus.stroke} opacity="0.6" />
+              <circle cx="6" cy="-5" r="1.2" fill={currentStatus.stroke} opacity="0.6" />
+              <circle cx="-6" cy="5" r="1.2" fill={currentStatus.stroke} opacity="0.6" />
+              <circle cx="6" cy="5" r="1.2" fill={currentStatus.stroke} opacity="0.6" />
             </>
           )}
 
           {coord.type === 'premolar' && (
             <>
-              <line x1={-width / 2 + 7} y1="0" x2={width / 2 - 7} y2="0" strokeWidth="1.4" strokeLinecap="round" />
-              <circle cx="-5" cy="0" r="1.5" fill={currentStatus.stroke} />
-              <circle cx="5" cy="0" r="1.5" fill={currentStatus.stroke} />
+              {/* პრემოლარის ცენტრალური ღარი ბორცვთაშორის */}
+              <path d="M -8 0 L 8 0 M -8 0 L -11 -3 M -8 0 L -11 3 M 8 0 L 11 -3 M 8 0 L 11 3" strokeWidth="1.3" strokeLinecap="round" />
+              <circle cx="-4" cy="0" r="1.4" fill={currentStatus.stroke} />
+              <circle cx="4" cy="0" r="1.4" fill={currentStatus.stroke} />
             </>
           )}
 
           {coord.type === 'canine' && (
             <>
-              <line x1="0" y1={-height / 2 + 7} x2="0" y2={height / 2 - 7} strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="0" cy="0" r="1.8" fill={currentStatus.stroke} />
+              {/* ეშვის წამახვილებული ქედი და წვერო */}
+              <line x1="0" y1={isUpper ? -16 : 16} x2="0" y2={isUpper ? 11 : -11} strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx="0" cy={isUpper ? -5 : 5} r="1.8" fill={currentStatus.stroke} />
             </>
           )}
 
           {coord.type === 'incisor' && (
             <>
-              <line x1={-width / 2 + 5} y1={isUpper ? -5 : 5} x2={width / 2 - 5} y2={isUpper ? -5 : 5} strokeWidth="1.8" strokeLinecap="round" />
-              <line x1="0" y1={-height / 2 + 6} x2="0" y2={height / 2 - 6} strokeWidth="1" strokeDasharray="2 3" />
+              {/* საჭრელი კიდის ბრტყელი ფასეტი */}
+              <line x1="-9" y1={isUpper ? -11 : 11} x2="9" y2={isUpper ? -11 : 11} strokeWidth="1.8" strokeLinecap="round" />
+              <line x1="0" y1={isUpper ? -11 : 11} x2="0" y2={isUpper ? 6 : -6} strokeWidth="1" strokeDasharray="2 3" opacity="0.5" />
             </>
           )}
         </g>
