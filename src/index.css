@@ -29,6 +29,7 @@
   --border-main: #f1f5f9;
   --border-dark: #e2e8f0;
   --brand-deep: #272b41;
+  --tooth-fill: #ffffff;
 }
 
 .dark {
@@ -39,6 +40,7 @@
   --border-main: #1e293b;
   --border-dark: #334155;
   --brand-deep: #0f172a;
+  --tooth-fill: #1e293b;
   --calendar-filter: invert(1);
 }
 
@@ -267,10 +269,8 @@ html {
 
 .dark .app-sheet,
 .dark .app-modal-card {
-  border: 1.5px solid rgba(255, 255, 255, 0.24) !important;
-  box-shadow:
-    0 30px 95px -12px rgba(0, 0, 0, 0.95),
-    0 0 0 1px rgba(255, 255, 255, 0.14) !important;
+  border: 0.2px solid #1e293b !important;
+ 
   overscroll-behavior: contain !important;
   -webkit-overflow-scrolling: touch;
 }

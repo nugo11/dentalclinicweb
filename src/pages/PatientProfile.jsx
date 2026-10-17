@@ -534,8 +534,8 @@ const PatientProfile = () => {
 
               {/* სამედიცინო სვეტი */}
               <div className="lg:col-span-2 space-y-8">
-                <div className="bg-surface p-10 rounded-[40px] border border-border-main shadow-sm relative overflow-hidden">
-                  <h3 className="text-2xl font-black text-text-main italic tracking-tighter flex items-center gap-3 mb-10">
+                <div className="bg-surface p-4 sm:p-8 lg:p-10 rounded-[32px] sm:rounded-[40px] border border-border-main shadow-sm relative overflow-hidden">
+                  <h3 className="text-xl sm:text-2xl font-black text-text-main italic tracking-tighter flex items-center gap-3 mb-6 sm:mb-8">
                     <Activity className="text-brand-purple" size={24} />{" "}
                     სტომატოლოგიური სტატუსი
                   </h3>
