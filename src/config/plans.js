@@ -129,10 +129,16 @@ export const PLANS = {
 };
 
 // დამხმარე ფუნქციები
-const getPlan = (planId) => {
-  const id = (planId || "free").toLowerCase();
-  if (id === "solo" || id === "basic") return PLANS.business; // ძველი Solo და Basic პაკეტების მხარდაჭერა
-  if (id === "pro") return PLANS.custom; // ძველი Pro პაკეტის მხარდაჭერა
+export const normalizePlanId = (planId) => {
+  const id = (planId || "free").toLowerCase().trim();
+  if (id === "solo" || id === "basic") return "business"; // ძველი Solo და Basic პაკეტების მხარდაჭერა
+  if (id === "pro") return "custom"; // ძველი Pro პაკეტის მხარდაჭერა
+  if (id === "custom" || id === "business" || id === "free") return id;
+  return "free";
+};
+
+export const getPlan = (planId) => {
+  const id = normalizePlanId(planId);
   return PLANS[id] || PLANS.free;
 };
 

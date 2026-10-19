@@ -8,7 +8,7 @@ import {
   ChevronRight, Calendar, DollarSign, Sparkles, FileText, Smartphone,
   Info, ExternalLink, Layers, ArrowLeft, Phone, Truck, ArrowRight, TrendingDown,
   Mail, Trash2, ChevronLeft, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown,
-  RotateCcw, SlidersHorizontal
+  RotateCcw, SlidersHorizontal, Settings
 } from "lucide-react";
 import { collection, onSnapshot, doc, updateDoc, query, orderBy, limit } from "firebase/firestore";
 import { db, auth } from "../../firebase";
@@ -21,6 +21,8 @@ import DoctorPinResetModal from "../../components/Admin/DoctorPinResetModal";
 import ClinicDetailsModal from "../../components/Admin/ClinicDetailsModal";
 import ClinicWarehouseModal from "../../components/Admin/ClinicWarehouseModal";
 import ClinicDeleteModal from "../../components/Admin/ClinicDeleteModal";
+import ClinicPlanModal from "../../components/Admin/ClinicPlanModal";
+import { normalizePlanId } from "../../config/plans";
 
 const SuperAdminDashboard = () => {
   const { currentUser, userData, staffLogout } = useAuth();
@@ -56,6 +58,7 @@ const SuperAdminDashboard = () => {
 
   // Modals state
   const [statusModalClinic, setStatusModalClinic] = useState(null);
+  const [planModalClinic, setPlanModalClinic] = useState(null);
   const [pinResetStaff, setPinResetStaff] = useState(null);
   const [pinResetClinicName, setPinResetClinicName] = useState("");
   const [detailsModalClinic, setDetailsModalClinic] = useState(null);
@@ -127,6 +130,12 @@ const SuperAdminDashboard = () => {
     const activeClinics = clinics.filter((c) => (c.subscriptionStatus || "active") === "active").length;
     const suspendedClinics = totalClinics - activeClinics;
 
+    const planStats = {
+      free: clinics.filter((c) => normalizePlanId(c.plan) === "free").length,
+      business: clinics.filter((c) => normalizePlanId(c.plan) === "business").length,
+      custom: clinics.filter((c) => normalizePlanId(c.plan) === "custom").length,
+    };
+
     const totalStaff = users.length;
     const totalDoctors = users.filter((u) => u.role === "doctor").length;
     
@@ -155,6 +164,7 @@ const SuperAdminDashboard = () => {
       totalClinics,
       activeClinics,
       suspendedClinics,
+      planStats,
       totalStaff,
       totalDoctors,
       lockedAccounts,
@@ -309,14 +319,25 @@ const SuperAdminDashboard = () => {
   };
 
   // Change Clinic Subscription Plan
-  const handleChangeClinicPlan = async (clinicId, newPlan) => {
+  const handleChangeClinicPlan = async (clinicId, newPlan, customMaxDocs) => {
     try {
       const clinicRef = doc(db, "clinics", clinicId);
-      await updateDoc(clinicRef, {
+      const updates = {
         plan: newPlan,
         planUpdatedAt: new Date().toISOString(),
         planUpdatedBy: currentUser?.email || SUPERADMIN_EMAIL,
-      });
+      };
+
+      if (newPlan === "custom") {
+        const parsed = parseInt(customMaxDocs, 10);
+        updates.customMaxDoctors = (!isNaN(parsed) && parsed > 0) ? parsed : 15;
+      }
+
+      await updateDoc(clinicRef, updates);
+
+      const planSummary = newPlan === "custom"
+        ? `CUSTOM (${updates.customMaxDoctors} ექიმის ლიმიტი)`
+        : newPlan.toUpperCase();
 
       await logAdminAudit({
         adminEmail: currentUser?.email || SUPERADMIN_EMAIL,
@@ -326,14 +347,14 @@ const SuperAdminDashboard = () => {
         targetName: clinicMap[clinicId] || "კლინიკა",
         clinicId,
         clinicName: clinicMap[clinicId] || "კლინიკა",
-        details: `კლინიკის ტარიფი შეიცვალა ➔ ${newPlan.toUpperCase()}`,
-        metadata: { newPlan },
+        details: `კლინიკის ტარიფი შეიცვალა ➔ ${planSummary}`,
+        metadata: { newPlan, customMaxDoctors: updates.customMaxDoctors || null },
       });
 
-      showToast(`კლინიკის ტარიფი განახლდა: ${newPlan.toUpperCase()}`, "success");
+      showToast(`კლინიკის ტარიფი განახლდა: ${planSummary}`, "success");
     } catch (err) {
       console.error("Error updating plan:", err);
-      showToast("ტარიფის განახლება ვერ მოხერხდა", "error");
+      showToast("ტარიფის განახლება ვერ მოხერხდა: " + err.message, "error");
     }
   };
 
@@ -391,7 +412,8 @@ const SuperAdminDashboard = () => {
 
       const status = c.subscriptionStatus || "active";
       const matchStatus = statusFilter === "all" || status === statusFilter;
-      const matchPlan = planFilter === "all" || (c.plan || "free") === planFilter;
+      const clinicPlan = normalizePlanId(c.plan);
+      const matchPlan = planFilter === "all" || clinicPlan === planFilter;
 
       return matchSearch && matchStatus && matchPlan;
     });
@@ -750,6 +772,13 @@ const SuperAdminDashboard = () => {
                     <span className="text-red-500 flex items-center gap-1">
                       <Power size={13} /> {metrics.suspendedClinics} გათიშული
                     </span>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-border-main flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-text-muted">
+                    <span className="text-purple-600 dark:text-purple-400 font-bold">{metrics.planStats?.custom || 0} Custom</span>
+                    <span>•</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-bold">{metrics.planStats?.business || 0} Business</span>
+                    <span>•</span>
+                    <span className="text-slate-500 font-bold">{metrics.planStats?.free || 0} Free</span>
                   </div>
                 </div>
 
@@ -1112,9 +1141,32 @@ const SuperAdminDashboard = () => {
                               </span>
                             </td>
                             <td className="py-3.5 px-4">
-                              <span className="px-2 py-0.5 rounded-md bg-brand-purple/10 text-brand-purple font-black text-[10px] uppercase">
-                                {clinic.plan || "Free"}
-                              </span>
+                              {(() => {
+                                const p = normalizePlanId(clinic.plan);
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => setPlanModalClinic(clinic)}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all hover:scale-105 cursor-pointer ${
+                                      p === "custom"
+                                        ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+                                        : p === "business"
+                                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                        : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20"
+                                    }`}
+                                    title="ტარიფის შეცვლა"
+                                  >
+                                    <Sparkles size={11} className={p === "custom" ? "text-purple-500" : "opacity-40"} />
+                                    <span>
+                                      {p === "custom"
+                                        ? `CUSTOM (${clinic.customMaxDoctors ? `${clinic.customMaxDoctors} ექ.` : "15 ექ."})`
+                                        : p === "business"
+                                        ? "BUSINESS (6 ექ.)"
+                                        : "FREE (3 ექ.)"}
+                                    </span>
+                                  </button>
+                                );
+                              })()}
                             </td>
                             <td className="py-3.5 px-4 text-text-muted">
                               {staffCount} პერსონალი
@@ -1192,10 +1244,9 @@ const SuperAdminDashboard = () => {
                     className="px-4 py-3 rounded-2xl bg-surface-soft border border-border-dark text-text-main text-xs font-bold focus:outline-none focus:border-brand-purple cursor-pointer"
                   >
                     <option value="all">ყველა ტარიფი</option>
-                    <option value="free">Free</option>
-                    <option value="starter">Starter</option>
-                    <option value="pro">Pro</option>
-                    <option value="enterprise">Enterprise</option>
+                    <option value="free">FREE (სატესტო — 3 ექიმი)</option>
+                    <option value="business">BUSINESS (ბიზნესი — 6 ექიმი)</option>
+                    <option value="custom">CUSTOM (სპეციალური)</option>
                   </select>
                 </div>
               </div>
@@ -1281,16 +1332,27 @@ const SuperAdminDashboard = () => {
                           {/* Plan selector */}
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] font-black text-text-muted uppercase">ტარიფი:</span>
-                            <select
-                              value={clinic.plan || "free"}
-                              onChange={(e) => handleChangeClinicPlan(clinic.id, e.target.value)}
-                              className="px-2 py-1 rounded-lg bg-surface-soft border border-border-dark text-[11px] font-black text-brand-purple uppercase cursor-pointer"
+                            <button
+                              type="button"
+                              onClick={() => setPlanModalClinic(clinic)}
+                              className={`px-2.5 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all hover:scale-105 cursor-pointer shadow-sm ${
+                                normalizePlanId(clinic.plan) === "custom"
+                                  ? "bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30"
+                                  : normalizePlanId(clinic.plan) === "business"
+                                  ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30"
+                                  : "bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30"
+                              }`}
+                              title="დააჭირეთ ტარიფისა და ექიმების ლიმიტის შესაცვლელად"
                             >
-                              <option value="free">FREE</option>
-                              <option value="starter">STARTER</option>
-                              <option value="pro">PRO</option>
-                              <option value="enterprise">ENTERPRISE</option>
-                            </select>
+                              <span>
+                                {normalizePlanId(clinic.plan) === "custom"
+                                  ? `CUSTOM (${clinic.customMaxDoctors ? `${clinic.customMaxDoctors} ექ.` : "15 ექ."})`
+                                  : normalizePlanId(clinic.plan) === "business"
+                                  ? "BUSINESS (6 ექ.)"
+                                  : "FREE (3 ექ.)"}
+                              </span>
+                              <Settings size={12} className="opacity-70" />
+                            </button>
                           </div>
 
                           {/* Details button */}
@@ -2234,6 +2296,7 @@ const SuperAdminDashboard = () => {
             setActiveTab("inventory");
           }}
           onDeleteClinic={(clinic) => setDeleteModalClinic(clinic)}
+          onChangePlan={(clinic) => setPlanModalClinic(clinic)}
         />
 
         {/* 4. Company Full Warehouse Quick Modal */}
@@ -2261,6 +2324,20 @@ const SuperAdminDashboard = () => {
             } else {
               showToast("კლინიკის ყველა ჩანაწერი (100%) წარმატებით წაიშალა ბაზიდან!", "success");
             }
+          }}
+        />
+
+        {/* 6. Clinic Plan Management Modal */}
+        <ClinicPlanModal
+          clinic={planModalClinic}
+          isOpen={Boolean(planModalClinic)}
+          onClose={() => setPlanModalClinic(null)}
+          adminEmail={currentUser?.email || SUPERADMIN_EMAIL}
+          onSuccess={(newPlan, customMaxDocs) => {
+            showToast(
+              `კლინიკის ტარიფი წარმატებით განახლდა (${newPlan.toUpperCase()}${customMaxDocs ? `, ${customMaxDocs} ექიმის ლიმიტით` : ""})`,
+              "success"
+            );
           }}
         />
       </div>

@@ -1,14 +1,22 @@
 import React from "react";
-import { X, Building2, Mail, Phone, Calendar, Package, Users, Shield, Globe, MapPin, CheckCircle2, AlertOctagon, Trash2 } from "lucide-react";
+import { X, Building2, Mail, Phone, Calendar, Package, Users, Shield, Globe, MapPin, CheckCircle2, AlertOctagon, Trash2, Sparkles, Settings } from "lucide-react";
 import { getRoleLabel } from "../../utils/roleUtils";
+import { normalizePlanId } from "../../config/plans";
 
-const ClinicDetailsModal = ({ clinic, staffList = [], inventoryItems = [], isOpen, onClose, onToggleStatus, onSelectStaffPin, onSelectClinicInventory, onDeleteClinic }) => {
+const ClinicDetailsModal = ({ clinic, staffList = [], inventoryItems = [], isOpen, onClose, onToggleStatus, onSelectStaffPin, onSelectClinicInventory, onDeleteClinic, onChangePlan }) => {
   if (!isOpen || !clinic) return null;
 
   const isSuspended = clinic.subscriptionStatus === "suspended";
   const clinicStaff = staffList.filter((s) => s.clinicId === clinic.id);
   const clinicInventory = inventoryItems.filter((i) => i.clinicId === clinic.id);
   const totalInventoryValue = clinicInventory.reduce((acc, item) => acc + (Number(item.quantity || 0) * Number(item.pricePerUnit || 0)), 0);
+
+  const normalizedPlan = normalizePlanId(clinic.plan);
+  const planTitle = normalizedPlan === "custom"
+    ? `CUSTOM (${clinic.customMaxDoctors ? `${clinic.customMaxDoctors} ექიმი` : "15 ექიმი"})`
+    : normalizedPlan === "business"
+    ? "BUSINESS (6 ექიმი)"
+    : "FREE (3 ექიმი)";
 
   const formattedDate = clinic.createdAt
     ? new Date(clinic.createdAt).toLocaleDateString("ka-GE", {
@@ -59,11 +67,23 @@ const ClinicDetailsModal = ({ clinic, staffList = [], inventoryItems = [], isOpe
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 custom-scrollbar">
           {/* Quick Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-4 rounded-2xl bg-surface-soft border border-border-main text-center">
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-wider">ტარიფი</p>
-              <p className="text-sm font-black text-brand-purple uppercase mt-1">
-                {clinic.plan || "Free"}
-              </p>
+            <div className="p-4 rounded-2xl bg-surface-soft border border-border-main text-center flex flex-col justify-between">
+              <div>
+                <p className="text-[10px] font-black text-text-muted uppercase tracking-wider">ტარიფი</p>
+                <p className="text-xs font-black text-brand-purple uppercase mt-1 tracking-tight">
+                  {planTitle}
+                </p>
+              </div>
+              {onChangePlan && (
+                <button
+                  type="button"
+                  onClick={() => onChangePlan(clinic)}
+                  className="mt-2 text-[10px] font-black text-brand-purple hover:underline cursor-pointer inline-flex items-center justify-center gap-1 mx-auto"
+                >
+                  <Settings size={11} />
+                  <span>შეცვლა</span>
+                </button>
+              )}
             </div>
             <div className="p-4 rounded-2xl bg-surface-soft border border-border-main text-center">
               <p className="text-[10px] font-black text-text-muted uppercase tracking-wider">პერსონალი</p>
