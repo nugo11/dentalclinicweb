@@ -618,7 +618,7 @@ const SuperAdminDashboard = () => {
                 </span>
               </div>
               <p className="text-[11px] text-text-muted font-bold truncate max-w-[240px] sm:max-w-none">
-                ავტორიზებული: <span className="text-brand-purple font-mono font-bold">{SUPERADMIN_EMAIL}</span>
+                ავტორიზებული: <span className="text-brand-purple font-mono font-bold">{currentUser?.email || SUPERADMIN_EMAIL}</span>
               </p>
             </div>
           </div>

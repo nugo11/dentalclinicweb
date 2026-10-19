@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "../../context/AuthContext";
-import { SUPERADMIN_EMAIL, isSuperAdminUser } from "../../utils/superAdmin";
+import { SUPERADMIN_EMAILS, isSuperAdminUser } from "../../utils/superAdmin";
 import { ShieldAlert, ArrowLeft, LogOut, Lock, Loader2, ShieldCheck } from "lucide-react";
 import { auth } from "../../firebase";
 
@@ -31,7 +31,7 @@ const SuperAdminRoute = ({ children }) => {
 
   const isAuthorized = isSuperAdminUser(currentUser, userData);
 
-  // თუ ავტორიზებულია მაგრამ არ გააჩნია სუპერ ადმინის უფლება (არასწორი მეილი ან არ არის admin როლი)
+  // თუ ავტორიზებულია მაგრამ არ გააჩნია სუპერ ადმინის უფლება
   if (!isAuthorized) {
     return (
       <>
@@ -58,7 +58,7 @@ const SuperAdminRoute = ({ children }) => {
             </h1>
 
             <p className="text-sm text-slate-400 font-bold leading-relaxed mb-6">
-              სისტემის სუპერ ადმინ პანელზე წვდომა მკაცრად კონტროლდება. აღნიშნული განყოფილება ხელმისაწვდომია მხოლოდ ავტორიზებული სუპერ ადმინისტრატორისთვის (<span className="text-amber-400 font-mono">{SUPERADMIN_EMAIL}</span>) <span className="text-emerald-400">admin</span> სტატუსით.
+              სისტემის სუპერ ადმინ პანელზე წვდომა მკაცრად კონტროლდება. აღნიშნული განყოფილება ხელმისაწვდომია მხოლოდ ავტორიზებული სუპერ ადმინისტრატორებისთვის: <span className="text-amber-400 font-mono text-xs">{SUPERADMIN_EMAILS.join(", ")}</span>.
             </p>
 
             <div className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 text-left mb-8 space-y-2">

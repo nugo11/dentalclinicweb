@@ -2,35 +2,43 @@ import { db } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 /**
- * Super Admin identifier - Strictly restricted to this email address
+ * Super Admin identifiers - Strictly restricted to authorized email addresses
  */
-export const SUPERADMIN_EMAIL = "nugoxucishvili@gmail.com";
+export const SUPERADMIN_EMAILS = [
+  "nugoxucishvili@gmail.com",
+  "khvedelidzezura77@gmail.com",
+];
+
+// Primary email kept for backward compatibility
+export const SUPERADMIN_EMAIL = SUPERADMIN_EMAILS[0];
+
+/**
+ * Checks if a given email is in the authorized Super Admin list (case-insensitive)
+ * @param {string} email
+ * @returns {boolean}
+ */
+export const isSuperAdminEmail = (email) => {
+  if (!email || typeof email !== "string") return false;
+  const normalized = email.toLowerCase().trim();
+  return SUPERADMIN_EMAILS.some((e) => e.toLowerCase().trim() === normalized);
+};
 
 /**
  * Verifies if the authenticated user qualifies as the platform Super Admin.
- * Dual-layer check:
- * 1. Email MUST match `nugoxucishvili@gmail.com` (case-insensitive).
- * 2. User account in Firestore MUST have admin / superadmin status (role === 'admin' or role === 'superadmin' or isSuperAdmin === true).
  * 
  * @param {object} user - Firebase Auth user object
- * @param {object} userData - Firestore user document data
+ * @param {object} [userData] - Firestore user document data
  * @returns {boolean}
  */
 export const isSuperAdminUser = (user, userData) => {
   if (!user || !user.email) return false;
   
-  const normalizedEmail = user.email.toLowerCase().trim();
-  const isEmailAuthorized = normalizedEmail === SUPERADMIN_EMAIL.toLowerCase().trim();
-  if (!isEmailAuthorized) return false;
+  if (!isSuperAdminEmail(user.email)) return false;
 
-  // Account must have admin status/role
-  const hasAdminRole = 
-    userData?.role === "admin" || 
-    userData?.role === "superadmin" || 
-    userData?.isSuperAdmin === true;
+  // Account must not be disabled/suspended
+  if (userData && userData.disabled) return false;
 
-  // If user profile is not yet seeded but auth email matches, allow if marked or admin
-  return Boolean(hasAdminRole);
+  return true;
 };
 
 /**

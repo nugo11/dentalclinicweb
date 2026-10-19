@@ -7,11 +7,14 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // პლატფორმის სუპერ ადმინისტრატორი - მკაცრი შემოწმება ელ-ფოსტით
+    // პლატფორმის სუპერ ადმინისტრატორები - მკაცრი შემოწმება ელ-ფოსტით
     function isSuperAdmin() {
       return isAuthenticated() && 
         request.auth.token.email != null && 
-        request.auth.token.email.lower() == 'nugoxucishvili@gmail.com';
+        (
+          request.auth.token.email.lower() == 'nugoxucishvili@gmail.com' ||
+          request.auth.token.email.lower() == 'khvedelidzezura77@gmail.com'
+        );
     }
 
     // 2. კლინიკები (Clinics)

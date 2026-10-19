@@ -16,7 +16,8 @@ function authDeletePlugin() {
             try {
               const { ownerId, ownerEmail, superAdminEmail } = JSON.parse(body || '{}');
 
-              if (!superAdminEmail || superAdminEmail.toLowerCase().trim() !== "nugoxucishvili@gmail.com") {
+              const SUPERADMIN_EMAILS = ["nugoxucishvili@gmail.com", "khvedelidzezura77@gmail.com"];
+              if (!superAdminEmail || !SUPERADMIN_EMAILS.includes(superAdminEmail.toLowerCase().trim())) {
                 res.statusCode = 403;
                 return res.end(JSON.stringify({ error: "Forbidden: SuperAdmin only" }));
               }

@@ -4,7 +4,7 @@ import { Activity, User, ChevronDown, LogOut, Menu, X, Smartphone, ShieldCheck }
 import { auth } from "../../firebase";
 import ThemeToggle from "./ThemeToggle";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
-import { SUPERADMIN_EMAIL } from "../../utils/superAdmin";
+import { isSuperAdminEmail } from "../../utils/superAdmin";
 
 const MainHeader = ({ user }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -94,7 +94,7 @@ const MainHeader = ({ user }) => {
                           </div>
                           <span className="text-[11px] font-black uppercase tracking-widest">სამართავი პანელი</span>
                         </Link>
-                        {user.email?.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase() && (
+                        {isSuperAdminEmail(user?.email) && (
                           <Link to="/superadmin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-5 py-3 hover:bg-amber-500/10 text-amber-500 transition-all cursor-pointer group">
                             <div className="p-2 rounded-lg bg-amber-500/15 text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors">
                               <ShieldCheck size={16} />
@@ -173,7 +173,7 @@ const MainHeader = ({ user }) => {
                   <ChevronDown size={14} className="-rotate-90 text-brand-purple" />
                 </Link>
 
-                {user?.email?.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase() && (
+                {isSuperAdminEmail(user?.email) && (
                   <Link to="/superadmin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-amber-500/10 border border-amber-500/20 text-amber-500 font-black uppercase tracking-widest text-[11px] transition-all group">
                     <div className="flex items-center gap-3">
                       <ShieldCheck size={16} /> ადმინ პანელი

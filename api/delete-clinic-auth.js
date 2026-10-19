@@ -62,8 +62,9 @@ export default async function handler(req, res) {
   try {
     const { ownerId, ownerEmail, superAdminEmail } = req.body || {};
 
-    // Security check: Must be the platform super admin
-    if (!superAdminEmail || superAdminEmail.toLowerCase().trim() !== "nugoxucishvili@gmail.com") {
+    // Security check: Must be a platform super admin
+    const SUPERADMIN_EMAILS = ["nugoxucishvili@gmail.com", "khvedelidzezura77@gmail.com"];
+    if (!superAdminEmail || !SUPERADMIN_EMAILS.includes(superAdminEmail.toLowerCase().trim())) {
       return res.status(403).json({ error: "წვდომა უარყოფილია: მხოლოდ სუპერ ადმინისტრატორს აქვს წაშლის უფლება." });
     }
 
