@@ -19,7 +19,8 @@ import {
   CreditCard,
   Globe,
   Book,
-  History
+  History,
+  ShieldCheck
 } from "lucide-react";
 import { auth } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
@@ -29,7 +30,7 @@ import { getRoleLabel } from "../../utils/roleUtils";
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { clinicData, userData, activeStaff, role, isAdmin, staffLogout } = useAuth(); 
+  const { clinicData, userData, activeStaff, role, isAdmin, isSuperAdmin, staffLogout } = useAuth(); 
   const [isMobile, setIsMobile] = useState(false);
 
   useLockBodyScroll(isMobile && isOpen);
@@ -145,6 +146,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     path: "/documentation",
   });
 
+  // სუპერ ადმინისტრატორი: მხოლოდ ავტორიზებული nugoxucishvili@gmail.com
+  if (isSuperAdmin) {
+    menuItems.push({
+      icon: ShieldCheck,
+      label: "ადმინ პანელი",
+      path: "/superadmin",
+      isSuperAdminItem: true,
+    });
+  }
+
   return (
     <>
       {isMobile && (
@@ -239,6 +250,34 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   </div>
                 )}
               </div>
+            );
+          }
+
+          if (item.isSuperAdminItem) {
+            const isCurrent = location.pathname.startsWith("/superadmin");
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => { if (isMobile) setIsOpen(false); }}
+                className={`flex items-center rounded-2xl transition-all cursor-pointer 
+                  ${isOpen ? "px-4 py-3.5 gap-4" : "p-4 justify-center"} 
+                  ${isCurrent 
+                    ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30" 
+                    : "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30"}`}
+              >
+                <item.icon size={22} className={`shrink-0 ${isCurrent ? "text-white" : "text-amber-400"}`} />
+                {isOpen && (
+                  <div className="flex items-center justify-between flex-1 min-w-0">
+                    <span className="text-xs font-black uppercase tracking-widest truncate">
+                      {item.label}
+                    </span>
+                    <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300">
+                      SUPER
+                    </span>
+                  </div>
+                )}
+              </Link>
             );
           }
 

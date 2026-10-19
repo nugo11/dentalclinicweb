@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from "r
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { isSuperAdminUser } from "../utils/superAdmin";
 
 const AuthContext = createContext();
 
@@ -84,6 +85,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     role: activeStaff?.role || userData?.role, // ვიყენებთ პერსონალის როლს თუ არჩეულია
     isAdmin: (activeStaff?.role || userData?.role) === "admin",
+    isSuperAdmin: isSuperAdminUser(currentUser, userData),
   };
 
   return (

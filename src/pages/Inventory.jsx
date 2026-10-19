@@ -28,6 +28,16 @@ import {
   Trash2,
   Loader2,
   Lock,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  RotateCcw,
+  Filter,
 } from "lucide-react";
 
 const Inventory = () => {
@@ -43,6 +53,12 @@ const Inventory = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [filter, setFilter] = useState("ყველა");
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'low' | 'ok' | 'out'
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortKey, setSortKey] = useState("deficit"); // 'deficit' | 'name' | 'quantity' | 'pricePerUnit' | 'total'
+  const [sortOrder, setSortOrder] = useState("asc"); // 'asc' | 'desc'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [formErrors, setFormErrors] = useState({});
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
@@ -185,10 +201,98 @@ const Inventory = () => {
     setIsModalOpen(true);
   };
 
-  const filteredItems = items.filter((item) => {
-    if (filter === "ყველა") return true;
-    return item.category === filter;
-  });
+  const filteredAndSortedItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    const result = items.filter((item) => {
+      // 1. Category
+      const matchCategory = filter === "ყველა" || item.category === filter;
+
+      // 2. Search
+      const matchSearch =
+        q === "" ||
+        (item.name && item.name.toLowerCase().includes(q)) ||
+        (item.category && item.category.toLowerCase().includes(q)) ||
+        (item.unit && item.unit.toLowerCase().includes(q));
+
+      // 3. Status
+      const qty = Number(item.quantity || 0);
+      const min = Number(item.minThreshold || 0);
+      let matchStatus = true;
+      if (statusFilter === "out") {
+        matchStatus = qty === 0;
+      } else if (statusFilter === "low") {
+        matchStatus = qty > 0 && qty <= min;
+      } else if (statusFilter === "ok") {
+        matchStatus = qty > min;
+      }
+
+      return matchCategory && matchSearch && matchStatus;
+    });
+
+    result.sort((a, b) => {
+      let comparison = 0;
+      const qtyA = Number(a.quantity || 0);
+      const qtyB = Number(b.quantity || 0);
+      const minA = Number(a.minThreshold || 0);
+      const minB = Number(b.minThreshold || 0);
+      const priceA = Number(a.pricePerUnit || 0);
+      const priceB = Number(b.pricePerUnit || 0);
+      const totalA = qtyA * priceA;
+      const totalB = qtyB * priceB;
+
+      if (sortKey === "deficit") {
+        const getRank = (q, m) => (q === 0 ? 1 : q <= m ? 2 : 3);
+        const rankA = getRank(qtyA, minA);
+        const rankB = getRank(qtyB, minB);
+        if (rankA !== rankB) {
+          comparison = rankA - rankB;
+        } else {
+          comparison = qtyA - qtyB;
+        }
+      } else if (sortKey === "name") {
+        comparison = (a.name || "").localeCompare(b.name || "", "ka");
+      } else if (sortKey === "quantity") {
+        comparison = qtyA - qtyB;
+      } else if (sortKey === "pricePerUnit") {
+        comparison = priceA - priceB;
+      } else if (sortKey === "total") {
+        comparison = totalA - totalB;
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+    return result;
+  }, [items, filter, searchQuery, statusFilter, sortKey, sortOrder]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedItems.length / pageSize));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const paginatedItems = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return filteredAndSortedItems.slice(start, start + pageSize);
+  }, [filteredAndSortedItems, safePage, pageSize]);
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const isFilterActive = filter !== "ყველა" || statusFilter !== "all" || searchQuery !== "";
+
+  const handleResetFilters = () => {
+    setFilter("ყველა");
+    setStatusFilter("all");
+    setSearchQuery("");
+    setSortKey("deficit");
+    setSortOrder("asc");
+    setCurrentPage(1);
+  };
 
   const lowStockItems = items.filter((i) => i.quantity <= i.minThreshold);
 
@@ -255,68 +359,285 @@ const Inventory = () => {
               <StatCard title="მარაგების ღირებულება" amount={`${items.reduce((sum, item) => sum + item.quantity * item.pricePerUnit, 0).toLocaleString()} ₾`} icon={TrendingDown} color="text-emerald-500" bg="bg-emerald-500/10" />
             </div>
 
-            {/* Filters */}
-            <div className="flex gap-2 pb-2 overflow-x-auto no-scrollbar">
-              {["ყველა", "consumable", "medicine", "instrument"].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer whitespace-nowrap ${
-                    filter === cat ? "bg-brand-purple text-white shadow-lg" : "bg-surface text-text-muted border border-border-main hover:bg-surface-soft"
-                  }`}
-                >
-                  {cat === "ყველა" ? "ყველა მასალა" : cat === "consumable" ? "სახარჯი" : cat === "medicine" ? "მედიკამენტები" : "ინსტრუმენტები"}
-                </button>
-              ))}
+            {/* Advanced Filters & Search Bar */}
+            <div className="bg-surface rounded-3xl p-5 border border-border-main shadow-sm space-y-4">
+              {/* Row 1: Search & Categories */}
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                {/* Search */}
+                <div className="relative flex-1">
+                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder="მასალის ძებნა დასახელებით ან ერთეულით..."
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-surface-soft border border-border-dark text-text-main text-xs font-bold focus:outline-none focus:border-brand-purple"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setCurrentPage(1);
+                      }}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main text-xs font-bold"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Category Pills */}
+                <div className="flex gap-2 overflow-x-auto no-scrollbar py-0.5">
+                  {[
+                    { id: "ყველა", label: "ყველა მასალა" },
+                    { id: "consumable", label: "📦 სახარჯი" },
+                    { id: "medicine", label: "💊 მედიკამენტი" },
+                    { id: "instrument", label: "🛠️ ინსტრუმენტი" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        setFilter(cat.id);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                        filter === cat.id
+                          ? "bg-brand-purple text-white shadow-md shadow-brand-purple/20"
+                          : "bg-surface-soft text-text-muted hover:text-text-main border border-border-dark"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Row 2: Status Filter & Pagination Size */}
+              <div className="pt-3 border-t border-border-main flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-black text-text-muted uppercase tracking-wider">
+                    სტატუსი:
+                  </span>
+                  {[
+                    { id: "all", label: "ყველა" },
+                    { id: "out", label: "🛑 ამოწურული" },
+                    { id: "low", label: "⚠️ შევსება" },
+                    { id: "ok", label: "✅ ნორმა" },
+                  ].map((st) => (
+                    <button
+                      key={st.id}
+                      onClick={() => {
+                        setStatusFilter(st.id);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer ${
+                        statusFilter === st.id
+                          ? "bg-text-main text-surface shadow-sm"
+                          : "bg-surface-soft text-text-muted hover:text-text-main"
+                      }`}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
+
+                  {isFilterActive && (
+                    <button
+                      onClick={handleResetFilters}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 font-black text-[10px] uppercase tracking-wider transition-all cursor-pointer ml-1"
+                    >
+                      <RotateCcw size={11} />
+                      <span>გასუფთავება</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 ml-auto">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black text-text-muted uppercase tracking-wider">
+                      გვერდზე:
+                    </span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="px-2.5 py-1.5 rounded-xl bg-surface-soft border border-border-dark text-text-main font-black focus:outline-none focus:border-brand-purple text-xs cursor-pointer"
+                    >
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Table */}
             <div className="bg-surface rounded-[40px] border border-border-main shadow-sm overflow-hidden min-h-[400px]">
-              <div className="p-8 border-b border-border-main">
-                <h3 className="text-xl font-black text-text-main italic">აქტიური მარაგები</h3>
+              <div className="p-6 md:p-8 border-b border-border-main flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-black text-text-main italic">აქტიური მარაგები</h3>
+                  <p className="text-xs text-text-muted font-bold mt-0.5">
+                    ნაპოვნია {filteredAndSortedItems.length} მასალა
+                  </p>
+                </div>
               </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-surface-soft/50 text-[10px] font-black uppercase text-text-muted tracking-widest">
-                      <th className="px-4 py-6 md:p-6">დასახელება / კატეგორია</th>
-                      <th className="px-4 py-6 md:p-6">რაოდენობა</th>
-                      <th className="px-4 py-6 md:p-6 hidden sm:table-cell">ერთეულის ფასი</th>
-                      <th className="px-4 py-6 md:p-6">სტატუსი</th>
-                      <th className="px-4 py-6 md:p-6 text-right">მართვა</th>
+                    <tr className="bg-surface-soft/50 text-[10px] font-black uppercase text-text-muted tracking-widest select-none">
+                      <th
+                        onClick={() => handleSort("name")}
+                        className="px-4 py-5 md:p-6 cursor-pointer hover:text-brand-purple transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>დასახელება / კატეგორია</span>
+                          {sortKey === "name" ? (
+                            sortOrder === "asc" ? <ArrowUp size={12} className="text-brand-purple" /> : <ArrowDown size={12} className="text-brand-purple" />
+                          ) : (
+                            <ArrowUpDown size={11} className="opacity-40" />
+                          )}
+                        </div>
+                      </th>
+
+                      <th
+                        onClick={() => handleSort("quantity")}
+                        className="px-4 py-5 md:p-6 cursor-pointer hover:text-brand-purple transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>რაოდენობა</span>
+                          {sortKey === "quantity" ? (
+                            sortOrder === "asc" ? <ArrowUp size={12} className="text-brand-purple" /> : <ArrowDown size={12} className="text-brand-purple" />
+                          ) : (
+                            <ArrowUpDown size={11} className="opacity-40" />
+                          )}
+                        </div>
+                      </th>
+
+                      <th
+                        onClick={() => handleSort("pricePerUnit")}
+                        className="px-4 py-5 md:p-6 hidden sm:table-cell cursor-pointer hover:text-brand-purple transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>ერთეულის ფასი</span>
+                          {sortKey === "pricePerUnit" ? (
+                            sortOrder === "asc" ? <ArrowUp size={12} className="text-brand-purple" /> : <ArrowDown size={12} className="text-brand-purple" />
+                          ) : (
+                            <ArrowUpDown size={11} className="opacity-40" />
+                          )}
+                        </div>
+                      </th>
+
+                      <th
+                        onClick={() => handleSort("total")}
+                        className="px-4 py-5 md:p-6 hidden md:table-cell cursor-pointer hover:text-brand-purple transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>ჯამური ღირებულება</span>
+                          {sortKey === "total" ? (
+                            sortOrder === "asc" ? <ArrowUp size={12} className="text-brand-purple" /> : <ArrowDown size={12} className="text-brand-purple" />
+                          ) : (
+                            <ArrowUpDown size={11} className="opacity-40" />
+                          )}
+                        </div>
+                      </th>
+
+                      <th
+                        onClick={() => handleSort("deficit")}
+                        className="px-4 py-5 md:p-6 cursor-pointer hover:text-brand-purple transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span>სტატუსი</span>
+                          {sortKey === "deficit" ? (
+                            sortOrder === "asc" ? <ArrowUp size={12} className="text-brand-purple" /> : <ArrowDown size={12} className="text-brand-purple" />
+                          ) : (
+                            <ArrowUpDown size={11} className="opacity-40" />
+                          )}
+                        </div>
+                      </th>
+
+                      <th className="px-4 py-5 md:p-6 text-right">მართვა</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-main">
                     {loading ? (
-                      <tr><td colSpan="5" className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-brand-purple" /></td></tr>
-                    ) : filteredItems.length > 0 ? (
-                      filteredItems.map((item) => {
-                        const isLow = item.quantity <= item.minThreshold;
+                      <tr>
+                        <td colSpan="6" className="p-20 text-center">
+                          <Loader2 className="animate-spin mx-auto text-brand-purple" />
+                        </td>
+                      </tr>
+                    ) : paginatedItems.length > 0 ? (
+                      paginatedItems.map((item) => {
+                        const qty = Number(item.quantity || 0);
+                        const min = Number(item.minThreshold || 0);
+                        const price = Number(item.pricePerUnit || 0);
+                        const total = qty * price;
+                        const isOut = qty === 0;
+                        const isLow = qty <= min && !isOut;
+
                         return (
                           <tr key={item.id} className="group hover:bg-surface-soft/50 transition-all">
-                            <td className="px-4 py-6 md:p-6">
+                            <td className="px-4 py-5 md:p-6">
                               <h5 className="font-bold text-text-main text-sm">{item.name}</h5>
                               <p className="text-[9px] text-text-muted uppercase font-black tracking-tighter mt-0.5">
-                                {item.category === "consumable" ? "სახარჯი" : item.category === "medicine" ? "მედიკამენტი" : "ინსტრუმენტი"}
+                                {item.category === "consumable"
+                                  ? "სახარჯი"
+                                  : item.category === "medicine"
+                                  ? "მედიკამენტი"
+                                  : item.category === "instrument"
+                                  ? "ინსტრუმენტი"
+                                  : item.category}
                               </p>
                             </td>
-                            <td className="px-4 py-6 md:p-6 font-black text-base md:text-lg">
+                            <td className="px-4 py-5 md:p-6 font-black text-base md:text-lg">
                               <div className="inline-flex items-baseline gap-1.5">
-                                <span className={isLow ? "text-red-500" : "text-text-main"}>{item.quantity}</span>
+                                <span className={isOut ? "text-red-500" : isLow ? "text-amber-500" : "text-text-main"}>
+                                  {qty}
+                                </span>
                                 <span className="text-[10px] text-text-muted uppercase font-bold">{item.unit}</span>
                               </div>
                             </td>
-                            <td className="px-4 py-6 md:p-6 font-bold text-text-main text-sm hidden sm:table-cell">{item.pricePerUnit} ₾</td>
-                            <td className="px-4 py-6 md:p-6">
-                              <span className={`inline-flex px-2 md:px-3 py-1 md:py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${isLow ? "bg-red-500/10 text-red-600 border border-red-500/20" : "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"}`}>
-                                {isLow ? "შევსება" : "ნორმა"}
+                            <td className="px-4 py-5 md:p-6 font-bold text-text-main text-sm hidden sm:table-cell">
+                              {price} ₾
+                            </td>
+                            <td className="px-4 py-5 md:p-6 font-mono text-emerald-500 font-black text-sm hidden md:table-cell">
+                              {total.toLocaleString()} ₾
+                            </td>
+                            <td className="px-4 py-5 md:p-6">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${
+                                  isOut
+                                    ? "bg-red-500/10 text-red-600 border border-red-500/20"
+                                    : isLow
+                                    ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                                    : "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                                }`}
+                              >
+                                {isOut ? "ამოიწურა" : isLow ? "შევსება" : "ნორმა"}
                               </span>
                             </td>
-                            <td className="px-4 py-6 md:p-6 text-right">
+                            <td className="px-4 py-5 md:p-6 text-right">
                               {!isReadOnly && (
                                 <div className="flex justify-end gap-2 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={() => openEditModal(item)} className="p-2 md:p-3 text-text-muted hover:text-brand-purple bg-surface-soft hover:bg-surface border border-border-main hover:border-brand-purple/20 rounded-xl transition-all shadow-sm"><Edit3 size={16} /></button>
-                                  <button onClick={() => handleDelete(item.id)} className="p-2 md:p-3 text-text-muted hover:text-red-500 bg-surface-soft hover:bg-surface border border-border-main hover:border-red-200 rounded-xl transition-all shadow-sm"><Trash2 size={16} /></button>
+                                  <button
+                                    onClick={() => openEditModal(item)}
+                                    className="p-2 md:p-3 text-text-muted hover:text-brand-purple bg-surface-soft hover:bg-surface border border-border-main hover:border-brand-purple/20 rounded-xl transition-all shadow-sm cursor-pointer"
+                                    title="რედაქტირება"
+                                  >
+                                    <Edit3 size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(item.id)}
+                                    className="p-2 md:p-3 text-text-muted hover:text-red-500 bg-surface-soft hover:bg-surface border border-border-main hover:border-red-200 rounded-xl transition-all shadow-sm cursor-pointer"
+                                    title="წაშლა"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
                                 </div>
                               )}
                             </td>
@@ -324,11 +645,111 @@ const Inventory = () => {
                         );
                       })
                     ) : (
-                      <tr><td colSpan="5" className="p-20 text-center text-text-muted font-bold uppercase text-[10px]">ნივთები არ მოიძებნა</td></tr>
+                      <tr>
+                        <td colSpan="6" className="p-20 text-center text-text-muted font-bold uppercase text-[10px]">
+                          მასალები ვერ მოიძებნა
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Footer */}
+              {filteredAndSortedItems.length > 0 && (
+                <div className="p-5 border-t border-border-main bg-surface-soft/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-xs text-text-muted font-bold">
+                    ნაჩვენებია{" "}
+                    <span className="text-text-main font-black">
+                      {(safePage - 1) * pageSize + 1} -{" "}
+                      {Math.min(safePage * pageSize, filteredAndSortedItems.length)}
+                    </span>{" "}
+                    / სულ <span className="text-text-main font-black">{filteredAndSortedItems.length}</span> მასალა
+                    {totalPages > 1 && (
+                      <span className="ml-2 text-text-muted">
+                        (გვერდი {safePage} / {totalPages})
+                      </span>
+                    )}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setCurrentPage(1)}
+                        disabled={safePage === 1}
+                        className="p-2 rounded-xl border border-border-dark bg-surface hover:bg-surface-soft text-text-main disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        title="პირველი გვერდი"
+                      >
+                        <ChevronsLeft size={16} />
+                      </button>
+
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={safePage === 1}
+                        className="p-2 rounded-xl border border-border-dark bg-surface hover:bg-surface-soft text-text-main disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        title="წინა გვერდი"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((pageNum) => {
+                          if (totalPages <= 7) return true;
+                          if (pageNum === 1 || pageNum === totalPages) return true;
+                          return Math.abs(pageNum - safePage) <= 1;
+                        })
+                        .reduce((acc, pageNum, idx, arr) => {
+                          if (idx > 0 && pageNum - arr[idx - 1] > 1) {
+                            acc.push(-idx);
+                          }
+                          acc.push(pageNum);
+                          return acc;
+                        }, [])
+                        .map((pageNum, idx) => {
+                          if (pageNum < 0) {
+                            return (
+                              <span key={`ellipsis-${idx}`} className="px-2 text-xs text-text-muted font-bold">
+                                ...
+                              </span>
+                            );
+                          }
+                          const isActive = pageNum === safePage;
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`w-8 h-8 rounded-xl font-black text-xs transition-all cursor-pointer ${
+                                isActive
+                                  ? "bg-brand-purple text-white shadow-md shadow-brand-purple/20"
+                                  : "bg-surface hover:bg-surface-soft text-text-main border border-border-dark"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safePage === totalPages}
+                        className="p-2 rounded-xl border border-border-dark bg-surface hover:bg-surface-soft text-text-main disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        title="შემდეგი გვერდი"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+
+                      <button
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={safePage === totalPages}
+                        className="p-2 rounded-xl border border-border-dark bg-surface hover:bg-surface-soft text-text-main disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        title="ბოლო გვერდი"
+                      >
+                        <ChevronsRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

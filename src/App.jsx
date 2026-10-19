@@ -32,6 +32,8 @@ import AboutPage from "./pages/AboutPage";
 import Pricing from "./pages/Pricing";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import ScrollToTop from "./components/Common/ScrollToTop";
+import SuperAdminRoute from "./components/Admin/SuperAdminRoute";
+import SuperAdminDashboard from "./pages/admin/SuperAdminDashboard";
 
 
 // დამხმარე კომპონენტი დაცული როუტებისთვის (RBAC)
@@ -187,6 +189,18 @@ function AppContent() {
         <Route path="/contact" element={<ContactPage user={currentUser} />} />
         <Route path="/about" element={<AboutPage user={currentUser} />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route
+          path="/superadmin"
+          element={
+            <SuperAdminRoute>
+              <SuperAdminDashboard />
+            </SuperAdminRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={<Navigate to="/superadmin" replace />}
+        />
         <Route
           path="/documentation"
           element={

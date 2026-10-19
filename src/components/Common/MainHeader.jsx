@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Activity, User, ChevronDown, LogOut, Menu, X, Smartphone } from "lucide-react";
+import { Activity, User, ChevronDown, LogOut, Menu, X, Smartphone, ShieldCheck } from "lucide-react";
 import { auth } from "../../firebase";
 import ThemeToggle from "./ThemeToggle";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
+import { SUPERADMIN_EMAIL } from "../../utils/superAdmin";
 
 const MainHeader = ({ user }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -93,6 +94,14 @@ const MainHeader = ({ user }) => {
                           </div>
                           <span className="text-[11px] font-black uppercase tracking-widest">სამართავი პანელი</span>
                         </Link>
+                        {user.email?.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase() && (
+                          <Link to="/superadmin" onClick={() => setIsProfileOpen(false)} className="flex items-center gap-3 px-5 py-3 hover:bg-amber-500/10 text-amber-500 transition-all cursor-pointer group">
+                            <div className="p-2 rounded-lg bg-amber-500/15 text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                              <ShieldCheck size={16} />
+                            </div>
+                            <span className="text-[11px] font-black uppercase tracking-widest">ადმინ პანელი</span>
+                          </Link>
+                        )}
                         <button onClick={() => { auth.signOut(); setIsProfileOpen(false); }} className="w-full flex items-center gap-3 px-5 py-3 hover:bg-red-500/10 text-red-500 transition-all cursor-pointer group">
                           <div className="p-2 rounded-lg bg-red-500/10 text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
                             <LogOut size={16} />
@@ -163,6 +172,15 @@ const MainHeader = ({ user }) => {
                   </div>
                   <ChevronDown size={14} className="-rotate-90 text-brand-purple" />
                 </Link>
+
+                {user?.email?.toLowerCase() === SUPERADMIN_EMAIL.toLowerCase() && (
+                  <Link to="/superadmin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-between p-5 rounded-[24px] bg-amber-500/10 border border-amber-500/20 text-amber-500 font-black uppercase tracking-widest text-[11px] transition-all group">
+                    <div className="flex items-center gap-3">
+                      <ShieldCheck size={16} /> ადმინ პანელი
+                    </div>
+                    <ChevronDown size={14} className="-rotate-90 text-amber-500" />
+                  </Link>
+                )}
 
                 <div className="flex items-center justify-between p-5 mt-4 rounded-[24px] bg-surface-soft border border-border-main text-text-main font-black uppercase tracking-widest text-[11px]">
                   <span>თემა</span>
