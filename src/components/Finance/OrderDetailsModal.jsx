@@ -1,14 +1,80 @@
+import React, { useState, useEffect } from 'react';
 import { 
   X, Receipt, User, Stethoscope, Calendar, CreditCard, 
   Printer, CheckCircle2, ShieldCheck, Tag, FileText, 
-  Layers, Package, AlertCircle 
+  Layers, Package, AlertCircle, Loader2 
 } from 'lucide-react';
 import useLockBodyScroll from '../../hooks/useLockBodyScroll';
+import { db } from '../../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useAuth } from '../../context/AuthContext';
+import { logActivity } from '../../utils/activityLogger';
 
-const OrderDetailsModal = ({ isOpen, onClose, order, onPrint, isPrinting }) => {
+const OrderDetailsModal = ({ isOpen, onClose, order, onPrint, isPrinting, onOrderUpdated }) => {
   useLockBodyScroll(isOpen);
+  const { userData, activeStaff } = useAuth();
+
+  const [isRepaying, setIsRepaying] = useState(false);
+  const [repayAmount, setRepayAmount] = useState("");
+  const [repayMethod, setRepayMethod] = useState("cash");
+  const [isSubmittingRepay, setIsSubmittingRepay] = useState(false);
+
+  useEffect(() => {
+    if (order?.debtAmount) {
+      setRepayAmount(Number(order.debtAmount).toFixed(2));
+    }
+    setIsRepaying(false);
+  }, [order?.id, order?.debtAmount]);
 
   if (!isOpen || !order) return null;
+
+  const handleConfirmRepayment = async () => {
+    const payVal = parseFloat(repayAmount);
+    const currentDebt = Number(order.debtAmount || 0);
+    if (isNaN(payVal) || payVal <= 0) {
+      alert("გთხოვთ შეიყვანოთ სწორი თანხა");
+      return;
+    }
+    if (payVal > currentDebt) {
+      alert(`თანხა არ უნდა აღემატებოდეს დარჩენილ ვალს (${currentDebt.toFixed(2)} ₾)`);
+      return;
+    }
+
+    setIsSubmittingRepay(true);
+    try {
+      const newPaidAmount = Number(order.paidAmount || 0) + payVal;
+      const newDebtAmount = Math.max(0, currentDebt - payVal);
+
+      const appointmentRef = doc(db, "appointments", order.id);
+      await updateDoc(appointmentRef, {
+        paidAmount: newPaidAmount,
+        debtAmount: newDebtAmount,
+        lastDebtRepayment: {
+          amount: payVal,
+          method: repayMethod,
+          date: new Date().toISOString()
+        }
+      });
+
+      await logActivity(
+        order.clinicId || userData?.clinicId,
+        activeStaff || userData,
+        'debt_repayment',
+        `დაიფარა ვალი: ${order.patientName} (${payVal}₾, დარჩა: ${newDebtAmount.toFixed(2)}₾)`,
+        { appointmentId: order.id, repaidAmount: payVal, remainingDebt: newDebtAmount }
+      );
+
+      setIsRepaying(false);
+      if (onOrderUpdated) {
+        onOrderUpdated({ ...order, paidAmount: newPaidAmount, debtAmount: newDebtAmount });
+      }
+    } catch (err) {
+      console.error("Error updating debt:", err);
+      alert("დაფიქსირდა შეცდომა ვალის დაფარვისას");
+    } finally {
+      setIsSubmittingRepay(false);
+    }
+  };
 
   const servicesAmount = order.billedServices?.reduce((sum, s) => sum + Number(s.price || 0), 0) || 0;
   const materialsAmount = order.extraMaterials?.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0) || 0;
@@ -233,13 +299,81 @@ const OrderDetailsModal = ({ isOpen, onClose, order, onPrint, isPrinting }) => {
                 </span>
               </div>
               {Number(order.debtAmount || 0) > 0 && (
-                <div className="flex justify-between items-center p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl">
-                  <span className="text-xs font-black text-red-600 uppercase tracking-wider">
-                    დარჩენილი ვალი:
-                  </span>
-                  <span className="text-base font-black text-red-600">
-                    {Number(order.debtAmount).toFixed(2)} ₾
-                  </span>
+                <div className="p-3.5 bg-red-500/10 border border-red-500/20 rounded-2xl space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-black text-red-600 uppercase tracking-wider">
+                      დარჩენილი ვალი:
+                    </span>
+                    <span className="text-base font-black text-red-600">
+                      {Number(order.debtAmount).toFixed(2)} ₾
+                    </span>
+                  </div>
+
+                  {!isRepaying ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRepayAmount(Number(order.debtAmount || 0).toFixed(2));
+                        setIsRepaying(true);
+                      }}
+                      className="w-full py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-red-500/20 active:scale-95"
+                    >
+                      <CreditCard size={14} />
+                      <span>ვალის დაფარვა / თანხის შეტანა</span>
+                    </button>
+                  ) : (
+                    <div className="p-3 bg-surface rounded-xl border border-border-main space-y-3 animate-in fade-in duration-200">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-text-muted">
+                        თანხის შეტანა ვალის დასაფარად
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[9px] font-bold text-text-muted uppercase">თანხა (₾)</label>
+                          <input
+                            type="number"
+                            min="0.01"
+                            max={Number(order.debtAmount)}
+                            step="0.01"
+                            value={repayAmount}
+                            onChange={(e) => setRepayAmount(e.target.value)}
+                            className="w-full px-3 py-2 bg-surface-soft border border-border-main rounded-xl text-xs font-black text-text-main outline-none focus:border-brand-purple"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-text-muted uppercase">მეთოდი</label>
+                          <select
+                            value={repayMethod}
+                            onChange={(e) => setRepayMethod(e.target.value)}
+                            className="w-full px-3 py-2 bg-surface-soft border border-border-main rounded-xl text-xs font-bold text-text-main outline-none focus:border-brand-purple cursor-pointer"
+                          >
+                            <option value="cash">💵 ნაღდი</option>
+                            <option value="card">💳 ბარათი</option>
+                            <option value="transfer">🏦 გადარიცხვა</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setIsRepaying(false)}
+                          disabled={isSubmittingRepay}
+                          className="flex-1 py-2 bg-surface-soft text-text-muted hover:text-text-main rounded-xl text-xs font-bold uppercase transition-all cursor-pointer"
+                        >
+                          გაუქმება
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleConfirmRepayment}
+                          disabled={isSubmittingRepay || !repayAmount || Number(repayAmount) <= 0}
+                          className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          {isSubmittingRepay ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                          <span>{isSubmittingRepay ? "მუშავდება..." : "დადასტურება"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

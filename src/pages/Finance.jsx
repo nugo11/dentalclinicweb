@@ -25,11 +25,13 @@ const Finance = () => {
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   
   // ფინანსური სტატისტიკის State
+  const [generalExpenses, setGeneralExpenses] = useState(0);
   const [stats, setStats] = useState({
     total: 0,
     paid: 0,
     vat: 0,
-    expenses: 0,
+    materialExpenses: 0,
+    generalExpenses: 0,
     netProfit: 0
   });
 
@@ -50,14 +52,13 @@ const Finance = () => {
       where("status", "==", "completed_and_billed"),
     );
 
-    return onSnapshot(q, (snapshot) => {
-      let total = 0,
-          paid = 0,
-          totalVat = 0,
-          expenses = 0;
+    const unsubAppointments = onSnapshot(q, (snapshot) => {
+      const data = [];
 
-      const data = snapshot.docs.map((doc) => {
+      snapshot.docs.forEach((doc) => {
         const item = doc.data();
+        if (item.isExternal) return; // არ ვითვლით სხვა კლინიკის ვიზიტებს
+
         const price = Number(item.price || 0);
         const amountPaid = Number(item.paidAmount || 0);
         const materialCost = Number(item.materialCost || 0); // საწყობის ხარჯი
@@ -65,25 +66,56 @@ const Finance = () => {
           ? Number(item.vatAmount || 0) 
           : (item.applyVat ? (price * 0.18) : 0);
 
-        total += price;
-        paid += amountPaid;
-        expenses += materialCost;
-        totalVat += vatAmount;
-
-        return { id: doc.id, ...item, price, amountPaid, materialCost, vatAmount };
+        data.push({ id: doc.id, ...item, price, amountPaid, materialCost, vatAmount });
       });
 
       setTransactions(data.sort((a, b) => new Date(b.finalizedAt) - new Date(a.finalizedAt)));
-      
-      setStats({
-        total,
-        paid,
-        vat: totalVat,
-        expenses,
-        netProfit: (paid - totalVat) - expenses
-      });
     });
+
+    const qFinance = query(
+      collection(db, "finance"),
+      where("clinicId", "==", userData.clinicId),
+    );
+
+    const unsubFinance = onSnapshot(qFinance, (snapshot) => {
+      let expSum = 0;
+      snapshot.docs.forEach((doc) => {
+        const item = doc.data();
+        if (item.type === "expense") {
+          expSum += Number(item.amount || 0);
+        }
+      });
+      setGeneralExpenses(expSum);
+    });
+
+    return () => {
+      unsubAppointments();
+      unsubFinance();
+    };
   }, [userData]);
+
+  useEffect(() => {
+    let total = 0,
+        paid = 0,
+        totalVat = 0,
+        materialExpenses = 0;
+
+    transactions.forEach((item) => {
+      total += item.price;
+      paid += item.amountPaid;
+      materialExpenses += item.materialCost;
+      totalVat += item.vatAmount;
+    });
+
+    setStats({
+      total,
+      paid,
+      vat: totalVat,
+      materialExpenses,
+      generalExpenses,
+      netProfit: (paid - totalVat) - materialExpenses - generalExpenses
+    });
+  }, [transactions, generalExpenses]);
 
   return (
     <>
@@ -120,8 +152,8 @@ const Finance = () => {
               </button>
             </div>
 
-            {/* Stats Grid - 4 Cards for better insight */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Stats Grid - 5 Cards for complete insight */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               <StatCard
                 title="მთლიანი დარიცხვა"
                 amount={stats.total}
@@ -131,10 +163,17 @@ const Finance = () => {
               />
               <StatCard
                 title="მასალების ხარჯი"
-                amount={stats.expenses}
+                amount={stats.materialExpenses}
                 icon={PieChart}
                 color="text-orange-500"
                 bg="bg-orange-500/10"
+              />
+              <StatCard
+                title="ხელფასები და ხარჯები"
+                amount={stats.generalExpenses}
+                icon={TrendingUp}
+                color="text-rose-500"
+                bg="bg-rose-500/10"
               />
               <StatCard
                 title="დღგ (18%)"

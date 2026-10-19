@@ -60,49 +60,39 @@ const CalendarPage = () => {
         const twoMonthsAgo = new Date();
         twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
-        let q;
-        if (role === "doctor") {
-          q = query(
-            collection(db, "appointments"),
-            where("doctorId", "==", activeStaff?.id || userData?.uid)
-          );
-        } else if (doctorIds.length > 0) {
-          if (doctorIds.length > 30) {
-              q = query(
-                collection(db, "appointments"),
-                where("clinicId", "==", userData.clinicId)
-              );
-          } else {
-              q = query(
-                collection(db, "appointments"),
-                where("doctorId", "in", doctorIds)
-              );
-          }
-        } else {
-          q = query(
-            collection(db, "appointments"),
-            where("clinicId", "==", userData.clinicId)
-          );
-        }
+        const q = query(
+          collection(db, "appointments"),
+          where("clinicId", "==", userData.clinicId)
+        );
 
         unsub = onSnapshot(q, (snapshot) => {
           if (!isMounted) return;
           
           const twoMonthsAgo = new Date();
           twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+          const myDoctorId = activeStaff?.id || userData?.uid;
 
           const allEvents = snapshot.docs
             .map((doc) => ({ id: doc.id, ...doc.data() }))
             .filter(data => new Date(data.start) >= twoMonthsAgo) // კლიენტის მხარეს ფილტრაცია
             .map((data) => {
               const isInternal = data.clinicId === userData.clinicId;
+              const isMyAppointment = role !== "doctor" || data.doctorId === myDoctorId;
               const startDate = new Date(data.start);
               const endDate = new Date(data.end);
 
               let title = "";
               let backgroundColor = data.color || "#7C3AED";
               
-              if (isInternal) {
+              if (role === "doctor") {
+                if (data.doctorId === myDoctorId) {
+                  title = data.patientName;
+                  backgroundColor = data.color || "#7C3AED";
+                } else {
+                  title = data.doctorName ? `დაკავებულია (${data.doctorName})` : "დაკავებულია";
+                  backgroundColor = "#94A3B8"; 
+                }
+              } else if (isInternal) {
                 title = (role === "admin" || role === "receptionist") && data.doctorName 
                   ? `${data.patientName} - ${data.doctorName}` 
                   : data.patientName;
@@ -119,9 +109,9 @@ const CalendarPage = () => {
                 backgroundColor,
                 borderColor: "transparent",
                 allDay: false,
-                extendedProps: isInternal 
-                  ? { ...data, isInternal: true }
-                  : { isInternal: false, doctorName: data.doctorName || "" },
+                extendedProps: isMyAppointment && isInternal 
+                  ? { ...data, isInternal: true, canEdit: true }
+                  : { isInternal: false, canEdit: false, doctorName: data.doctorName || "" },
               };
             });
           setEvents(allEvents);
@@ -233,8 +223,8 @@ const CalendarPage = () => {
                 expandRows={true}
                 stickyHeaderDates={true}
                 eventClick={(info) => {
-                  if (!info.event.extendedProps?.isInternal) {
-                    // სხვა კლინიკის ჩანაწერის დეტალების ნახვა ან რედაქტირება დაუშვებელია
+                  if (!info.event.extendedProps?.canEdit || !info.event.extendedProps?.isInternal) {
+                    // სხვა ექიმის ან სხვა კლინიკის ჩანაწერის დეტალების ნახვა ან რედაქტირება დაუშვებელია
                     return;
                   }
                   setSelectedAppointment({

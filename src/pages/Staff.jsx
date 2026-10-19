@@ -104,7 +104,10 @@ const Staff = () => {
 
   const handleAddDoctor = async (e) => {
     e.preventDefault();
-    if (doctorLimitReached) return;
+    if (newDoctor.role === 'doctor' && doctorLimitReached) {
+      alert(`თქვენი პაკეტი გათვლილია მაქსიმუმ ${maxDocs} ექიმზე. გთხოვთ აირჩიოთ სხვა როლი (რეგისტრატორი, მენეჯერი, ბუღალტერი) ან გაზარდოთ ტარიფი.`);
+      return;
+    }
 
     const errors = {};
     if (!newDoctor.fullName || !newDoctor.fullName.trim()) {
@@ -354,7 +357,16 @@ const Staff = () => {
               </div>
               
               <button 
-                onClick={() => setShowAddModal(true)}
+                onClick={() => {
+                  setNewDoctor({ 
+                    fullName: "", email: "", phone: "", pin: "", 
+                    role: doctorLimitReached ? "receptionist" : "doctor", 
+                    salaryAmount: "", salaryPayDay: "1", salaryType: "fixed", 
+                    commissionRate: "", personalId: "", birthDate: "" 
+                  });
+                  setStaffErrors({});
+                  setShowAddModal(true);
+                }}
                 className="flex items-center gap-3 px-6 py-4 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-lg shadow-brand-purple/20 hover:scale-105 transition-all cursor-pointer active:scale-95"
               >
                 <UserPlus size={18} /> თანამშრომლის დამატება
@@ -486,154 +498,154 @@ const Staff = () => {
           <div className="app-overlay fixed inset-0 touch-none" onClick={() => setShowAddModal(false)} onTouchMove={(e) => e.preventDefault()} />
           <div className="app-sheet bg-surface rounded-t-[32px] md:rounded-[40px] w-full max-w-md p-6 md:p-10 relative z-10 animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-200 overflow-y-auto max-h-[90vh] overscroll-contain custom-scrollbar">
             <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4 md:hidden" />
-            {doctorLimitReached ? (
-              <div className="text-center py-4">
-                <div className="w-20 h-20 bg-brand-purple/10 text-brand-purple rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <Crown size={40} />
-                </div>
-                <h3 className="text-2xl font-black text-text-main italic mb-4">ლიმიტი ამოწურულია</h3>
-                <p className="text-xs text-text-muted font-bold uppercase tracking-widest leading-relaxed mb-8">
-                   თქვენი პაკეტი გათვლილია მხოლოდ {maxDocs} ექიმზე.
-                </p>
-                <button 
-                  onClick={() => navigate('/settings/billing')}
-                  className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all flex items-center justify-center gap-3 active:scale-95">
-                  <Zap size={18} className="fill-current" /> Upgrade
-                </button>
+            <form onSubmit={handleAddDoctor} className="space-y-4">
+              <div className="flex justify-between items-center mb-6">
+                 <h3 className="text-2xl font-black text-text-main italic">ახალი თანამშრომელი</h3>
+                 <button type="button" onClick={() => setShowAddModal(false)} className="text-text-muted hover:text-text-main"><X /></button>
               </div>
-            ) : (
-              <form onSubmit={handleAddDoctor} className="space-y-4">
-                <div className="flex justify-between items-center mb-6">
-                   <h3 className="text-2xl font-black text-text-main italic">ახალი თანამშრომელი</h3>
-                   <button type="button" onClick={() => setShowAddModal(false)} className="text-text-muted hover:text-text-main"><X /></button>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center ml-4">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">სრული სახელი <span className="text-red-500">*</span></label>
-                    {staffErrors.addFullName && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addFullName}</span>}
+
+              {doctorLimitReached && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-between gap-3 text-amber-600 dark:text-amber-400 text-xs">
+                  <div>
+                    <span className="font-black block">ექიმების ლიმიტი ({maxDocs}) შევსებულია</span>
+                    <span className="text-[10px] opacity-80">შეგიძლიათ დაამატოთ რეგისტრატორი, ბუღალტერი ან მენეჯერი.</span>
                   </div>
-                  <input 
-                    required 
-                    data-error={Boolean(staffErrors.addFullName)}
-                    aria-invalid={Boolean(staffErrors.addFullName)}
-                    className={`w-full bg-surface-soft border-2 rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all ${staffErrors.addFullName ? 'border-red-500 bg-red-500/10 animate-shake' : 'border-transparent focus:border-brand-purple'}`} 
-                    value={newDoctor.fullName} 
-                    onChange={e => {
-                      setNewDoctor({...newDoctor, fullName: e.target.value});
-                      if (staffErrors.addFullName) setStaffErrors(prev => ({ ...prev, addFullName: undefined }));
-                    }} 
-                  />
+                  <button 
+                    type="button" 
+                    onClick={() => navigate('/settings/billing')}
+                    className="px-3 py-1.5 bg-amber-500 text-white rounded-xl font-black text-[9px] uppercase tracking-wider hover:bg-amber-600 transition-colors whitespace-nowrap"
+                  >
+                    პაკეტის შეცვლა
+                  </button>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div className="space-y-1 min-w-0">
-                      <div className="flex justify-between items-center ml-4">
-                        <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">პირადი ნომერი</label>
-                        {staffErrors.addPersonalId && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addPersonalId}</span>}
-                      </div>
+              )}
+
+              <div className="space-y-1">
+                <div className="flex justify-between items-center ml-4">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">სრული სახელი <span className="text-red-500">*</span></label>
+                  {staffErrors.addFullName && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addFullName}</span>}
+                </div>
+                <input 
+                  required 
+                  data-error={Boolean(staffErrors.addFullName)}
+                  aria-invalid={Boolean(staffErrors.addFullName)}
+                  className={`w-full bg-surface-soft border-2 rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all ${staffErrors.addFullName ? 'border-red-500 bg-red-500/10 animate-shake' : 'border-transparent focus:border-brand-purple'}`} 
+                  value={newDoctor.fullName} 
+                  onChange={e => {
+                    setNewDoctor({...newDoctor, fullName: e.target.value});
+                    if (staffErrors.addFullName) setStaffErrors(prev => ({ ...prev, addFullName: undefined }));
+                  }} 
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex justify-between items-center ml-4">
+                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">პირადი ნომერი</label>
+                      {staffErrors.addPersonalId && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addPersonalId}</span>}
+                    </div>
+                    <input 
+                      className={`w-full bg-surface-soft border-2 rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 ${staffErrors.addPersonalId ? 'border-red-500 bg-red-500/10' : 'border-transparent focus:border-brand-purple'}`} 
+                      maxLength={11} 
+                      value={newDoctor.personalId} 
+                      onChange={e => {
+                        setNewDoctor({...newDoctor, personalId: e.target.value.replace(/\D/g, '')});
+                        if (staffErrors.addPersonalId) setStaffErrors(prev => ({ ...prev, addPersonalId: undefined }));
+                      }} 
+                      placeholder="010XXXXXXXX" 
+                    />
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
+                    <div className="relative min-w-0">
                       <input 
-                        className={`w-full bg-surface-soft border-2 rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 ${staffErrors.addPersonalId ? 'border-red-500 bg-red-500/10' : 'border-transparent focus:border-brand-purple'}`} 
-                        maxLength={11} 
-                        value={newDoctor.personalId} 
-                        onChange={e => {
-                          setNewDoctor({...newDoctor, personalId: e.target.value.replace(/\D/g, '')});
-                          if (staffErrors.addPersonalId) setStaffErrors(prev => ({ ...prev, addPersonalId: undefined }));
-                        }} 
-                        placeholder="010XXXXXXXX" 
+                        type="date" 
+                        className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" 
+                        value={newDoctor.birthDate} 
+                        onClick={(e) => {
+                          try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                        }}
+                        onChange={e => setNewDoctor({...newDoctor, birthDate: e.target.value})} 
                       />
+                      {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !newDoctor.birthDate && (
+                        <span className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
+                          mm/dd/yyyy
+                        </span>
+                      )}
                     </div>
-                    <div className="space-y-1 min-w-0">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">დაბადების თარიღი</label>
-                      <div className="relative min-w-0">
-                        <input 
-                          type="date" 
-                          className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" 
-                          value={newDoctor.birthDate} 
-                          onClick={(e) => {
-                            try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
-                          }}
-                          onChange={e => setNewDoctor({...newDoctor, birthDate: e.target.value})} 
-                        />
-                        {typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent || '') && !newDoctor.birthDate && (
-                          <span className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 text-text-muted text-xs font-bold pointer-events-none opacity-60 select-none truncate pr-6">
-                            mm/dd/yyyy
-                          </span>
-                        )}
-                      </div>
+                  </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center ml-4">
+                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">PIN (4 ციფრი) <span className="text-red-500">*</span></label>
+                      {staffErrors.addPin && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addPin}</span>}
                     </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center ml-4">
-                        <label className="text-[9px] font-black text-text-muted uppercase tracking-widest">PIN (4 ციფრი) <span className="text-red-500">*</span></label>
-                        {staffErrors.addPin && <span className="text-[9px] font-black text-red-500 animate-in fade-in">{staffErrors.addPin}</span>}
-                      </div>
-                      <input 
-                        required 
-                        maxLength={4} 
-                        data-error={Boolean(staffErrors.addPin)}
-                        aria-invalid={Boolean(staffErrors.addPin)}
-                        className={`w-full bg-surface-soft border-2 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-center tracking-[0.5em] transition-all ${staffErrors.addPin ? 'border-red-500 bg-red-500/10 animate-shake' : 'border-transparent focus:border-brand-purple'}`} 
-                        value={newDoctor.pin} 
-                        onChange={e => {
-                          setNewDoctor({...newDoctor, pin: e.target.value.replace(/\D/g, '')});
-                          if (staffErrors.addPin) setStaffErrors(prev => ({ ...prev, addPin: undefined }));
-                        }} 
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">როლი <span className="text-red-500">*</span></label>
-                      <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all cursor-pointer" value={newDoctor.role} onChange={e => setNewDoctor({...newDoctor, role: e.target.value})}>
-                        <option value="doctor">ექიმი</option>
-                        <option value="receptionist">რეგისტრატორი</option>
-                        <option value="accountant">ბუღალტერი</option>
-                        <option value="manager">მენეჯერი</option>
-                      </select>
-                    </div>
-                </div>
-                <div>
-                  <PhoneInput 
-                    label="ტელეფონი" 
-                    value={newDoctor.phone} 
-                    error={staffErrors.addPhone}
-                    onChange={(formatted) => {
-                      setNewDoctor({...newDoctor, phone: formatted});
-                      if (staffErrors.addPhone) setStaffErrors(prev => ({ ...prev, addPhone: undefined }));
-                    }} 
-                  />
-                </div>
+                    <input 
+                      required 
+                      maxLength={4} 
+                      data-error={Boolean(staffErrors.addPin)}
+                      aria-invalid={Boolean(staffErrors.addPin)}
+                      className={`w-full bg-surface-soft border-2 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-center tracking-[0.5em] transition-all ${staffErrors.addPin ? 'border-red-500 bg-red-500/10 animate-shake' : 'border-transparent focus:border-brand-purple'}`} 
+                      value={newDoctor.pin} 
+                      onChange={e => {
+                        setNewDoctor({...newDoctor, pin: e.target.value.replace(/\D/g, '')});
+                        if (staffErrors.addPin) setStaffErrors(prev => ({ ...prev, addPin: undefined }));
+                      }} 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">როლი <span className="text-red-500">*</span></label>
+                    <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all cursor-pointer" value={newDoctor.role} onChange={e => setNewDoctor({...newDoctor, role: e.target.value})}>
+                      <option value="doctor" disabled={doctorLimitReached}>ექიმი {doctorLimitReached ? `(ლიმიტი ${maxDocs} ამოწურულია)` : ''}</option>
+                      <option value="receptionist">რეგისტრატორი</option>
+                      <option value="accountant">ბუღალტერი</option>
+                      <option value="manager">მენეჯერი</option>
+                    </select>
+                  </div>
+              </div>
+              <div>
+                <PhoneInput 
+                  label="ტელეფონი" 
+                  value={newDoctor.phone} 
+                  error={staffErrors.addPhone}
+                  onChange={(formatted) => {
+                    setNewDoctor({...newDoctor, phone: formatted});
+                    if (staffErrors.addPhone) setStaffErrors(prev => ({ ...prev, addPhone: undefined }));
+                  }} 
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ელ-ფოსტა</label>
+                <input type="email" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.email} onChange={e => setNewDoctor({...newDoctor, email: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ხელფასის ტიპი</label>
+                    <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all cursor-pointer" value={newDoctor.salaryType} onChange={e => setNewDoctor({...newDoctor, salaryType: e.target.value})}>
+                      <option value="fixed">ფიქსირებული</option>
+                      <option value="commission">გამომუშავება</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">გადახდის რიცხვი</label>
+                    <input type="number" min="1" max="31" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.salaryPayDay} onChange={e => setNewDoctor({...newDoctor, salaryPayDay: e.target.value})} placeholder="1-31" />
+                  </div>
+              </div>
+              {newDoctor.salaryType === 'fixed' ? (
                 <div className="space-y-1">
-                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ელ-ფოსტა</label>
-                  <input type="email" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.email} onChange={e => setNewDoctor({...newDoctor, email: e.target.value})} />
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ხელფასი (₾)</label>
+                  <input type="number" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.salaryAmount} onChange={e => setNewDoctor({...newDoctor, salaryAmount: e.target.value})} placeholder="0" />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ხელფასის ტიპი</label>
-                      <select className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-black text-[10px] uppercase tracking-widest appearance-none transition-all cursor-pointer" value={newDoctor.salaryType} onChange={e => setNewDoctor({...newDoctor, salaryType: e.target.value})}>
-                        <option value="fixed">ფიქსირებული</option>
-                        <option value="commission">გამომუშავება</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">გადახდის რიცხვი</label>
-                      <input type="number" min="1" max="31" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.salaryPayDay} onChange={e => setNewDoctor({...newDoctor, salaryPayDay: e.target.value})} placeholder="1-31" />
-                    </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">გამომუშავების პროცენტი (%)</label>
+                  <input type="number" min="0" max="100" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.commissionRate} onChange={e => setNewDoctor({...newDoctor, commissionRate: e.target.value})} placeholder="მაგ: 30" />
                 </div>
-                {newDoctor.salaryType === 'fixed' ? (
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">ხელფასი (₾)</label>
-                    <input type="number" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.salaryAmount} onChange={e => setNewDoctor({...newDoctor, salaryAmount: e.target.value})} placeholder="0" />
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-text-muted uppercase tracking-widest ml-4">გამომუშავების პროცენტი (%)</label>
-                    <input type="number" min="0" max="100" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-6 py-4 outline-none font-bold text-sm transition-all" value={newDoctor.commissionRate} onChange={e => setNewDoctor({...newDoctor, commissionRate: e.target.value})} placeholder="მაგ: 30" />
-                  </div>
-                )}
-                <button disabled={isProcessing} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all mt-6">
-                  {isProcessing ? <Loader2 className="animate-spin mx-auto" size={20} /> : "შენახვა"}
-                </button>
-              </form>
-            )}
+              )}
+              <button disabled={isProcessing} className="w-full py-5 bg-brand-purple text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-brand-purple/20 hover:brightness-110 transition-all mt-6">
+                {isProcessing ? <Loader2 className="animate-spin mx-auto" size={20} /> : "შენახვა"}
+              </button>
+            </form>
           </div>
         </div>
       )}

@@ -80,26 +80,43 @@ const ClinicPortfolio = () => {
   });
 
   const [showSmsModal, setShowSmsModal] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [generatedOtpHash, setGeneratedOtpHash] = useState("");
   const [userOtp, setUserOtp] = useState("");
   const [smsStatus, setSmsStatus] = useState("idle"); // idle, loading, sent, verified
   const [resendTimer, setResendTimer] = useState(0);
+
+  const hashOtp = async (code) => {
+    const enc = new TextEncoder().encode(code);
+    const buf = await crypto.subtle.digest("SHA-256", enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
 
   useLockBodyScroll(showSmsModal);
 
   useEffect(() => {
     // შემოწმება localStorage-დან
     const lastSent = localStorage.getItem(`sms_cooldown_${formData.phone}`);
-    const savedOtp = localStorage.getItem(`sms_otp_${formData.phone}`);
+    const savedOtpData = localStorage.getItem(`sms_otp_hash_${formData.phone}`);
     
-    if (savedOtp) setGeneratedOtp(savedOtp);
+    if (savedOtpData) {
+      try {
+        const parsed = JSON.parse(savedOtpData);
+        if (parsed.expiresAt && Date.now() <= parsed.expiresAt) {
+          setGeneratedOtpHash(parsed.hash);
+        } else {
+          localStorage.removeItem(`sms_otp_hash_${formData.phone}`);
+        }
+      } catch (e) {
+        localStorage.removeItem(`sms_otp_hash_${formData.phone}`);
+      }
+    }
 
     if (lastSent) {
       const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
       if (remaining > 0) setResendTimer(remaining);
       else {
           localStorage.removeItem(`sms_cooldown_${formData.phone}`);
-          localStorage.removeItem(`sms_otp_${formData.phone}`);
+          localStorage.removeItem(`sms_otp_hash_${formData.phone}`);
       }
     }
 
@@ -275,7 +292,8 @@ const ClinicPortfolio = () => {
     
     // ვქმნით 6 ნიშნა კოდს
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(otp);
+    const otpHash = await hashOtp(otp);
+    setGeneratedOtpHash(otpHash);
     
     try {
       const apiKey = import.meta.env.VITE_UBILL_API_KEY;
@@ -292,7 +310,10 @@ const ClinicPortfolio = () => {
       setSmsStatus("sent");
       setResendTimer(120); // 2 წუთიანი ტაიმერი
       localStorage.setItem(`sms_cooldown_${targetPhone}`, Date.now().toString());
-      localStorage.setItem(`sms_otp_${targetPhone}`, otp);
+      localStorage.setItem(`sms_otp_hash_${targetPhone}`, JSON.stringify({
+        hash: otpHash,
+        expiresAt: Date.now() + 5 * 60 * 1000
+      }));
     } catch (err) {
       console.error("SMS Error:", err);
       setToast({ type: "error", text: "SMS-ის გაგზავნა ვერ მოხერხდა" });
@@ -678,21 +699,39 @@ const ClinicPortfolio = () => {
                 გაუქმება
               </button>
               <button 
-                onClick={() => {
-                  if (userOtp === generatedOtp) {
+                onClick={async () => {
+                  const enteredHash = await hashOtp(userOtp);
+                  const savedRaw = localStorage.getItem(`sms_otp_hash_${formData.phone}`);
+                  let isValid = false;
+
+                  if (savedRaw) {
+                    try {
+                      const parsed = JSON.parse(savedRaw);
+                      if (parsed.expiresAt && Date.now() <= parsed.expiresAt && enteredHash === parsed.hash) {
+                        isValid = true;
+                      }
+                    } catch (e) {
+                      if (enteredHash === generatedOtpHash) isValid = true;
+                    }
+                  } else if (enteredHash === generatedOtpHash) {
+                    isValid = true;
+                  }
+
+                  if (isValid) {
+                    localStorage.removeItem(`sms_otp_hash_${formData.phone}`);
                     setSmsStatus("verified");
                     setShowSmsModal(false);
                     setUserOtp("");
                     setResendTimer(0);
                     // Trigger save again with verified status
                     setTimeout(() => {
-                      document.querySelector('button[type="submit"]').click();
+                      document.querySelector('button[type="submit"]')?.click();
                     }, 100);
                   } else {
-                    setToast({ type: "error", text: "კოდი არასწორია" });
+                    setToast({ type: "error", text: "კოდი არასწორია ან ვადაგასულია" });
                   }
                 }}
-                className="py-5 bg-brand-purple text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:bg-brand-deep transition-all active:scale-95"
+                className="py-5 bg-brand-purple text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:bg-brand-deep transition-all active:scale-95 cursor-pointer"
               >
                 დადასტურება
               </button>

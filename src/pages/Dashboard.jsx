@@ -96,6 +96,7 @@ const Dashboard = () => {
       let exp = 0;
       snap.docs.forEach(doc => {
         const d = doc.data();
+        if (d.isExternal) return; // skip external clinic visits
         const rawDate = d.finalizedAt || d.start;
         let dt = rawDate?.toDate ? rawDate.toDate() : new Date(rawDate || 0);
         if (dt >= startOfMonth) {
@@ -266,7 +267,7 @@ const Dashboard = () => {
                 {(role !== 'accountant' && role !== 'manager') && (() => {
                   const now = new Date();
                   const nextApp = appointments
-                    .filter(a => new Date(a.start) > now && a.status !== 'cancelled')
+                    .filter(a => new Date(a.start) > now && a.status !== 'cancelled' && a.status !== 'completed' && a.status !== 'completed_and_billed')
                     .sort((a, b) => new Date(a.start) - new Date(b.start))[0];
 
                   if (!nextApp) {

@@ -141,7 +141,7 @@ function AppContent() {
         } />
         
         <Route path="/archive" element={
-          <PrivateRoute title="შეკვეთების არქივი" allowedRoles={['admin', 'manager', 'accountant']}>
+          <PrivateRoute title="შეკვეთების არქივი" allowedRoles={['admin', 'manager', 'receptionist', 'accountant']}>
             <OrderArchive />
           </PrivateRoute>
         } />

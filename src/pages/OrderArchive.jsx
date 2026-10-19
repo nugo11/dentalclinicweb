@@ -301,9 +301,14 @@ const OrderArchive = () => {
                             <div className="flex flex-col">
                               <span className="font-black text-brand-purple">{order.price} ₾</span>
                               {Number(order.debtAmount || 0) > 0 ? (
-                                <span className="text-[9px] font-black text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded-md mt-0.5 w-fit">
-                                  ვალი: {Number(order.debtAmount).toFixed(2)} ₾
-                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedOrderDetails(order)}
+                                  className="text-[9px] font-black text-amber-600 bg-amber-500/10 hover:bg-amber-500 hover:text-white px-2 py-0.5 rounded-md mt-0.5 w-fit transition-all cursor-pointer flex items-center gap-1"
+                                  title="ვალის დაფარვა"
+                                >
+                                  ვალი: {Number(order.debtAmount).toFixed(2)} ₾ • დაფარვა
+                                </button>
                               ) : (
                                 <span className="text-[9px] font-black text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-md mt-0.5 w-fit">
                                   გადახდილია
@@ -387,6 +392,7 @@ const OrderArchive = () => {
               order={selectedOrderDetails}
               onPrint={handlePrintOrder}
               isPrinting={printingId === selectedOrderDetails?.id}
+              onOrderUpdated={setSelectedOrderDetails}
             />
 
           </div>

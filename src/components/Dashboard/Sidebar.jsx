@@ -98,18 +98,30 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     menuItems.push({ icon: Calendar, label: "კალენდარი", path: "/calendar" });
   }
 
-  // ფინანსები: ადმინი, მენეჯერი, ბუღალტერი
+  // ექიმისთვის: მიმდინარე ვიზიტები (ჯავშნები / ანგარიშსწორება)
+  if (isDoctor) {
+    menuItems.push({ icon: FileText, label: "მიმდინარე ვიზიტები", path: "/treatments" });
+  }
+
+  // ფინანსები: ადმინი, მენეჯერი, ბუღალტერი, რეგისტრატორი
+  const financeSubItems = [];
   if (isAdmin || isManager || isAccountant) {
+    financeSubItems.push({ label: "მიმოხილვა", path: "/finance", icon: PieChart });
+  }
+  if (isAdmin || isManager || isAccountant || isReceptionist) {
+    financeSubItems.push({ label: "მიმდინარე", path: "/treatments", icon: FileText });
+    financeSubItems.push({ label: "არქივი", path: "/archive", icon: Archive });
+  }
+  if (isAdmin || isManager || isAccountant) {
+    financeSubItems.push({ label: "ხელფასები", path: "/salary-archive", icon: History });
+  }
+
+  if (financeSubItems.length > 0) {
     menuItems.push({
       label: "ფინანსები",
       icon: DollarSign,
       id: "finance",
-      subItems: [
-        { label: "მიმოხილვა", path: "/finance", icon: PieChart },
-        { label: "მიმდინარე", path: "/treatments", icon: FileText }, 
-        { label: "არქივი", path: "/archive", icon: Archive }, 
-        { label: "ხელფასები", path: "/salary-archive", icon: History },
-      ],
+      subItems: financeSubItems,
     });
   }
 
