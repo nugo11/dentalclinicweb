@@ -2300,17 +2300,19 @@ const SuperAdminDashboard = () => {
         />
 
         {/* 4. Company Full Warehouse Quick Modal */}
-        <ClinicWarehouseModal
-          clinic={warehouseModalClinic}
-          items={inventory}
-          isOpen={Boolean(warehouseModalClinic)}
-          onClose={() => setWarehouseModalClinic(null)}
-          onGoToFullInventory={(clinicId) => {
-            setSelectedClinicFilter(clinicId);
-            setStockStatusFilter("all");
-            setActiveTab("inventory");
-          }}
-        />
+        {warehouseModalClinic && (
+          <ClinicWarehouseModal
+            clinic={warehouseModalClinic}
+            items={inventory}
+            isOpen={Boolean(warehouseModalClinic)}
+            onClose={() => setWarehouseModalClinic(null)}
+            onGoToFullInventory={(clinicId) => {
+              setSelectedClinicFilter(clinicId);
+              setStockStatusFilter("all");
+              setActiveTab("inventory");
+            }}
+          />
+        )}
 
         {/* 5. Complete Cascade Deletion Modal */}
         <ClinicDeleteModal

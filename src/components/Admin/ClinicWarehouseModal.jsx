@@ -21,9 +21,21 @@ const ClinicWarehouseModal = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  if (!isOpen || !clinic) return null;
+  // Reset pagination and search when clinic changes
+  React.useEffect(() => {
+    if (clinic?.id) {
+      setCurrentPage(1);
+      setSearch("");
+      setStatusFilter("all");
+      setCategoryFilter("all");
+    }
+  }, [clinic?.id]);
 
-  const clinicItems = items.filter((i) => i.clinicId === clinic.id);
+  const clinicId = clinic?.id;
+  const clinicItems = useMemo(() => {
+    if (!clinicId) return [];
+    return items.filter((i) => i.clinicId === clinicId);
+  }, [items, clinicId]);
 
   // Available categories in this clinic's inventory
   const categories = useMemo(() => {
@@ -155,6 +167,8 @@ const ClinicWarehouseModal = ({
     setSortOrder("asc");
     setCurrentPage(1);
   };
+
+  if (!isOpen || !clinic) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 font-nino">
