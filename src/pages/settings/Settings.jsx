@@ -51,6 +51,21 @@ const Settings = () => {
     }
   }, [userData, clinicData]);
 
+  // შეტყობინების ავტომატური გაქრობა
+  useEffect(() => {
+    if (profileMessage.text) {
+      const timer = setTimeout(() => setProfileMessage({ type: "", text: "" }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [profileMessage]);
+
+  useEffect(() => {
+    if (passwordMessage.text) {
+      const timer = setTimeout(() => setPasswordMessage({ type: "", text: "" }), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [passwordMessage]);
+
   // წვდომის შემოწმება - მხოლოდ კლინიკის ადმინისტრატორს
   if (!isAdmin) {
     return (
@@ -68,21 +83,6 @@ const Settings = () => {
       </div>
     );
   }
-
-  // შეტყობინების ავტომატური გაქრობა
-  useEffect(() => {
-    if (profileMessage.text) {
-      const timer = setTimeout(() => setProfileMessage({ type: "", text: "" }), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [profileMessage]);
-
-  useEffect(() => {
-    if (passwordMessage.text) {
-      const timer = setTimeout(() => setPasswordMessage({ type: "", text: "" }), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [passwordMessage]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();

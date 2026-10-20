@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { 
   collection, query, where, getDocs, doc, 
   deleteDoc, writeBatch 
@@ -131,9 +131,21 @@ export const deleteClinicPermanently = async (clinic, superAdminEmail, onProgres
     let authMessage = "";
 
     try {
+      let idToken = "";
+      if (auth.currentUser) {
+        try {
+          idToken = await auth.currentUser.getIdToken();
+        } catch (tokErr) {
+          console.warn("Failed to retrieve ID token for cascade deletion:", tokErr);
+        }
+      }
+
       const response = await fetch("/api/delete-clinic-auth", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(idToken ? { "Authorization": `Bearer ${idToken}` } : {})
+        },
         body: JSON.stringify({
           ownerId,
           ownerEmail,

@@ -65,6 +65,12 @@ const SuperAdminDashboard = () => {
   const [warehouseModalClinic, setWarehouseModalClinic] = useState(null);
   const [deleteModalClinic, setDeleteModalClinic] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTimestamp(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Show temporary toast notification
   const showToast = (msg, type = "success") => {
@@ -140,7 +146,7 @@ const SuperAdminDashboard = () => {
     const totalDoctors = users.filter((u) => u.role === "doctor").length;
     
     // Check locked accounts
-    const now = Date.now();
+    const now = currentTimestamp;
     const lockedAccounts = users.filter((u) => {
       const lockUntil = u.pinLockedUntil ? new Date(u.pinLockedUntil).getTime() : 0;
       return (u.failedPinAttempts >= 4) || (lockUntil > now);
@@ -592,12 +598,12 @@ const SuperAdminDashboard = () => {
       let matchLock = true;
       if (statusFilter === "locked") {
         const lockUntil = u.pinLockedUntil ? new Date(u.pinLockedUntil).getTime() : 0;
-        matchLock = u.failedPinAttempts >= 4 || lockUntil > Date.now();
+        matchLock = u.failedPinAttempts >= 4 || lockUntil > currentTimestamp;
       }
 
       return matchClinic && matchSearch && matchRole && matchLock;
     });
-  }, [users, selectedClinicFilter, searchQuery, roleFilter, statusFilter]);
+  }, [users, selectedClinicFilter, searchQuery, roleFilter, statusFilter, currentTimestamp]);
 
   return (
     <>
@@ -2047,7 +2053,7 @@ const SuperAdminDashboard = () => {
               {/* Staff Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filteredStaff.map((staff) => {
-                  const now = Date.now();
+                  const now = currentTimestamp;
                   const lockUntil = staff.pinLockedUntil ? new Date(staff.pinLockedUntil).getTime() : 0;
                   const isLocked = (staff.failedPinAttempts >= 4) || (lockUntil > now);
                   const clinicName = clinicMap[staff.clinicId] || "კლინიკა";

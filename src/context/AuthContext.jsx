@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
 
   const unsubUserRef = useRef(null);
   const unsubClinicRef = useRef(null); // რეფი კლინიკის მოსასმენად
+  const unsubStaffRef = useRef(null); // რეფი პერსონალის რეალურ დროში შესამოწმებლად
 
   // პერსონალის ავტორიზაცია PIN-ით
   const staffLogin = (staffMember) => {
@@ -24,14 +25,51 @@ export const AuthProvider = ({ children }) => {
 
   const staffLogout = () => {
     setActiveStaff(null);
-    localStorage.removeItem(`activeStaff_${currentUser?.uid}`);
+    if (currentUser?.uid) {
+      localStorage.removeItem(`activeStaff_${currentUser.uid}`);
+    }
   };
+
+  // პერსონალის სტატუსის და როლის რეალურ დროში სინქრონიზაცია
+  useEffect(() => {
+    if (unsubStaffRef.current) {
+      unsubStaffRef.current();
+      unsubStaffRef.current = null;
+    }
+
+    if (currentUser && activeStaff?.id && activeStaff.id !== currentUser.uid) {
+      unsubStaffRef.current = onSnapshot(doc(db, "users", activeStaff.id), (staffSnap) => {
+        if (!staffSnap.exists()) {
+          staffLogout();
+        } else {
+          const sData = staffSnap.data();
+          if (sData.status === "suspended" || (userData?.clinicId && sData.clinicId !== userData.clinicId)) {
+            staffLogout();
+          } else if (sData.role !== activeStaff.role || sData.fullName !== activeStaff.fullName) {
+            const updated = { ...activeStaff, role: sData.role, fullName: sData.fullName };
+            setActiveStaff(updated);
+            localStorage.setItem(`activeStaff_${currentUser.uid}`, JSON.stringify(updated));
+          }
+        }
+      }, (err) => {
+        console.warn("Staff live sync error:", err);
+      });
+    }
+
+    return () => {
+      if (unsubStaffRef.current) {
+        unsubStaffRef.current();
+        unsubStaffRef.current = null;
+      }
+    };
+  }, [currentUser?.uid, activeStaff?.id, userData?.clinicId]);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       // ვასუფთავებთ წინა საბსქრაიბებს
       if (unsubUserRef.current) unsubUserRef.current();
       if (unsubClinicRef.current) unsubClinicRef.current();
+      if (unsubStaffRef.current) unsubStaffRef.current();
 
       if (user) {
         setCurrentUser(user);
@@ -72,6 +110,7 @@ export const AuthProvider = ({ children }) => {
       unsubscribeAuth();
       if (unsubUserRef.current) unsubUserRef.current();
       if (unsubClinicRef.current) unsubClinicRef.current();
+      if (unsubStaffRef.current) unsubStaffRef.current();
     };
   }, []);
 

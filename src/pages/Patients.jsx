@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { Plus, Users, Loader2 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { PLANS } from '../config/plans';
 import Sidebar from '../components/Dashboard/Sidebar';
@@ -12,7 +10,7 @@ import PatientsTable from '../components/Patients/PatientsTable';
 import AddPatientSlideOver from '../components/Patients/AddPatientSlideOver';
 
 const Patients = () => {
-  const { clinicData, userData } = useAuth();
+  const { clinicData } = useAuth();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialSearch = searchParams.get('search') || "";
@@ -21,22 +19,6 @@ const Patients = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [patientsCount, setPatientsCount] = useState(0);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!userData?.clinicId) return;
-
-    const q = query(
-      collection(db, "patients"),
-      where("clinicId", "==", userData.clinicId)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setPatientsCount(snapshot.docs.length);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [userData]);
 
   const currentPlan = PLANS[(clinicData?.plan || "free").toLowerCase()] || PLANS.free;
   const maxPatients = currentPlan.maxPatients;
@@ -106,7 +88,11 @@ const Patients = () => {
               </div>
 
               <div className="flex-1 min-h-0">
-                <PatientsTable externalSearch={initialSearch} />
+                <PatientsTable 
+                  externalSearch={initialSearch} 
+                  onCountChange={setPatientsCount} 
+                  onLoadingChange={setLoading} 
+                />
               </div>
             </div>
           </div>

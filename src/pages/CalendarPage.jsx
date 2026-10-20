@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -19,7 +19,6 @@ const CalendarPage = () => {
   const calendarRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [events, setEvents] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -32,102 +31,77 @@ const CalendarPage = () => {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const [rawAppointments, setRawAppointments] = useState([]);
+
   useEffect(() => {
-    if (!userData || !userData.clinicId) return;
+    if (!userData?.clinicId) return;
 
-    let unsub;
-    let isMounted = true;
+    const q = query(
+      collection(db, "appointments"),
+      where("clinicId", "==", userData.clinicId)
+    );
 
-    const fetchGlobalAppointments = async () => {
-      try {
-        // 1. ჯერ გავიგოთ ამ კლინიკის ყველა ექიმის ID
-        const doctorsQuery = query(
-          collection(db, "users"),
-          where("clinicId", "==", userData.clinicId),
-          where("role", "==", "doctor")
-        );
-        const doctorsSnap = await getDocs(doctorsQuery);
-        
-        if (!isMounted) return;
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const allDocs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        setRawAppointments(allDocs);
+      },
+      (err) => {
+        console.error("Firestore appointments error:", err);
+      }
+    );
 
-        const doctorIds = doctorsSnap.docs.map(d => d.id);
+    return () => unsubscribe();
+  }, [userData?.clinicId]);
 
-        if (doctorIds.length === 0 && role !== "admin") {
-          setEvents([]);
-          return;
+  const events = useMemo(() => {
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    const myDoctorId = activeStaff?.id || userData?.uid;
+
+    return rawAppointments
+      .filter((data) => new Date(data.start) >= twoMonthsAgo)
+      .map((data) => {
+        const isInternal = data.clinicId === userData?.clinicId;
+        const isMyAppointment = role !== "doctor" || data.doctorId === myDoctorId;
+        const startDate = new Date(data.start);
+        const endDate = new Date(data.end);
+
+        let title = "";
+        let backgroundColor = data.color || "#7C3AED";
+
+        if (role === "doctor") {
+          if (data.doctorId === myDoctorId) {
+            title = data.patientName;
+            backgroundColor = data.color || "#7C3AED";
+          } else {
+            title = data.doctorName ? `დაკავებულია (${data.doctorName})` : "დაკავებულია";
+            backgroundColor = "#94A3B8"; 
+          }
+        } else if (isInternal) {
+          title = (role === "admin" || role === "receptionist") && data.doctorName 
+            ? `${data.patientName} - ${data.doctorName}` 
+            : data.patientName;
+        } else {
+          title = data.doctorName ? `დაკავებულია (${data.doctorName})` : "დაკავებულია (სხვა კლინიკა)";
+          backgroundColor = "#94A3B8"; 
         }
 
-        const twoMonthsAgo = new Date();
-        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-
-        const q = query(
-          collection(db, "appointments"),
-          where("clinicId", "==", userData.clinicId)
-        );
-
-        unsub = onSnapshot(q, (snapshot) => {
-          if (!isMounted) return;
-          
-          const twoMonthsAgo = new Date();
-          twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-          const myDoctorId = activeStaff?.id || userData?.uid;
-
-          const allEvents = snapshot.docs
-            .map((doc) => ({ id: doc.id, ...doc.data() }))
-            .filter(data => new Date(data.start) >= twoMonthsAgo) // კლიენტის მხარეს ფილტრაცია
-            .map((data) => {
-              const isInternal = data.clinicId === userData.clinicId;
-              const isMyAppointment = role !== "doctor" || data.doctorId === myDoctorId;
-              const startDate = new Date(data.start);
-              const endDate = new Date(data.end);
-
-              let title = "";
-              let backgroundColor = data.color || "#7C3AED";
-              
-              if (role === "doctor") {
-                if (data.doctorId === myDoctorId) {
-                  title = data.patientName;
-                  backgroundColor = data.color || "#7C3AED";
-                } else {
-                  title = data.doctorName ? `დაკავებულია (${data.doctorName})` : "დაკავებულია";
-                  backgroundColor = "#94A3B8"; 
-                }
-              } else if (isInternal) {
-                title = (role === "admin" || role === "receptionist") && data.doctorName 
-                  ? `${data.patientName} - ${data.doctorName}` 
-                  : data.patientName;
-              } else {
-                title = data.doctorName ? `დაკავებულია (${data.doctorName})` : "დაკავებულია (სხვა კლინიკა)";
-                backgroundColor = "#94A3B8"; 
-              }
-
-              return {
-                id: data.id,
-                title,
-                start: startDate,
-                end: endDate,
-                backgroundColor,
-                borderColor: "transparent",
-                allDay: false,
-                extendedProps: isMyAppointment && isInternal 
-                  ? { ...data, isInternal: true, canEdit: true }
-                  : { isInternal: false, canEdit: false, doctorName: data.doctorName || "" },
-              };
-            });
-          setEvents(allEvents);
-        });
-      } catch (err) {
-        console.error("Firestore error:", err);
-      }
-    };
-
-    fetchGlobalAppointments();
-    
-    return () => {
-      isMounted = false;
-      if (unsub) unsub();
-    };
-  }, [userData, role, activeStaff]);
+        return {
+          id: data.id,
+          title,
+          start: startDate,
+          end: endDate,
+          backgroundColor,
+          borderColor: "transparent",
+          allDay: false,
+          extendedProps: isMyAppointment && isInternal 
+            ? { ...data, isInternal: true, canEdit: true }
+            : { isInternal: false, canEdit: false, doctorName: data.doctorName || "" },
+        };
+      });
+  }, [rawAppointments, role, activeStaff?.id, userData?.clinicId, userData?.uid]);
 
   const canBookPast = role === "admin";
 

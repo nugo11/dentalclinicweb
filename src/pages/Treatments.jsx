@@ -20,7 +20,7 @@ const Treatments = () => {
   const { userData, role, activeStaff } = useAuth();
   const isReadOnly = role === 'accountant';
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [orders, setOrders] = useState([]);
+  const [rawOrders, setRawOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -40,26 +40,27 @@ const Treatments = () => {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      
-      // ფილტრაცია როლის მიხედვით:
-      // ექიმი ხედავს მხოლოდ თავისას, სხვები (ადმინი, მენეჯერი, ბუღალტერი, რეგისტრატორი) ხედავენ ყველასას
-      const activeOrders = data.filter((order) => {
-        const isNotFinalized = order.status !== "completed_and_billed" && order.status !== "cancelled";
-        if (role === 'doctor') {
-          return isNotFinalized && order.doctorId === (activeStaff?.id || userData?.uid);
-        }
-        return isNotFinalized;
-      });
-
-      // სორტირება: უახლესი ჯავშნები (თარიღით) იყოს თავში
-      const sortedData = activeOrders.sort(
-        (a, b) => new Date(b.start) - new Date(a.start),
-      );
-      setOrders(sortedData);
+      setRawOrders(data);
     });
 
     return () => unsubscribe();
   }, [refreshTrigger, userData?.clinicId]);
+
+  // ფილტრაცია როლის მიხედვით (მეხსიერებაში, რეაქტიულად როლის/პერსონალის ცვლილებაზე)
+  const orders = useMemo(() => {
+    const myDoctorId = activeStaff?.id || userData?.uid;
+    const activeOrders = rawOrders.filter((order) => {
+      const isNotFinalized = order.status !== "completed_and_billed" && order.status !== "cancelled";
+      if (role === 'doctor') {
+        return isNotFinalized && order.doctorId === myDoctorId;
+      }
+      return isNotFinalized;
+    });
+
+    return activeOrders.sort(
+      (a, b) => new Date(b.start) - new Date(a.start),
+    );
+  }, [rawOrders, role, activeStaff?.id, userData?.uid]);
 
   // ძებნის ფილტრაცია კოდის დონეზე (ოპტიმიზირებული useMemo-თი)
   const filteredOrders = useMemo(() => {
@@ -77,7 +78,7 @@ const Treatments = () => {
     setIsModalOpen(false);
 
     if (selectedOrder) {
-      setOrders((prevOrders) =>
+      setRawOrders((prevOrders) =>
         prevOrders.filter((order) => order.id !== selectedOrder.id),
       );
     }

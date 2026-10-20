@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { generateForm100 } from "../../utils/generateForm100";
 import { useAuth } from "../../context/AuthContext";
 
-const PatientsTable = ({ externalSearch = "" }) => {
+const PatientsTable = ({ externalSearch = "", onCountChange, onLoadingChange }) => {
   const navigate = useNavigate();
   const { clinicData, userData } = useAuth();
   
@@ -106,11 +106,14 @@ const PatientsTable = ({ externalSearch = "" }) => {
           ...doc.data(),
         }));
         setPatients(patientsData);
+        if (onCountChange) onCountChange(patientsData.length);
+        if (onLoadingChange) onLoadingChange(false);
         setFetchError(null);
         setLoading(false);
       },
       (error) => {
         console.error("Error fetching patients:", error);
+        if (onLoadingChange) onLoadingChange(false);
         setFetchError(error.message || "მონაცემების ჩატვირთვა ვერ მოხერხდა");
         setLoading(false);
       },
