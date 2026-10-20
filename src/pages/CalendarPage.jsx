@@ -36,10 +36,18 @@ const CalendarPage = () => {
   useEffect(() => {
     if (!userData?.clinicId) return;
 
-    const q = query(
-      collection(db, "appointments"),
-      where("clinicId", "==", userData.clinicId)
-    );
+    let q;
+    if (role === "doctor") {
+      q = query(
+        collection(db, "appointments"),
+        where("doctorId", "==", activeStaff?.id || userData?.uid)
+      );
+    } else {
+      q = query(
+        collection(db, "appointments"),
+        where("clinicId", "==", userData.clinicId)
+      );
+    }
 
     const unsubscribe = onSnapshot(
       q,
@@ -53,7 +61,7 @@ const CalendarPage = () => {
     );
 
     return () => unsubscribe();
-  }, [userData?.clinicId]);
+  }, [userData?.clinicId, role, activeStaff?.id, userData?.uid]);
 
   const events = useMemo(() => {
     const twoMonthsAgo = new Date();

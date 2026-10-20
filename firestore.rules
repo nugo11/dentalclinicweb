@@ -75,11 +75,12 @@ service cloud.firestore {
     }
 
     // 6. ვიზიტები და ჯავშნები (Appointments / Calendar)
+    // წაკითხვა დაშვებულია ავტორიზებულთათვის, რათა სხვადასხვა კლინიკაში მოღვაწე ექიმების გრაფიკის გადაკვეთა არ მოხდეს (Overlap / Double-Booking Prevention)
+    // შექმნა, რედაქტირება და წაშლა მკაცრად დაშვებულია მხოლოდ საკუთარი კლინიკის ჩანაწერებზე
     match /appointments/{appointmentId} {
-      allow read, delete: if belongsToUserClinic(resource.data.clinicId);
+      allow read: if isAuthenticated();
       allow create: if belongsToUserClinic(request.resource.data.clinicId);
-      allow update: if belongsToUserClinic(resource.data.clinicId) &&
-                       (request.resource.data.clinicId == null || belongsToUserClinic(request.resource.data.clinicId));
+      allow update, delete: if belongsToUserClinic(resource.data.clinicId);
     }
 
     // 7. პაციენტის რენტგენები (Patient X-Rays)

@@ -86,10 +86,9 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
       // Overlap check for doctor
       const doctorId = appointmentData.doctorId || appointmentData.extendedProps?.doctorId;
       const clinicId = appointmentData.clinicId || appointmentData.extendedProps?.clinicId;
-      if (doctorId && clinicId) {
+      if (doctorId) {
         const qOverlap = query(
           collection(db, "appointments"),
-          where("clinicId", "==", clinicId),
           where("doctorId", "==", doctorId)
         );
         const overlapSnapshot = await getDocs(qOverlap);

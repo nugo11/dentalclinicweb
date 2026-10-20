@@ -244,11 +244,10 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
       const targetDoctorId = canSelectDoctor ? formData.doctorId : (activeStaff?.id || userData?.uid);
       const targetDoctorName = canSelectDoctor ? formData.doctorName : (activeStaff?.fullName || userData?.fullName);
 
-      // Overlap check for doctor
-      if (targetDoctorId && clinicId) {
+      // Overlap check for doctor across clinics
+      if (targetDoctorId) {
         const qOverlap = query(
           collection(db, "appointments"),
-          where("clinicId", "==", clinicId),
           where("doctorId", "==", targetDoctorId)
         );
         const overlapSnapshot = await getDocs(qOverlap);
