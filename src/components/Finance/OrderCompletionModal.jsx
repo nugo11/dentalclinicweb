@@ -38,16 +38,16 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   useLockBodyScroll(isOpen);
   const { role, activeStaff, userData, clinicData } = useAuth();
   
-  // ჩახურვის უფლება: ადმინს, მენეჯერს და რეგისტრატორს შეუძლიათ ყველასი. 
-  // ექიმს შეუძლია მხოლოდ თავისი შეკვეთის ჩახურვა.
+  // ჩახურვის უფლება: ადმინს, მენეჯერს და რეგისტრატორს (მიმღებს).
+  // ექიმს არ შეუძლია შეკვეთის ჩახურვა და არ უჩანს ფინანსური დეტალები.
   // ბუღალტერი რჩება მხოლოდ ნახვის რეჟიმში.
   const canFinalize = 
     role === 'admin' || 
     role === 'manager' || 
-    role === 'receptionist' || 
-    (role === 'doctor' && orderData.doctorId === (activeStaff?.id || userData?.uid));
+    role === 'receptionist';
 
   const isReadOnly = !canFinalize;
+  const isDoctor = role === 'doctor';
   const [availableServices, setAvailableServices] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
   const [customService, setCustomService] = useState({ name: "", price: "" });
@@ -785,9 +785,11 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                     </span>
                     <div className="flex flex-col items-end gap-1.5">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xs font-black text-brand-purple bg-brand-purple/10 dark:bg-brand-purple/15 px-2.5 py-1 rounded-lg border border-brand-purple/20 dark:border-brand-purple/30">
-                          {s.price} ₾
-                        </span>
+                        {!isDoctor && (
+                          <span className="text-xs font-black text-brand-purple bg-brand-purple/10 dark:bg-brand-purple/15 px-2.5 py-1 rounded-lg border border-brand-purple/20 dark:border-brand-purple/30">
+                            {s.price} ₾
+                          </span>
+                        )}
                         {!isReadOnly && (
                           <button
                             onClick={() => removeService(s.uniqueId)}
@@ -832,188 +834,196 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
               </div>
             </div>
 
-            {/* შეჯამება და გადახდის პარამეტრები */}
-            <div className="bg-slate-50/90 dark:bg-[#0d1222] border border-slate-200/90 dark:border-slate-700/90 rounded-[28px] p-5 md:p-6 text-slate-900 dark:text-white shadow-xl shadow-slate-200/50 dark:shadow-black/40 space-y-4">
-              <div className="space-y-2.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">მომსახურების ჯამი:</span>
-                  <span className="text-sm font-black text-slate-900 dark:text-white">{servicesTotal.toFixed(2)} ₾</span>
-                </div>
-                {materialsTotal > 0 && (
+            {/* შეჯამება და გადახდის პარამეტრები - ექიმს არ უჩანს */}
+            {!isDoctor ? (
+              <div className="bg-slate-50/90 dark:bg-[#0d1222] border border-slate-200/90 dark:border-slate-700/90 rounded-[28px] p-5 md:p-6 text-slate-900 dark:text-white shadow-xl shadow-slate-200/50 dark:shadow-black/40 space-y-4">
+                <div className="space-y-2.5">
                   <div className="flex justify-between items-center">
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">დამატებითი მასალები:</span>
-                    <span className="text-sm font-black text-amber-600 dark:text-amber-400">{materialsTotal.toFixed(2)} ₾</span>
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">მომსახურების ჯამი:</span>
+                    <span className="text-sm font-black text-slate-900 dark:text-white">{servicesTotal.toFixed(2)} ₾</span>
                   </div>
-                )}
-
-                {/* დღგ-ს არჩევა */}
-                <label className={`flex items-center justify-between cursor-pointer select-none group p-3.5 rounded-2xl border transition-all ${
-                  applyVat 
-                    ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/40 shadow-sm shadow-emerald-500/10' 
-                    : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:bg-slate-100/70 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm'
-                }`}>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      id="apply-vat-toggle"
-                      disabled={isReadOnly}
-                      checked={applyVat}
-                      onChange={(e) => setApplyVat(e.target.checked)}
-                      className="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
-                    />
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                      დაიბეგროს დღგ-ით (18%)
-                    </span>
-                  </div>
-                  <span className={`text-sm font-black transition-colors ${applyVat ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-400 dark:text-slate-400'}`}>
-                    {applyVat ? `+${vatAmount.toFixed(2)} ₾` : '0.00 ₾'}
-                  </span>
-                </label>
-
-                <div className="flex justify-between items-center p-3.5 bg-amber-500/15 dark:bg-gradient-to-r dark:from-amber-500/15 dark:to-amber-500/5 border border-amber-400/50 dark:border-amber-500/30 rounded-2xl shadow-sm">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900 dark:text-amber-300">სულ გადასახდელი:</span>
-                  <span className="text-2xl font-black text-amber-700 dark:text-amber-400 tracking-tight">{totalAmount.toFixed(2)} ₾</span>
-                </div>
-              </div>
-
-              {/* გადახდის მეთოდი */}
-              <div className="space-y-2.5 pt-3.5 border-t border-slate-200 dark:border-slate-700/80">
-                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
-                  გადახდის მეთოდი:
-                </label>
-                <div className="grid grid-cols-3 gap-2.5">
-                  {[
-                    { id: 'cash', label: 'ნაღდი', icon: DollarSign },
-                    { id: 'card', label: 'ბარათი', icon: CreditCard },
-                    { id: 'transfer', label: 'გადმორიცხვა', icon: FileText }
-                  ].map(m => {
-                    const isSelected = paymentMethod === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        disabled={isReadOnly}
-                        onClick={() => setPaymentMethod(m.id)}
-                        className={`py-3.5 px-2 rounded-2xl flex flex-col items-center gap-1.5 transition-all duration-200 border cursor-pointer ${
-                          isSelected
-                            ? 'bg-gradient-to-br from-brand-purple to-indigo-600 text-white border-brand-purple shadow-md shadow-brand-purple/40 ring-2 ring-brand-purple/40 scale-[1.02]'
-                            : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200/90 hover:border-slate-300 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700/90 dark:hover:bg-slate-700/80 dark:hover:text-white dark:hover:border-slate-600 shadow-sm'
-                        }`}
-                      >
-                        <m.icon size={16} className={isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-300'} />
-                        <span className="text-[9px] font-black uppercase tracking-wider">{m.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* გადამხდელი */}
-                <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block pt-2">
-                  გადამხდელი:
-                </label>
-                <div className="grid grid-cols-3 gap-2.5">
-                  {[
-                    { id: 'personal', label: 'პირადი', icon: Users },
-                    { id: 'insurance', label: 'სადაზღვევო', icon: Activity },
-                    { id: 'corporate', label: 'შპს / კორპ.', icon: Briefcase }
-                  ].map(p => {
-                    const isSelected = payerType === p.id;
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        disabled={isReadOnly}
-                        onClick={() => setPayerType(p.id)}
-                        className={`py-3.5 px-2 rounded-2xl flex flex-col items-center gap-1.5 transition-all duration-200 border cursor-pointer ${
-                          isSelected
-                            ? 'bg-gradient-to-br from-brand-purple to-indigo-600 text-white border-brand-purple shadow-md shadow-brand-purple/40 ring-2 ring-brand-purple/40 scale-[1.02]'
-                            : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200/90 hover:border-slate-300 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700/90 dark:hover:bg-slate-700/80 dark:hover:text-white dark:hover:border-slate-600 shadow-sm'
-                        }`}
-                      >
-                        <p.icon size={16} className={isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-300'} />
-                        <span className="text-[9px] font-black uppercase tracking-wider">{p.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* დაზღვევა */}
-                {payerType === 'insurance' && (
-                  <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700/80 animate-in slide-in-from-top-2">
-                    <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">დაზღვევის დეტალები:</label>
-                    <input 
-                      type="text" 
-                      placeholder="სადაზღვევო კომპანია" 
-                      disabled={isReadOnly}
-                      value={insuranceInfo.company} 
-                      onChange={e => setInsuranceInfo({...insuranceInfo, company: e.target.value})}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-3 px-4 outline-none text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all shadow-sm"
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input 
-                        type="text" 
-                        placeholder="პოლისის №" 
-                        disabled={isReadOnly}
-                        value={insuranceInfo.policyNum} 
-                        onChange={e => setInsuranceInfo({...insuranceInfo, policyNum: e.target.value})}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-3 px-4 outline-none text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all shadow-sm"
-                      />
-                      <input 
-                        type="text" 
-                        placeholder="დასტურის კოდი" 
-                        disabled={isReadOnly}
-                        value={insuranceInfo.approvalCode} 
-                        onChange={e => setInsuranceInfo({...insuranceInfo, approvalCode: e.target.value})}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-3 px-4 outline-none text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all shadow-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* გადახდილი თანხა */}
-                <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-700/80">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
-                      გადახდილი თანხა:
-                    </label>
-                    {isPaidAmountCustom && !isReadOnly && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsPaidAmountCustom(false);
-                          setPaidAmount(totalAmount);
-                        }}
-                        className="text-[10px] font-black text-brand-purple hover:underline cursor-pointer"
-                      >
-                        სრული თანხა ({totalAmount.toFixed(2)} ₾)
-                      </button>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <CreditCard
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-purple"
-                      size={18}
-                    />
-                    <input
-                      type="number"
-                      disabled={isReadOnly}
-                      value={paidAmount}
-                      onChange={(e) => {
-                        setIsPaidAmountCustom(true);
-                        setPaidAmount(e.target.value);
-                      }}
-                      className="w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/30 rounded-2xl py-3.5 pl-11 pr-4 outline-none font-black text-xl text-slate-900 dark:text-white shadow-inner transition-all"
-                    />
-                  </div>
-                  {totalAmount > Number(paidAmount || 0) && (
-                    <div className="flex justify-between items-center text-xs font-bold text-red-500 mt-2 px-1">
-                      <span>დარჩენილი დავალიანება (ვალი):</span>
-                      <span className="font-black text-sm">{(totalAmount - Number(paidAmount || 0)).toFixed(2)} ₾</span>
+                  {materialsTotal > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">დამატებითი მასალები:</span>
+                      <span className="text-sm font-black text-amber-600 dark:text-amber-400">{materialsTotal.toFixed(2)} ₾</span>
                     </div>
                   )}
+
+                  {/* დღგ-ს არჩევა */}
+                  <label className={`flex items-center justify-between cursor-pointer select-none group p-3.5 rounded-2xl border transition-all ${
+                    applyVat 
+                      ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/40 shadow-sm shadow-emerald-500/10' 
+                      : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 hover:bg-slate-100/70 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="apply-vat-toggle"
+                        disabled={isReadOnly}
+                        checked={applyVat}
+                        onChange={(e) => setApplyVat(e.target.checked)}
+                        className="w-4 h-4 rounded accent-emerald-500 cursor-pointer"
+                      />
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                        დაიბეგროს დღგ-ით (18%)
+                      </span>
+                    </div>
+                    <span className={`text-sm font-black transition-colors ${applyVat ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-400 dark:text-slate-400'}`}>
+                      {applyVat ? `+${vatAmount.toFixed(2)} ₾` : '0.00 ₾'}
+                    </span>
+                  </label>
+
+                  <div className="flex justify-between items-center p-3.5 bg-amber-500/15 dark:bg-gradient-to-r dark:from-amber-500/15 dark:to-amber-500/5 border border-amber-400/50 dark:border-amber-500/30 rounded-2xl shadow-sm">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900 dark:text-amber-300">სულ გადასახდელი:</span>
+                    <span className="text-2xl font-black text-amber-700 dark:text-amber-400 tracking-tight">{totalAmount.toFixed(2)} ₾</span>
+                  </div>
+                </div>
+
+                {/* გადახდის მეთოდი */}
+                <div className="space-y-2.5 pt-3.5 border-t border-slate-200 dark:border-slate-700/80">
+                  <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
+                    გადახდის მეთოდი:
+                  </label>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {[
+                      { id: 'cash', label: 'ნაღდი', icon: DollarSign },
+                      { id: 'card', label: 'ბარათი', icon: CreditCard },
+                      { id: 'transfer', label: 'გადმორიცხვა', icon: FileText }
+                    ].map(m => {
+                      const isSelected = paymentMethod === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          disabled={isReadOnly}
+                          onClick={() => setPaymentMethod(m.id)}
+                          className={`py-3.5 px-2 rounded-2xl flex flex-col items-center gap-1.5 transition-all duration-200 border cursor-pointer ${
+                            isSelected
+                              ? 'bg-gradient-to-br from-brand-purple to-indigo-600 text-white border-brand-purple shadow-md shadow-brand-purple/40 ring-2 ring-brand-purple/40 scale-[1.02]'
+                              : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200/90 hover:border-slate-300 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700/90 dark:hover:bg-slate-700/80 dark:hover:text-white dark:hover:border-slate-600 shadow-sm'
+                          }`}
+                        >
+                          <m.icon size={16} className={isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-300'} />
+                          <span className="text-[9px] font-black uppercase tracking-wider">{m.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* გადამხდელი */}
+                  <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block pt-2">
+                    გადამხდელი:
+                  </label>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {[
+                      { id: 'personal', label: 'პირადი', icon: Users },
+                      { id: 'insurance', label: 'სადაზღვევო', icon: Activity },
+                      { id: 'corporate', label: 'შპს / კორპ.', icon: Briefcase }
+                    ].map(p => {
+                      const isSelected = payerType === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          disabled={isReadOnly}
+                          onClick={() => setPayerType(p.id)}
+                          className={`py-3.5 px-2 rounded-2xl flex flex-col items-center gap-1.5 transition-all duration-200 border cursor-pointer ${
+                            isSelected
+                              ? 'bg-gradient-to-br from-brand-purple to-indigo-600 text-white border-brand-purple shadow-md shadow-brand-purple/40 ring-2 ring-brand-purple/40 scale-[1.02]'
+                              : 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200/90 hover:border-slate-300 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700/90 dark:hover:bg-slate-700/80 dark:hover:text-white dark:hover:border-slate-600 shadow-sm'
+                          }`}
+                        >
+                          <p.icon size={16} className={isSelected ? 'text-white' : 'text-slate-500 dark:text-slate-300'} />
+                          <span className="text-[9px] font-black uppercase tracking-wider">{p.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* დაზღვევა */}
+                  {payerType === 'insurance' && (
+                    <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700/80 animate-in slide-in-from-top-2">
+                      <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">დაზღვევის დეტალები:</label>
+                      <input 
+                        type="text" 
+                        placeholder="სადაზღვევო კომპანია" 
+                        disabled={isReadOnly}
+                        value={insuranceInfo.company} 
+                        onChange={e => setInsuranceInfo({...insuranceInfo, company: e.target.value})}
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-3 px-4 outline-none text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all shadow-sm"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input 
+                          type="text" 
+                          placeholder="პოლისის №" 
+                          disabled={isReadOnly}
+                          value={insuranceInfo.policyNum} 
+                          onChange={e => setInsuranceInfo({...insuranceInfo, policyNum: e.target.value})}
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-3 px-4 outline-none text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all shadow-sm"
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="დასტურის კოდი" 
+                          disabled={isReadOnly}
+                          value={insuranceInfo.approvalCode} 
+                          onChange={e => setInsuranceInfo({...insuranceInfo, approvalCode: e.target.value})}
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-3 px-4 outline-none text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/20 transition-all shadow-sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* გადახდილი თანხა */}
+                  <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-700/80">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block">
+                        გადახდილი თანხა:
+                      </label>
+                      {isPaidAmountCustom && !isReadOnly && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsPaidAmountCustom(false);
+                            setPaidAmount(totalAmount);
+                          }}
+                          className="text-[10px] font-black text-brand-purple hover:underline cursor-pointer"
+                        >
+                          სრული თანხა ({totalAmount.toFixed(2)} ₾)
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <CreditCard
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-purple"
+                        size={18}
+                      />
+                      <input
+                        type="number"
+                        disabled={isReadOnly}
+                        value={paidAmount}
+                        onChange={(e) => {
+                          setIsPaidAmountCustom(true);
+                          setPaidAmount(e.target.value);
+                        }}
+                        className="w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 focus:border-brand-purple focus:ring-2 focus:ring-brand-purple/30 rounded-2xl py-3.5 pl-11 pr-4 outline-none font-black text-xl text-slate-900 dark:text-white shadow-inner transition-all"
+                      />
+                    </div>
+                    {totalAmount > Number(paidAmount || 0) && (
+                      <div className="flex justify-between items-center text-xs font-bold text-red-500 mt-2 px-1">
+                        <span>დარჩენილი დავალიანება (ვალი):</span>
+                        <span className="font-black text-sm">{(totalAmount - Number(paidAmount || 0)).toFixed(2)} ₾</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-5 bg-surface-soft/60 border border-border-main rounded-[28px] text-center">
+                <p className="text-xs font-bold text-text-muted leading-relaxed">
+                  ფინანსური ანგარიშსწორება და შეკვეთის ჩახურვა ხორციელდება მიმღების/მენეჯერის მიერ.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

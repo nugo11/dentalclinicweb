@@ -125,8 +125,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     });
   }
 
-  // საწყობი: ადმინი, მენეჯერი, ექიმი, ბუღალტერი
-  if (isAdmin || isManager || isDoctor || isAccountant) {
+  // საწყობი: ადმინი, მენეჯერი, ბუღალტერი (ექიმს არ აქვს წვდომა)
+  if (isAdmin || isManager || isAccountant) {
     menuItems.push({ icon: Package, label: "საწყობი", path: "/inventory" });
   }
 

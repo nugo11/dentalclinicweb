@@ -7,7 +7,7 @@ const QuickActions = () => {
   const navigate = useNavigate();
   const { role } = useAuth();
   
-  const canAddPatient = ['admin', 'manager', 'receptionist', 'doctor'].includes(role);
+  const canAddPatient = ['admin', 'manager', 'receptionist'].includes(role);
 
   const actions = [
     { icon: UserPlus, label: 'პაციენტი', color: 'bg-emerald-500', shadow: 'shadow-emerald-500/20', to: '/patients' },
@@ -18,6 +18,9 @@ const QuickActions = () => {
   const filteredActions = actions.filter(action => {
     if (role === 'accountant') {
       return action.label === 'ინვოისი';
+    }
+    if (role === 'doctor') {
+      return action.label !== 'ინვოისი';
     }
     return true;
   });

@@ -366,7 +366,9 @@ const Dashboard = () => {
                   <SalaryReminder staff={staff} paidStaffIds={paidStaffIds} />
                 )}
 
-                <RecentTreatments appointments={appointments} />
+                {role !== 'doctor' && (
+                  <RecentTreatments appointments={appointments} />
+                )}
 
                 {/* Inventory Low Stock Alert */}
                 {(role === 'admin' || role === 'manager') && lowStockItems.length > 0 && (

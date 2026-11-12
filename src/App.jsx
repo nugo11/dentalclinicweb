@@ -129,7 +129,7 @@ function AppContent() {
         } />
         
         <Route path="/inventory" element={
-          <PrivateRoute title="ინვენტარი" allowedRoles={['admin', 'manager', 'doctor', 'accountant']}>
+          <PrivateRoute title="ინვენტარი" allowedRoles={['admin', 'manager', 'accountant']}>
             <Inventory />
           </PrivateRoute>
         } />

@@ -79,9 +79,11 @@ const CalendarPage = () => {
         let title = "";
         let backgroundColor = data.color || "#7C3AED";
 
+        const pName = data.patientName || data.title || "ჯავშანი";
+
         if (role === "doctor") {
           if (data.doctorId === myDoctorId) {
-            title = data.patientName;
+            title = pName;
             backgroundColor = data.color || "#7C3AED";
           } else {
             title = data.doctorName ? `დაკავებულია (${data.doctorName})` : "დაკავებულია";
@@ -89,8 +91,8 @@ const CalendarPage = () => {
           }
         } else if (isInternal) {
           title = (role === "admin" || role === "receptionist") && data.doctorName 
-            ? `${data.patientName} - ${data.doctorName}` 
-            : data.patientName;
+            ? `${pName} - ${data.doctorName}` 
+            : pName;
         } else {
           title = data.doctorName ? `დაკავებულია (${data.doctorName})` : "დაკავებულია (სხვა კლინიკა)";
           backgroundColor = "#94A3B8"; 
@@ -157,20 +159,18 @@ const CalendarPage = () => {
                 </div>
               </div>
 
-              {role !== 'manager' && (
-                <button
-                  onClick={() => {
-                    setSelectedDate(new Date());
-                    setIsModalOpen(true);
-                  }}
-                  className="flex items-center justify-center gap-3 bg-brand-purple text-white px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl shadow-xl shadow-brand-purple/20 hover:bg-brand-deep transition-all active:scale-95 w-full sm:w-auto"
-                >
-                  <Plus size={18} />
-                  <span className="text-[11px] font-black uppercase tracking-widest">
-                    ჩანიშვნა
-                  </span>
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  setSelectedDate(new Date());
+                  setIsModalOpen(true);
+                }}
+                className="flex items-center justify-center gap-3 bg-brand-purple text-white px-5 py-3.5 sm:px-6 sm:py-4 rounded-2xl shadow-xl shadow-brand-purple/20 hover:bg-brand-deep transition-all active:scale-95 w-full sm:w-auto"
+              >
+                <Plus size={18} />
+                <span className="text-[11px] font-black uppercase tracking-widest">
+                  ჩანიშვნა
+                </span>
+              </button>
             </div>
 
             {/* კალენდრის კონტეინერი */}
@@ -214,6 +214,8 @@ const CalendarPage = () => {
                     title: info.event.title,
                     start: info.event.start,
                     end: info.event.end,
+                    patientId: info.event.extendedProps?.patientId,
+                    isExternal: info.event.extendedProps?.isExternal,
                     extendedProps: info.event.extendedProps,
                   });
                   setIsEditModalOpen(true);

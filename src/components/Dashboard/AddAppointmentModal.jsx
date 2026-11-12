@@ -8,6 +8,7 @@ import {
   addDoc,
   serverTimestamp,
   doc,
+  getDoc,
   updateDoc,
   increment,
 } from "firebase/firestore";
@@ -30,6 +31,7 @@ import FormInput from "../Common/FormInput";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 import { formatPhone, cleanPhone, validatePhone } from "../../utils/phoneFormatter";
 import { scrollToFirstError } from "../../utils/scrollHelper";
+import { normalizePlanId } from "../../config/plans";
 
 const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   useLockBodyScroll(isOpen);
@@ -42,7 +44,8 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   const [doctors, setDoctors] = useState([]);
   const [formErrors, setFormErrors] = useState({});
   const [toast, setToast] = useState({ show: false, message: "" });
-  const canSelectDoctor = role === "admin" || role === "receptionist";
+  const isDoctor = role === "doctor";
+  const canSelectDoctor = role === "admin" || role === "receptionist" || role === "manager";
   const isReceptionist = role === "receptionist";
 
   const [formData, setFormData] = useState({
@@ -81,6 +84,11 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
 
   useEffect(() => {
     if (isOpen) {
+      if (isDoctor) {
+        setIsExternal(true);
+      } else {
+        setIsExternal(false);
+      }
       const dateObj = selectedDate ? new Date(selectedDate) : new Date();
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, "0");
@@ -94,7 +102,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         startTime: `${hours}:${mins}`,
       }));
     }
-  }, [isOpen, selectedDate]);
+  }, [isOpen, selectedDate, isDoctor]);
 
   useEffect(() => {
     const searchPatients = async () => {
@@ -157,34 +165,75 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   };
 
   const sendAppointmentSms = async (patientPhone, date, time, service, doctorName) => {
-    const planKey = (clinicData?.plan || "free").toLowerCase();
-    if (!patientPhone || patientPhone === "არ არის მითითებული" || planKey === "free") return;
-    
-    // ნომრის ფორმატირება
-    let formattedPhone = patientPhone.replace(/\D/g, "");
-    if (formattedPhone.length === 9) formattedPhone = "995" + formattedPhone;
-    if (formattedPhone.length !== 12) return;
+    if (!patientPhone || patientPhone === "არ არის მითითებული") return;
+
+    // კლინიკის პაკეტის დადგენა (Free პაკეტზე SMS არ იგზავნება, ყველა დანარჩენზე - Custom, Business და ა.შ. იგზავნება)
+    let clinicInfo = clinicData;
+    const clinicId = userData?.clinicId || activeStaff?.clinicId;
+    if ((!clinicInfo || !clinicInfo.plan) && clinicId) {
+      try {
+        const cSnap = await getDoc(doc(db, "clinics", clinicId));
+        if (cSnap.exists()) {
+          clinicInfo = { id: cSnap.id, ...cSnap.data() };
+        }
+      } catch (err) {
+        console.warn("Could not check clinic plan for SMS:", err);
+      }
+    }
+
+    const rawPlan = (clinicInfo?.plan || "free").toString().toLowerCase().trim();
+    const currentPlan = normalizePlanId(rawPlan);
+
+    if (currentPlan === "free") {
+      console.log("SMS შეტყობინება გაუქმებულია: Free პაკეტს არ გააჩნია SMS ფუნქციონალი.");
+      return;
+    }
+
+    // ნომრის გაწმენდა და ფორმატირება (995...)
+    const cleaned = cleanPhone(patientPhone);
+    let formattedPhone = "";
+    if (cleaned.startsWith("5") && cleaned.length === 9) {
+      formattedPhone = "995" + cleaned;
+    } else {
+      const digits = String(patientPhone).replace(/\D/g, "");
+      if (digits.length === 9 && digits.startsWith("5")) {
+        formattedPhone = "995" + digits;
+      } else if (digits.length === 12 && digits.startsWith("995")) {
+        formattedPhone = digits;
+      }
+    }
+
+    if (!formattedPhone || formattedPhone.length !== 12) {
+      console.warn("SMS canceled: invalid phone number length", patientPhone, formattedPhone);
+      return;
+    }
 
     // ტრანსლიტერაცია და მონაცემების მომზადება
-    const clinicLatin = transliterateToLatin(clinicData?.clinicName || "Clinic");
-    const serviceLatin = transliterateToLatin(service);
+    const clinicLatin = transliterateToLatin(clinicInfo?.clinicName || "Clinic");
+    const serviceLatin = transliterateToLatin(service || "Konsultacia");
     const doctorLatin = transliterateToLatin(doctorName || "Doctor");
-    const clinicPhone = clinicData?.phone || "";
+    const clinicPhone = clinicInfo?.phone || "";
 
-    // თქვენი მოთხოვნილი სტრუქტურა
-    const message = `javshani ${clinicLatin}\nProcedura: ${serviceLatin}\nTarigi ${date} - ${time}\n${doctorLatin}\ncvlilebis shemtxvevashi, dagvireket ${clinicPhone}`;
+    let message = `javshani ${clinicLatin}\nProcedura: ${serviceLatin}\nTarigi ${date} - ${time}\n${doctorLatin}`;
+    if (clinicPhone) {
+      message += `\ncvlilebis shemtxvevashi, dagvireket ${clinicPhone}`;
+    }
 
     try {
       const apiKey = import.meta.env.VITE_UBILL_API_KEY;
-      await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+      const resp = await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brandID: 2, 
           numbers: [formattedPhone],
-          text: message
+          text: message,
+          otp: true // აუცილებელია ოპერატორების (Magti, Silknet, Cellfie) მიერ SMS-ის დაუყოვნებლივ მისატანად
         })
       });
+      const data = await resp.json().catch(() => null);
+      console.log("Appointment SMS Sent successfully:", data);
+      return data;
     } catch (err) {
       console.error("SMS Notification Error:", err);
     }
@@ -192,6 +241,13 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ექიმს არ შეუძლია ჩემ კლინიკაში ჯავშნის დამატება (მხოლოდ სხვა კლინიკაში)
+    if (isDoctor && !isExternal) {
+      setToast({ show: true, message: "ექიმს არ აქვს საკუთარ კლინიკაში ჯავშნის დამატების უფლება." });
+      setTimeout(() => setToast({ show: false, message: "" }), 3500);
+      return;
+    }
 
     // შევამოწმოთ თუ ადმინია წარსულში ჯავშნისას
     const now = new Date();
@@ -273,10 +329,24 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         ? `${formData.externalPatientName} (${formData.externalClinicName})`
         : selectedPatient?.fullName;
 
+      // პაციენტის ტელეფონის წამოღება SMS-ისთვის და ჯავშანში ჩასაწერად
+      let phoneToSend = selectedPatient?.phone || "";
+      if (!phoneToSend && selectedPatient?.id && !isExternal) {
+        try {
+          const patSnap = await getDoc(doc(db, "patients", selectedPatient.id));
+          if (patSnap.exists()) {
+            phoneToSend = patSnap.data().phone || "";
+          }
+        } catch (patErr) {
+          console.warn("Could not fetch patient phone for appointment:", patErr);
+        }
+      }
+
       await addDoc(collection(db, "appointments"), {
         clinicId,
         patientId: isExternal ? "external" : selectedPatient?.id,
         patientName: displayTitle,
+        patientPhone: phoneToSend || "",
         doctorId: targetDoctorId,
         doctorName: targetDoctorName,
         start: startDateTime.toISOString(),
@@ -300,11 +370,10 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         }
       }
 
-      // SMS გაგზავნა ფასიანი პაკეტებისთვის
-      const planKey = (clinicData?.plan || "free").toLowerCase();
-      if (!isExternal && selectedPatient?.phone && planKey !== "free") {
+      // SMS გაგზავნა ჯავშნისას (მხოლოდ ფასიან პაკეტებზე: Custom, Business და ა.შ. Free-ზე არ იგზავნება)
+      if (!isExternal && phoneToSend) {
         const docName = canSelectDoctor ? formData.doctorName : (activeStaff?.fullName || userData?.fullName);
-        sendAppointmentSms(selectedPatient.phone, formData.date, formData.startTime, formData.service, docName);
+        await sendAppointmentSms(phoneToSend, formData.date, formData.startTime, formData.service, docName);
       }
 
       onClose();
@@ -369,13 +438,34 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 md:p-8 space-y-6 overflow-y-auto max-h-[80vh] md:max-h-[70vh] overscroll-contain custom-scrollbar">
-          {/* მხოლოდ ექიმებს შეუძლიათ სხვა კლინიკის ჯავშნები */}
-          {!isReceptionist && (
-            <div className="flex p-1 bg-surface-soft rounded-2xl">
-                <button type="button" onClick={() => { setIsExternal(false); setSelectedPatient(null); setSearchTerm(""); }} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isExternal ? "bg-surface text-brand-purple shadow-sm" : "text-text-muted hover:text-gray-600"}`}>ჩემი კლინიკა</button>
-                <button type="button" onClick={() => setIsExternal(true)} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isExternal ? "bg-slate-500 text-white shadow-sm" : "text-text-muted hover:text-gray-600"}`}>სხვა კლინიკა</button>
+          {/* რეჟიმის არჩევა: ექიმს შეუძლია მხოლოდ სხვა კლინიკაში ჯავშნის მონიშვნა */}
+          {isDoctor ? (
+            <div className="p-3 bg-slate-500/10 border border-slate-500/20 rounded-2xl flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">
+                სხვა კლინიკაში ჯავშნის მონიშვნა
+              </span>
+              <span className="text-[9px] font-black uppercase px-2.5 py-1 bg-slate-500 text-white rounded-lg">
+                პირადი განრიგი
+              </span>
             </div>
-          )}
+          ) : !isReceptionist ? (
+            <div className="flex p-1 bg-surface-soft rounded-2xl">
+              <button 
+                type="button" 
+                onClick={() => { setIsExternal(false); setSelectedPatient(null); setSearchTerm(""); }} 
+                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${!isExternal ? "bg-surface text-brand-purple shadow-sm" : "text-text-muted hover:text-gray-600"}`}
+              >
+                ჩემი კლინიკა
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setIsExternal(true)} 
+                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isExternal ? "bg-slate-500 text-white shadow-sm" : "text-text-muted hover:text-gray-600"}`}
+              >
+                სხვა კლინიკა
+              </button>
+            </div>
+          ) : null}
 
           {!isExternal ? (
             <div className="space-y-3 relative z-50">

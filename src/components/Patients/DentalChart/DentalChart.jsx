@@ -480,18 +480,20 @@ const DentalChart = ({ data = {}, onToothUpdate }) => {
           </div>
         </div>
 
-        {/* მოქმედების ღილაკი */}
-        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-          <button
-            type="button"
-            onClick={() => onToothUpdate && onToothUpdate(inspectedNumber)}
-            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-brand-purple text-white text-xs font-black hover:bg-brand-purple/90 transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
-          >
-            <Edit3 size={15} />
-            <span>სტატუსის შეცვლა (#{inspectedNumber})</span>
-            <ChevronRight size={14} className="opacity-70" />
-          </button>
-        </div>
+        {/* მოქმედების ღილაკი - ჩნდება მხოლოდ მაშინ, როდესაც რედაქტირება დაშვებულია */}
+        {onToothUpdate && (
+          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+            <button
+              type="button"
+              onClick={() => onToothUpdate && onToothUpdate(inspectedNumber)}
+              className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-brand-purple text-white text-xs font-black hover:bg-brand-purple/90 transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
+            >
+              <Edit3 size={15} />
+              <span>სტატუსის შეცვლა (#{inspectedNumber})</span>
+              <ChevronRight size={14} className="opacity-70" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

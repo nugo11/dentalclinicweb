@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { Clock, Calendar, ChevronRight, Activity, Inbox, X } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const PatientHistory = ({ patientId }) => {
+  const { role } = useAuth();
+  const isDoctor = role === 'doctor';
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedVisit, setSelectedVisit] = useState(null);
@@ -172,7 +175,7 @@ const PatientHistory = ({ patientId }) => {
                                 {selectedVisit.billedServices.map((s, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
                                         <span className="text-text-main font-bold">{s.name}</span>
-                                        <span className="text-brand-purple font-black">{s.price} ₾</span>
+                                        {!isDoctor && <span className="text-brand-purple font-black">{s.price} ₾</span>}
                                     </div>
                                 ))}
                             </div>
@@ -187,15 +190,15 @@ const PatientHistory = ({ patientId }) => {
                                 {selectedVisit.extraMaterials.map((m, i) => (
                                     <div key={i} className="flex justify-between items-center text-xs">
                                         <span className="text-text-main font-bold">{m.name} <span className="text-text-muted ml-1">x{m.amount}</span></span>
-                                        <span className="text-amber-600 font-black">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)} ₾</span>
+                                        {!isDoctor && <span className="text-amber-600 font-black">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)} ₾</span>}
                                     </div>
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {/* Financials */}
-                    {selectedVisit.price !== undefined && (
+                    {/* Financials (ექიმს არ უჩანს) */}
+                    {!isDoctor && selectedVisit.price !== undefined && (
                         <div className="bg-brand-deep p-5 rounded-2xl text-white shadow-lg">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-[10px] font-black uppercase tracking-widest opacity-70">ჯამური ღირებულება</span>

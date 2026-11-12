@@ -193,15 +193,14 @@ const Treatments = () => {
                           const canFinalize = 
                             role === 'admin' || 
                             role === 'manager' || 
-                            role === 'receptionist' || 
-                            (role === 'doctor' && order.doctorId === (activeStaff?.id || userData?.uid));
+                            role === 'receptionist';
                           
                           const btnReadOnly = !canFinalize;
 
                           return (
                             <button
                               onClick={() => handleOpenModal(order)}
-                              className={`flex-1 md:flex-none px-8 py-4 ${btnReadOnly ? 'bg-surface-soft text-text-muted' : 'bg-brand-purple text-white'} rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg ${btnReadOnly ? '' : 'shadow-brand-purple/20 hover:bg-brand-deep'} transition-all flex items-center justify-center gap-3 cursor-pointer`}
+                              className={`flex-1 md:flex-none px-8 py-4 ${btnReadOnly ? 'bg-surface-soft text-text-muted hover:text-text-main' : 'bg-brand-purple text-white shadow-brand-purple/20 hover:bg-brand-deep'} rounded-[20px] font-black text-[11px] uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-3 cursor-pointer`}
                             >
                               {btnReadOnly ? <FileText size={18} /> : <Plus size={18} />}
                               {btnReadOnly ? 'ნახვა' : 'გაფორმება'}

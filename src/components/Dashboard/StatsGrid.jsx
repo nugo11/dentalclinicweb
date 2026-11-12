@@ -35,16 +35,18 @@ const StatsGrid = ({ patientsGrowth = 0, inventoryAlerts = 0, monthlyIncome = 0,
         </>
       )}
 
-      <StatCard 
-        title="ინვენტარის განგაში" 
-        value={inventoryAlerts} 
-        desc="შესავსები ნივთები"
-        icon={Package} 
-        iconColor="text-amber-500"
-        bgColor="bg-amber-500/10"
-        trend={inventoryAlerts > 0 ? "ყურადღება" : "წესრიგშია"}
-        isAlert={inventoryAlerts > 0}
-      />
+      {role !== 'doctor' && (
+        <StatCard 
+          title="ინვენტარის განგაში" 
+          value={inventoryAlerts} 
+          desc="შესავსები ნივთები"
+          icon={Package} 
+          iconColor="text-amber-500"
+          bgColor="bg-amber-500/10"
+          trend={inventoryAlerts > 0 ? "ყურადღება" : "წესრიგშია"}
+          isAlert={inventoryAlerts > 0}
+        />
+      )}
 
       <StatCard 
         title="თვიური ზრდა" 

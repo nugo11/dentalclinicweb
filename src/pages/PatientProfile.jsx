@@ -46,6 +46,7 @@ const STATUS_LABELS_KA = {
 const PatientProfile = () => {
   const { id } = useParams();
   const { userData, currentUser, activeStaff, role, isAdmin } = useAuth();
+  const isDoctor = role === "doctor";
   const isReceptionist = role === "receptionist";
   const canEditMedical = role === "admin" || role === "doctor";
   const navigate = useNavigate();
@@ -142,11 +143,17 @@ const PatientProfile = () => {
         return;
       }
       const patientRef = doc(db, "patients", id);
+      // ექიმს ეზღუდება პირადი მონაცემების ცვლილება (ტელეფონი, ელ-ფოსტა, მისამართი, სქესი, დაბადების თარიღი, პირადი ნომერი)
       const dataToSave = {
         ...patientData,
         fullName: patientData.fullName.trim(),
-        personalId: patientData.personalId ? patientData.personalId.replace(/\D/g, '') : "",
-        phone: patientData.phone ? formatPhone(patientData.phone) : ""
+        personalId: isDoctor && originalPatientData ? (originalPatientData.personalId || "") : (patientData.personalId ? patientData.personalId.replace(/\D/g, '') : ""),
+        phone: isDoctor && originalPatientData ? (originalPatientData.phone || "") : (patientData.phone ? formatPhone(patientData.phone) : ""),
+        email: isDoctor && originalPatientData ? (originalPatientData.email || "") : (patientData.email || ""),
+        actualRegion: isDoctor && originalPatientData ? (originalPatientData.actualRegion || "") : (patientData.actualRegion || ""),
+        actualResidenceAddress: isDoctor && originalPatientData ? (originalPatientData.actualResidenceAddress || "") : (patientData.actualResidenceAddress || ""),
+        gender: isDoctor && originalPatientData ? (originalPatientData.gender || "") : (patientData.gender || ""),
+        birthDate: isDoctor && originalPatientData ? (originalPatientData.birthDate || "") : (patientData.birthDate || ""),
       };
       await updateDoc(patientRef, dataToSave);
       
@@ -324,7 +331,7 @@ const PatientProfile = () => {
                   </h1>
                 )}
                 <div className="flex flex-wrap gap-3 justify-center md:justify-start items-center">
-                  {isEditing ? (
+                  {isEditing && !isDoctor ? (
                     <div className="flex flex-col">
                       <input 
                         type="text"
@@ -396,7 +403,7 @@ const PatientProfile = () => {
                           ? "მდედრობითი"
                           : "---"
                     }
-                    editable={isEditing}
+                    editable={isEditing && !isDoctor}
                     type="select"
                     options={[
                       { value: "male", label: "მამრობითი" },
@@ -410,7 +417,7 @@ const PatientProfile = () => {
                     label="დაბადების თარიღი"
                     icon={Calendar}
                     value={patientData.birthDate}
-                    editable={isEditing}
+                    editable={isEditing && !isDoctor}
                     type="date"
                     max={new Date().toISOString().split("T")[0]}
                     error={editErrors.birthDate}
@@ -427,7 +434,7 @@ const PatientProfile = () => {
                   label="ტელეფონი"
                   icon={Phone}
                   value={patientData.phone}
-                  editable={isEditing}
+                  editable={isEditing && !isDoctor}
                   type="phone"
                   error={editErrors.phone}
                   onChange={(val) => {
@@ -442,7 +449,7 @@ const PatientProfile = () => {
                   label="ელ-ფოსტის მისამართი"
                   icon={Mail}
                   value={patientData.email}
-                  editable={isEditing}
+                  editable={isEditing && !isDoctor}
                   type="email"
                   onChange={(val) =>
                     setPatientData({ ...patientData, email: val })
@@ -453,7 +460,7 @@ const PatientProfile = () => {
                   label="მისამართი (რეგიონი ან ქალაქი)"
                   icon={MapPin}
                   value={patientData.actualRegion}
-                  editable={isEditing}
+                  editable={isEditing && !isDoctor}
                   onChange={(val) =>
                     setPatientData({ ...patientData, actualRegion: val })
                   }
@@ -463,7 +470,7 @@ const PatientProfile = () => {
                   label="ფაქტობრივი მისამართი (რაიონი ან ქუჩა)"
                   icon={Map}
                   value={patientData.actualResidenceAddress}
-                  editable={isEditing}
+                  editable={isEditing && !isDoctor}
                   onChange={(val) =>
                     setPatientData({ ...patientData, actualResidenceAddress: val })
                   }

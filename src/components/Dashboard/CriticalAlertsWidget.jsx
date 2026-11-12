@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Phone, ChevronRight, X, ShieldAlert, Sparkles } from 'lucide-react';
-import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 
 const CriticalAlertsWidget = ({ role, clinicData }) => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-
-  useLockBodyScroll(isOpen);
 
   const criticalItems = [];
 
@@ -41,12 +38,12 @@ const CriticalAlertsWidget = ({ role, clinicData }) => {
     <>
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 overscroll-none touch-action-none" 
+          className="fixed inset-0 z-40 bg-black/10 sm:bg-transparent" 
           onClick={() => setIsOpen(false)} 
         />
       )}
       <div 
-        className="fixed right-4 sm:right-8 z-40 font-nino bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6"
+        className="fixed right-4 sm:right-8 z-50 font-nino bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6"
       >
         {/* Floating Alert Trigger Pill */}
         {!isOpen && (

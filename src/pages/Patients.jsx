@@ -10,7 +10,7 @@ import PatientsTable from '../components/Patients/PatientsTable';
 import AddPatientSlideOver from '../components/Patients/AddPatientSlideOver';
 
 const Patients = () => {
-  const { clinicData } = useAuth();
+  const { clinicData, role } = useAuth();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialSearch = searchParams.get('search') || "";
@@ -26,15 +26,17 @@ const Patients = () => {
 
   useEffect(() => {
     if (searchParams.get('add') === 'true' && !loading) {
-      if (!isLimitReached) {
-        setIsAddModalOpen(true);
-      } else {
-        alert("პაციენტების ლიმიტი ამოწურულია. გთხოვთ განაახლოთ ტარიფი.");
+      if (role !== 'doctor') {
+        if (!isLimitReached) {
+          setIsAddModalOpen(true);
+        } else {
+          alert("პაციენტების ლიმიტი ამოწურულია. გთხოვთ განაახლოთ ტარიფი.");
+        }
       }
       // წავშალოთ პარამეტრი URL-დან სისუფთავისთვის
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [location.search, isLimitReached, loading]);
+  }, [location.search, isLimitReached, loading, role]);
 
   return (
     <>
@@ -67,24 +69,26 @@ const Patients = () => {
                   </div>
                 </div>
 
-                <button
-                  disabled={isLimitReached}
-                  onClick={() => setIsAddModalOpen(true)}
-                  className={`flex items-center gap-3 px-6 py-4 rounded-[20px] shadow-xl transition-all active:scale-95 group
-                    ${isLimitReached
-                      ? 'bg-surface-soft text-text-muted cursor-not-allowed shadow-none'
-                      : 'bg-brand-purple text-white hover:bg-brand-deep shadow-brand-purple/20'
-                    }`}
-                >
-                  {isLimitReached ? (
-                    <span className="text-[11px] font-black uppercase tracking-widest italic">ლიმიტი ამოწურულია</span>
-                  ) : (
-                    <>
-                      <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-                      <span className="text-[11px] font-black uppercase tracking-widest">ახალი პაციენტი</span>
-                    </>
-                  )}
-                </button>
+                {role !== 'doctor' && (
+                  <button
+                    disabled={isLimitReached}
+                    onClick={() => setIsAddModalOpen(true)}
+                    className={`flex items-center gap-3 px-6 py-4 rounded-[20px] shadow-xl transition-all active:scale-95 group
+                      ${isLimitReached
+                        ? 'bg-surface-soft text-text-muted cursor-not-allowed shadow-none'
+                        : 'bg-brand-purple text-white hover:bg-brand-deep shadow-brand-purple/20'
+                      }`}
+                  >
+                    {isLimitReached ? (
+                      <span className="text-[11px] font-black uppercase tracking-widest italic">ლიმიტი ამოწურულია</span>
+                    ) : (
+                      <>
+                        <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                        <span className="text-[11px] font-black uppercase tracking-widest">ახალი პაციენტი</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               <div className="flex-1 min-h-0">
