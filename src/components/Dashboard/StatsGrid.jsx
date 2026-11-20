@@ -35,7 +35,7 @@ const StatsGrid = ({ patientsGrowth = 0, inventoryAlerts = 0, monthlyIncome = 0,
         </>
       )}
 
-      {role !== 'doctor' && (
+      {(role === 'admin' || role === 'manager' || role === 'accountant') && (
         <StatCard 
           title="ინვენტარის განგაში" 
           value={inventoryAlerts} 

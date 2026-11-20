@@ -19,7 +19,7 @@ const ClinicWarehouseModal = ({
   const [sortKey, setSortKey] = useState("deficit"); // 'deficit' | 'name' | 'category' | 'quantity' | 'minThreshold' | 'price' | 'total'
   const [sortOrder, setSortOrder] = useState("asc"); // 'asc' | 'desc'
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize] = useState(10);
 
   // Reset pagination and search when clinic changes
   React.useEffect(() => {

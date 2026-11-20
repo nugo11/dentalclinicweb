@@ -22,7 +22,6 @@ import {
   History,
   ShieldCheck
 } from "lucide-react";
-import { auth } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 import { getRoleLabel } from "../../utils/roleUtils";
@@ -35,10 +34,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   useLockBodyScroll(isMobile && isOpen);
   
-  const [expandedMenus, setExpandedMenus] = useState({ 
-    finance: false, 
-    management: false 
-  });
+  const [expandedMenus, setExpandedMenus] = useState(() => ({
+    finance:
+      location.pathname.startsWith("/finance") ||
+      location.pathname === "/treatments" ||
+      location.pathname === "/archive" ||
+      location.pathname === "/salary-archive",
+    management:
+      location.pathname === "/staff" ||
+      location.pathname === "/services" ||
+      location.pathname === "/settings" ||
+      location.pathname === "/settings/billing",
+  }));
+  const [prevPathname, setPrevPathname] = useState(location.pathname);
 
   const isFreePlan = clinicData?.plan === "free";
   const isDoctor = role === "doctor";
@@ -46,24 +54,25 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const isReceptionist = role === "receptionist";
   const isManager = role === "manager" || isAdmin;
 
-  useEffect(() => {
-    const isFinancePath = 
-      location.pathname.startsWith("/finance") || 
-      location.pathname === "/treatments" || 
+  if (location.pathname !== prevPathname) {
+    setPrevPathname(location.pathname);
+    const isFinancePath =
+      location.pathname.startsWith("/finance") ||
+      location.pathname === "/treatments" ||
       location.pathname === "/archive" ||
       location.pathname === "/salary-archive";
 
-    const isManagementPath = 
-      location.pathname === "/staff" || 
-      location.pathname === "/services" || 
+    const isManagementPath =
+      location.pathname === "/staff" ||
+      location.pathname === "/services" ||
       location.pathname === "/settings" ||
       location.pathname === "/settings/billing";
 
     setExpandedMenus({
       finance: isFinancePath,
-      management: isManagementPath
+      management: isManagementPath,
     });
-  }, [location.pathname]);
+  }
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
@@ -98,22 +107,19 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     menuItems.push({ icon: Calendar, label: "კალენდარი", path: "/calendar" });
   }
 
-  // ექიმისთვის: მიმდინარე ვიზიტები (ჯავშნები / ანგარიშსწორება)
-  if (isDoctor) {
-    menuItems.push({ icon: FileText, label: "მიმდინარე ვიზიტები", path: "/treatments" });
-  }
-
-  // ფინანსები: ადმინი, მენეჯერი, ბუღალტერი, რეგისტრატორი
+  // ფინანსები: ადმინი, მენეჯერი, ბუღალტერი, რეგისტრატორი (ექიმს არ აქვს წვდომა)
   const financeSubItems = [];
-  if (isAdmin || isManager || isAccountant) {
-    financeSubItems.push({ label: "მიმოხილვა", path: "/finance", icon: PieChart });
-  }
-  if (isAdmin || isManager || isAccountant || isReceptionist) {
-    financeSubItems.push({ label: "მიმდინარე", path: "/treatments", icon: FileText });
-    financeSubItems.push({ label: "არქივი", path: "/archive", icon: Archive });
-  }
-  if (isAdmin || isManager || isAccountant) {
-    financeSubItems.push({ label: "ხელფასები", path: "/salary-archive", icon: History });
+  if (!isDoctor) {
+    if (isAdmin || isManager || isAccountant) {
+      financeSubItems.push({ label: "მიმოხილვა", path: "/finance", icon: PieChart });
+    }
+    if (isAdmin || isManager || isAccountant || isReceptionist) {
+      financeSubItems.push({ label: "მიმდინარე", path: "/treatments", icon: FileText });
+      financeSubItems.push({ label: "არქივი", path: "/archive", icon: Archive });
+    }
+    if (isAdmin || isManager || isAccountant) {
+      financeSubItems.push({ label: "ხელფასები", path: "/salary-archive", icon: History });
+    }
   }
 
   if (financeSubItems.length > 0) {
@@ -313,22 +319,24 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         })}
       </nav>
 
-      {/* --- Upgrade / Plan Section --- */}
+      {/* --- Upgrade / Plan / Staff Section --- */}
       <div className="mt-auto mb-3 px-2 shrink-0">
         {isOpen ? (
           <div 
             onClick={() => isAdmin ? navigate('/settings/billing') : null}
-            className={`p-3.5 sm:p-5 rounded-[24px] sm:rounded-[32px] relative overflow-hidden transition-all duration-300 ${isAdmin ? 'cursor-pointer hover:brightness-105' : ''} ${isFreePlan ? 'bg-gradient-to-br from-brand-purple to-purple-700 shadow-xl shadow-brand-purple/20' : 'bg-surface/5 border border-white/10'}`}
+            className={`p-3.5 sm:p-5 rounded-[24px] sm:rounded-[32px] relative overflow-hidden transition-all duration-300 ${isAdmin ? 'cursor-pointer hover:brightness-105' : ''} ${isAdmin && isFreePlan ? 'bg-gradient-to-br from-brand-purple to-purple-700 shadow-xl shadow-brand-purple/20' : 'bg-surface/5 border border-white/10'}`}
           >
             <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Crown size={14} className={isFreePlan ? "text-white" : "text-brand-purple"} />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
-                   {clinicData?.plan === 'free' ? 'უფასო ტარიფი' : (clinicData?.plan || 'Business') + ' პაკეტი'}
-                </span>
-              </div>
+              {isAdmin && (
+                <div className="flex items-center gap-2 mb-1.5 pb-2.5 sm:pb-3.5 border-b border-white/10">
+                  <Crown size={14} className={isFreePlan ? "text-white" : "text-brand-purple"} />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">
+                     {clinicData?.plan === 'free' ? 'უფასო ტარიფი' : (clinicData?.plan || 'Business') + ' პაკეტი'}
+                  </span>
+                </div>
+              )}
               
-              <div className="mt-2.5 pt-2.5 sm:mt-3.5 sm:pt-3.5 border-t border-white/10">
+              <div>
                  <p className="text-[10px] font-black text-white uppercase tracking-widest truncate">{activeStaff?.fullName || userData?.fullName}</p>
                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-0.5">
                     {getRoleLabel(role)}
@@ -338,12 +346,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <div className="absolute -right-4 -bottom-4 w-16 h-16 bg-surface/10 rounded-full blur-xl"></div>
           </div>
         ) : (
-          <button 
-            onClick={() => isAdmin ? navigate('/settings/billing') : null}
-            className={`w-full aspect-square rounded-2xl flex items-center justify-center transition-all ${isFreePlan ? 'bg-brand-purple text-white animate-pulse shadow-lg shadow-brand-purple/40' : 'bg-surface/5 text-white/30 hover:text-white'}`}
-          >
-            <Crown size={20} />
-          </button>
+          isAdmin ? (
+            <button 
+              onClick={() => navigate('/settings/billing')}
+              className={`w-full aspect-square rounded-2xl flex items-center justify-center transition-all ${isFreePlan ? 'bg-brand-purple text-white animate-pulse shadow-lg shadow-brand-purple/40' : 'bg-surface/5 text-white/30 hover:text-white'}`}
+            >
+              <Crown size={20} />
+            </button>
+          ) : (
+            <div
+              className="w-full aspect-square rounded-2xl flex items-center justify-center bg-surface/5 text-white/70 font-black text-xs uppercase border border-white/10"
+              title={`${activeStaff?.fullName || userData?.fullName || ''} — ${getRoleLabel(role)}`}
+            >
+              {(activeStaff?.fullName || userData?.fullName || '?')[0]}
+            </div>
+          )
         )}
       </div>
 

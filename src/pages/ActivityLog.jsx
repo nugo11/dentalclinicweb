@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { db } from '../firebase';
 import { 
-  collection, query, where, orderBy, limit, 
-  getDocs, startAfter, Timestamp, onSnapshot
+  collection, query, where, limit, 
+  onSnapshot
 } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Dashboard/Sidebar';
@@ -19,67 +19,17 @@ import { getRoleLabel } from '../utils/roleUtils';
 const LOGS_PER_PAGE = 10;
 
 const ActivityLog = () => {
-  const { userData, role } = useAuth();
+  const { userData } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [lastDoc, setLastDoc] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const fetchLogs = async (isNextPage = false) => {
-    if (!userData?.clinicId) return;
-    
-    if (isNextPage) setLoadingMore(true);
-    else setLoading(true);
-
-    try {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-      let q = query(
-        collection(db, "activity"),
-        where("clinicId", "==", userData.clinicId),
-        limit(LOGS_PER_PAGE)
-      );
-
-      if (isNextPage && lastDoc) {
-        q = query(q, startAfter(lastDoc));
-      }
-
-      const snapshot = await getDocs(q);
-      const allNewLogs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
-      // Filter locally for the 7-day requirement to avoid composite index requirement
-      const newLogs = allNewLogs.filter(log => {
-        const logDate = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
-        return logDate >= sevenDaysAgo;
-      });
-
-      if (isNextPage) {
-        setLogs(prev => [...prev, ...newLogs]);
-      } else {
-        setLogs(newLogs);
-      }
-
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-      // If we filtered out some logs, we might have fewer than LOGS_PER_PAGE but there could be more
-      setHasMore(snapshot.docs.length === LOGS_PER_PAGE && newLogs.length > 0);
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
 
   useEffect(() => {
     if (!userData?.clinicId) return;
 
-    setLoading(true);
     // ბოლო 100 ლოგს მაინც წამოვიღებთ, რომ 7 დღის ფილტრმა იმუშაოს
     const q = query(
       collection(db, "activity"),
@@ -108,8 +58,6 @@ const ActivityLog = () => {
         });
 
       setLogs(processedLogs);
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-      setHasMore(snapshot.docs.length === 100);
       setLoading(false);
     }, (error) => {
       console.error("Error fetching logs:", error);
@@ -140,9 +88,12 @@ const ActivityLog = () => {
   };
 
   // Reset page when filtering or searching
-  useEffect(() => {
+  const activityFilterKey = `${searchTerm}|${filterType}`;
+  const [prevActivityFilterKey, setPrevActivityFilterKey] = useState(activityFilterKey);
+  if (activityFilterKey !== prevActivityFilterKey) {
+    setPrevActivityFilterKey(activityFilterKey);
     setCurrentPage(1);
-  }, [searchTerm, filterType]);
+  }
 
   const getActionIcon = (action) => {
     if (action.includes('patient')) return <User size={16} />;

@@ -76,7 +76,7 @@ const FormInput = ({
                     if (e.target && typeof e.target.showPicker === 'function') {
                       e.target.showPicker();
                     }
-                  } catch (err) {}
+                  } catch { /* ignore */ }
                 }
                 if (props.onClick) props.onClick(e);
               }}

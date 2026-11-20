@@ -31,7 +31,7 @@ export const scrollToFirstError = (containerOrSelector) => {
       if (focusable && typeof focusable.focus === 'function') {
         try {
           focusable.focus({ preventScroll: true });
-        } catch (e) {
+        } catch {
           focusable.focus();
         }
       }

@@ -1,46 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { X, Download, Smartphone, Globe, AlertTriangle, Activity } from 'lucide-react';
 
+const detectClientEnvironment = () => {
+  if (typeof navigator === 'undefined') {
+    return { isAndroid: false, isIOS: false, isChrome: false, browserName: '' };
+  }
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isAndroid = /Android/.test(ua);
+  const isSamsungBrowser = /SamsungBrowser/i.test(ua);
+  const isFirefox = /Firefox/i.test(ua) && !/Seamonkey/i.test(ua);
+  const isOpera = /OPR|Opera/i.test(ua);
+  const isEdge = /Edg/i.test(ua);
+  const isBrave = navigator.brave && typeof navigator.brave.isBrave === 'function';
+  const isChromeDetected = /Chrome/i.test(ua) && !/SamsungBrowser|OPR|Opera|Edg/i.test(ua);
+
+  let browserName = '';
+  if (isSamsungBrowser) browserName = 'Samsung Internet';
+  else if (isFirefox) browserName = 'Firefox';
+  else if (isOpera) browserName = 'Opera';
+  else if (isEdge) browserName = 'Edge';
+  else if (isChromeDetected) browserName = 'Chrome';
+
+  return {
+    isAndroid,
+    isIOS,
+    isChrome: Boolean(isChromeDetected || isBrave),
+    browserName,
+  };
+};
+
 const PWAInstallBanner = () => {
+  const [clientEnv] = useState(detectClientEnvironment);
+  const { isAndroid, isIOS, isChrome, browserName } = clientEnv;
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showAndroidModal, setShowAndroidModal] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [showChromeRequiredModal, setShowChromeRequiredModal] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isChrome, setIsChrome] = useState(false);
-  const [browserName, setBrowserName] = useState('');
 
   useEffect(() => {
     // --- Check if dismissed in this session ---
     const isDismissed = sessionStorage.getItem('pwa_banner_dismissed_session') === 'true';
     if (isDismissed) return;
-
-    const ua = navigator.userAgent;
-
-    // --- OS Detection ---
-    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-    const isAndroidDevice = /Android/.test(ua);
-    setIsIOS(isIOSDevice);
-    setIsAndroid(isAndroidDevice);
-
-    // --- Browser Detection ---
-    const isSamsungBrowser = /SamsungBrowser/i.test(ua);
-    const isFirefox = /Firefox/i.test(ua) && !/Seamonkey/i.test(ua);
-    const isOpera = /OPR|Opera/i.test(ua);
-    const isEdge = /Edg/i.test(ua);
-    const isBrave = navigator.brave && typeof navigator.brave.isBrave === 'function';
-    const isChromeDetected = /Chrome/i.test(ua) && !/SamsungBrowser|OPR|Opera|Edg/i.test(ua);
-
-    setIsChrome(isChromeDetected || isBrave);
-
-    if (isSamsungBrowser) setBrowserName('Samsung Internet');
-    else if (isFirefox) setBrowserName('Firefox');
-    else if (isOpera) setBrowserName('Opera');
-    else if (isEdge) setBrowserName('Edge');
-    else if (isChromeDetected) setBrowserName('Chrome');
-    else setBrowserName('');
 
     // --- Check if already installed ---
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -59,15 +61,8 @@ const PWAInstallBanner = () => {
     };
     window.addEventListener('beforeinstallprompt', handler);
 
-    // Show with delay for iOS
-    if (isIOSDevice && !isStandalone) {
-      timer = setTimeout(() => {
-        setShowBanner(true);
-      }, 2000);
-    }
-
-    // Show with delay for Android immediately
-    if (isAndroidDevice && !isStandalone) {
+    // Show with delay for iOS or Android
+    if (isIOS || isAndroid) {
       timer = setTimeout(() => {
         setShowBanner(true);
       }, 2000);
@@ -77,7 +72,7 @@ const PWAInstallBanner = () => {
       window.removeEventListener('beforeinstallprompt', handler);
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [isIOS, isAndroid]);
 
   const handleInstallClick = async () => {
     if (isIOS) {

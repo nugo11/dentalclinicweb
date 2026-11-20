@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Sidebar from '../components/Dashboard/Sidebar';
 import TopNav from '../components/Dashboard/TopNav';
+import { useAuth } from '../context/AuthContext';
 import { 
   Book, HelpCircle, Map, Layout, Users, Calendar, 
   Package, DollarSign, ShieldCheck, ChevronRight, ChevronDown,
@@ -144,76 +145,100 @@ const FeatureCard = ({ title, desc, buttons = [], fields = [], roles = [], logic
   </div>
 );
 
-const Documentation = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
-  // Accordion state: by default first topic is open for guidance
-  const [openSections, setOpenSections] = useState({
-    calendar: true,
-  });
+const DOC_NAV_ITEMS = [
+  { 
+    id: 'calendar', 
+    name: 'კალენდარი', 
+    title: 'კალენდარი & გეგმარება',
+    subtitle: 'ჯავშნების მართვის იერარქია და დროის დაბლოკვა',
+    icon: Calendar,
+    allowedRoles: ['admin', 'manager', 'receptionist', 'doctor']
+  },
+  { 
+    id: 'patients', 
+    name: 'პაციენტები', 
+    title: 'პაციენტთა ბაზა (CRM)',
+    subtitle: 'სამედიცინო ბარათი, ისტორია და კბილების რუკა',
+    icon: Users,
+    allowedRoles: ['admin', 'manager', 'receptionist', 'doctor']
+  },
+  { 
+    id: 'treatments', 
+    name: 'მიმდინარე', 
+    title: 'ჩახურვის პროცესი',
+    subtitle: 'ბილინგი, მასალების ჩამოწერა და EHR (ფორმა 100)',
+    icon: Activity,
+    allowedRoles: ['admin', 'manager', 'receptionist', 'accountant']
+  },
+  { 
+    id: 'archive', 
+    name: 'ფინანსები', 
+    title: 'ფინანსური არქივი',
+    subtitle: 'შემოსავლების კონტროლი, გადახდის ტიპები და რეპორტები',
+    icon: DollarSign,
+    allowedRoles: ['admin', 'manager', 'accountant']
+  },
+  { 
+    id: 'inventory', 
+    name: 'საწყობი', 
+    title: 'საწყობი & მასალები',
+    subtitle: 'ავტომატიზირებული ჩამოწერა და ნაშთების მონიტორინგი',
+    icon: Package,
+    allowedRoles: ['admin', 'manager', 'accountant']
+  },
+  { 
+    id: 'staff', 
+    name: 'პერსონალი', 
+    title: 'პერსონალის უსაფრთხოება',
+    subtitle: 'წვდომის კონტროლი, როლები და PIN კოდის დაცვა',
+    icon: UserPlus,
+    allowedRoles: ['admin']
+  },
+  { 
+    id: 'settings', 
+    name: 'პარამეტრები', 
+    title: 'კლინიკის პარამეტრები & პაკეტები',
+    subtitle: 'კონფიგურაცია, პაკეტები (Billing) და პორტფოლიო',
+    icon: Settings,
+    allowedRoles: ['admin']
+  }
+];
 
-  const navItems = [
-    { 
-      id: 'calendar', 
-      name: 'კალენდარი', 
-      title: 'კალენდარი & გეგმარება',
-      subtitle: 'ჯავშნების მართვის იერარქია და დროის დაბლოკვა',
-      icon: Calendar 
-    },
-    { 
-      id: 'patients', 
-      name: 'პაციენტები', 
-      title: 'პაციენტთა ბაზა (CRM)',
-      subtitle: 'სამედიცინო ბარათი, ისტორია და კბილების რუკა',
-      icon: Users 
-    },
-    { 
-      id: 'treatments', 
-      name: 'მიმდინარე', 
-      title: 'ჩახურვის პროცესი',
-      subtitle: 'ბილინგი, მასალების ჩამოწერა და EHR (ფორმა 100)',
-      icon: Activity 
-    },
-    { 
-      id: 'archive', 
-      name: 'ფინანსები', 
-      title: 'ფინანსური არქივი',
-      subtitle: 'შემოსავლების კონტროლი, გადახდის ტიპები და რეპორტები',
-      icon: DollarSign 
-    },
-    { 
-      id: 'inventory', 
-      name: 'საწყობი', 
-      title: 'საწყობი & მასალები',
-      subtitle: 'ავტომატიზირებული ჩამოწერა და ნაშთების მონიტორინგი',
-      icon: Package 
-    },
-    { 
-      id: 'staff', 
-      name: 'პერსონალი', 
-      title: 'პერსონალის უსაფრთხოება',
-      subtitle: 'წვდომის კონტროლი, როლები და PIN კოდის დაცვა',
-      icon: UserPlus 
-    },
-    { 
-      id: 'settings', 
-      name: 'პარამეტრები', 
-      title: 'კლინიკის პარამეტრები & პაკეტები',
-      subtitle: 'კონფიგურაცია, პაკეტები (Billing) და პორტფოლიო',
-      icon: Settings 
+const Documentation = () => {
+  const { role } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const visibleNavItems = useMemo(
+    () => DOC_NAV_ITEMS.filter((item) => !role || item.allowedRoles.includes(role)),
+    [role]
+  );
+  const visibleIds = useMemo(
+    () => new Set(visibleNavItems.map((item) => item.id)),
+    [visibleNavItems]
+  );
+
+  // Accordion state: null means default (first visible topic is open for guidance)
+  const [openSections, setOpenSections] = useState(null);
+
+  const isSectionOpen = (id) => {
+    if (openSections === null) {
+      return visibleNavItems[0]?.id === id;
     }
-  ];
+    return !!openSections[id];
+  };
 
   const toggleSection = (id) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+    setOpenSections((prev) => {
+      const base = prev === null
+        ? (visibleNavItems[0]?.id ? { [visibleNavItems[0].id]: true } : {})
+        : prev;
+      return { ...base, [id]: !base[id] };
+    });
   };
 
   const expandAll = () => {
     const all = {};
-    navItems.forEach(item => { all[item.id] = true; });
+    visibleNavItems.forEach((item) => { all[item.id] = true; });
     setOpenSections(all);
   };
 
@@ -222,7 +247,12 @@ const Documentation = () => {
   };
 
   const handleNavClick = (id) => {
-    setOpenSections(prev => ({ ...prev, [id]: true }));
+    setOpenSections((prev) => {
+      const base = prev === null
+        ? (visibleNavItems[0]?.id ? { [visibleNavItems[0].id]: true } : {})
+        : prev;
+      return { ...base, [id]: true };
+    });
     setTimeout(() => {
       const element = document.getElementById(id);
       if (element) {
@@ -257,19 +287,19 @@ const Documentation = () => {
                         <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-6">სისტემური გზამკვლევი</p>
                         
                         <nav className="space-y-1.5">
-                          {navItems.map(item => {
-                            const isSectionOpen = !!openSections[item.id];
+                          {visibleNavItems.map(item => {
+                            const sectionOpen = isSectionOpen(item.id);
                             return (
                               <button 
                                 key={item.id}
                                 onClick={() => handleNavClick(item.id)}
-                                className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all text-left group cursor-pointer ${isSectionOpen ? 'bg-surface/15 text-white' : 'hover:bg-surface/10 text-white/60 hover:text-white'}`}
+                                className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all text-left group cursor-pointer ${sectionOpen ? 'bg-surface/15 text-white' : 'hover:bg-surface/10 text-white/60 hover:text-white'}`}
                               >
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <item.icon size={18} className={isSectionOpen ? 'text-brand-purple' : 'text-white/40 group-hover:text-white transition-colors'} />
+                                  <item.icon size={18} className={sectionOpen ? 'text-brand-purple' : 'text-white/40 group-hover:text-white transition-colors'} />
                                   <span className="text-[11px] font-black uppercase tracking-wider truncate">{item.name}</span>
                                 </div>
-                                <span className={`w-2 h-2 rounded-full transition-all ${isSectionOpen ? 'bg-brand-purple' : 'bg-transparent'}`}></span>
+                                <span className={`w-2 h-2 rounded-full transition-all ${sectionOpen ? 'bg-brand-purple' : 'bg-transparent'}`}></span>
                               </button>
                             );
                           })}
@@ -327,12 +357,13 @@ const Documentation = () => {
                 </div>
 
                 {/* 1. კალენდარი */}
+                {visibleIds.has('calendar') && (
                 <DocAccordionSection 
                   id="calendar" 
                   title="კალენდარი & გეგმარება" 
                   subtitle="ჯავშნების მართვა, ექიმების განრიგი და პირადი დროის დაბლოკვა"
                   icon={Calendar}
-                  isOpen={!!openSections.calendar}
+                  isOpen={isSectionOpen('calendar')}
                   onToggle={() => toggleSection('calendar')}
                 >
                   <FeatureCard 
@@ -341,7 +372,7 @@ const Documentation = () => {
                     roles={["Admin", "Manager", "Receptionist", "Doctor"]}
                     logic={[
                       "ადმინისტრატორი, მენეჯერი და რეგისტრატორი ფლობენ სრულ კონტროლს - მათ შეუძლიათ ნებისმიერი ექიმის განრიგში ჯავშნის დამატება, გადატანა ან წაშლა.",
-                      "ექიმი შეზღუდულია მხოლოდ საკუთარი განრიგით. მას შეუძლია ჯავშნის დამატება მხოლოდ თავის თავზე. სხვა ექიმების განრიგს ის მხოლოდ საინფორმაციო რეჟიმში ხედავს.",
+                      "ექიმი შეზღუდულია საკუთარი განრიგით. მას შეუძლია საკუთარ განრიგში ჩანიშნოს 'გარე კლინიკის ჯავშანი' (ან პირადი დროის ბლოკი), ხოლო კლინიკის შიდა ვიზიტებს ხედავს საინფორმაციო რეჟიმში, რათა არ მოხდეს დროის კონფლიქტი.",
                       "ექიმს აქვს შესაძლებლობა ჩანიშნოს 'გარე კლინიკის ჯავშანი' (ან პერსონალური დროის ბლოკი). ეს აისახება საერთო კალენდარში, რათა სხვა როლებმა დაინახონ, რომ ექიმი დაკავებულია და არ მოხდეს დროის კონფლიქტი.",
                       "ბუღალტერი საერთოდ არ ფლობს წვდომას კალენდარზე. მისთვის ეს მოდული დამალულია უსაფრთხოების მიზნით."
                     ]}
@@ -351,14 +382,16 @@ const Documentation = () => {
                     ]}
                   />
                 </DocAccordionSection>
+                )}
 
                 {/* 2. პაციენტები */}
+                {visibleIds.has('patients') && (
                 <DocAccordionSection 
                   id="patients" 
                   title="პაციენტთა ბაზა (CRM)" 
                   subtitle="სამედიცინო ბარათი, ისტორია, ალერგიები და კბილების რუკა"
                   icon={Users}
-                  isOpen={!!openSections.patients}
+                  isOpen={isSectionOpen('patients')}
                   onToggle={() => toggleSection('patients')}
                 >
                   <FeatureCard 
@@ -366,48 +399,53 @@ const Documentation = () => {
                     desc="პაციენტის ისტორია, კბილების რუკა და პერსონალური მონაცემები."
                     roles={["Admin", "Manager", "Receptionist", "Doctor"]}
                     logic={[
-                      "ახალი პაციენტის დამატება შეუძლია ყველას, გარდა ბუღალტრისა. ეს კეთდება სწრაფი რეგისტრაციის ფორმით.",
-                      "კბილების რუკა და სამედიცინო ისტორია ხელმისაწვდომია მხოლოდ ექიმებისთვის, მენეჯერებისთვის და ადმინისთვის. რეგისტრატორი ხედავს მხოლოდ საკონტაქტო ინფორმაციას.",
+                      "ახალი პაციენტის დამატება და ექსელით იმპორტი შეუძლია ადმინისტრატორს, მენეჯერს და რეგისტრატორს. ექიმი ხედავს პაციენტის ბარათს, სამედიცინო ისტორიას, რენტგენებს და კბილების რუკას.",
+                      "კბილების რუკა და სამედიცინო ისტორია ხელმისაწვდომია ექიმებისთვის, მენეჯერებისთვის და ადმინისთვის. რეგისტრატორი ხედავს მხოლოდ საკონტაქტო ინფორმაციას.",
                       "პაციენტის წაშლა კატეგორიულად აკრძალულია ყველასთვის, გარდა ადმინისტრატორისა, რათა არ მოხდეს სამედიცინო ისტორიის შემთხვევითი დაკარგვა.",
                       "სისტემა ავტომატურად აჯგუფებს პაციენტებს მათი ვიზიტების სიხშირისა და სტატუსის მიხედვით."
                     ]}
                     buttons={[
                       { icon: <Plus size={14} />, name: "ახალი პაციენტი", action: "სწრაფი რეგისტრაცია და ბაზაში დამატება." },
+                      { icon: <Upload size={14} />, name: "ექსელით იმპორტი", action: "ექსელის შაბლონის ჩამოტვირთვა და პაციენტების მასობრივი ატვირთვა." },
                       { icon: <Map size={14} />, name: "კბილების რუკა", action: "ვიზუალური ისტორიის მართვა და ჩანაწერები." }
                     ]}
                   />
                 </DocAccordionSection>
+                )}
 
                 {/* 3. მიმდინარე მკურნალობა */}
+                {visibleIds.has('treatments') && (
                 <DocAccordionSection 
                   id="treatments" 
                   title="ჩახურვის პროცესი & EHR" 
                   subtitle="ბილინგის ბიზნეს წესები, მასალების ჩამოწერა და ფორმა 100"
                   icon={Activity}
-                  isOpen={!!openSections.treatments}
+                  isOpen={isSectionOpen('treatments')}
                   onToggle={() => toggleSection('treatments')}
                 >
                   <FeatureCard 
                     title="ბილინგის ბიზნეს წესები" 
                     desc="მკურნალობის დასრულების და ფინანსური გაფორმების ლოგიკა."
-                    roles={["Admin", "Manager", "Receptionist", "Doctor", "Accountant"]}
+                    roles={["Admin", "Manager", "Receptionist", "Accountant"]}
                     logic={[
-                      "ექიმს შეუძლია ჩახუროს (დაასრულოს) მხოლოდ საკუთარი შეკვეთები. მას არ აქვს უფლება ჩაერიოს სხვა კოლეგის მკურნალობის ფინანსურ მხარეში.",
+                      "შეკვეთების ფინანსური დახურვა და ანგარიშსწორება ხორციელდება ადმინისტრატორის, მენეჯერის და რეგისტრატორის მიერ. ექიმს ფინანსურ ბილინგზე წვდომა არ აქვს.",
                       "რეგისტრატორს შეუძლია ჩახუროს ნებისმიერი ექიმის შეკვეთა. ეს საჭიროა იმისთვის, რომ როდესაც პაციენტი მიდის კლინიკიდან, მან თანხა რეგისტრატურაში გადაიხადოს.",
                       "ჩახურვისას სისტემა ავტომატურად ითვლის მასალების ხარჯს საწყობიდან, სერვისების წინასწარი კონფიგურაციის მიხედვით.",
-                      "თუ კლინიკას აქვს 'Business' ან 'Custom' პაკეტი და ჩართული აქვს EHR, ჩახურვის მომენტში ექიმი უთითებს დაავადების ICD-10 კოდს და სერვისების NCSP კოდებს. სისტემა ავტომატურად აგზავნის და ამტკიცებს ფორმა 100-ს ჯანდაცვის სამინისტროს ბაზაში.",
+                      "თუ კლინიკას აქვს 'Business' ან 'Custom' პაკეტი და ჩართული აქვს EHR, ჩახურვის მომენტში ჩახურვაზე პასუხისმგებელი პირი უთითებს დაავადების ICD-10 კოდს და სერვისების NCSP კოდებს. სისტემა ავტომატურად აგზავნის და ამტკიცებს ფორმა 100-ს ჯანდაცვის სამინისტროს ბაზაში.",
                       "ბუღალტერი ხედავს ყველა მიმდინარე შეკვეთას, მაგრამ მისი როლი შემოიფარგლება მხოლოდ მონიტორინგით."
                     ]}
                   />
                 </DocAccordionSection>
+                )}
 
                 {/* 4. ფინანსური არქივი */}
+                {visibleIds.has('archive') && (
                 <DocAccordionSection 
                   id="archive" 
                   title="ფინანსური არქივი" 
                   subtitle="შემოსავლების კონტროლი, გადახდის მეთოდები და რეპორტები"
                   icon={DollarSign}
-                  isOpen={!!openSections.archive}
+                  isOpen={isSectionOpen('archive')}
                   onToggle={() => toggleSection('archive')}
                 >
                   <FeatureCard 
@@ -426,14 +464,16 @@ const Documentation = () => {
                     ]}
                   />
                 </DocAccordionSection>
+                )}
 
                 {/* 5. საწყობი */}
+                {visibleIds.has('inventory') && (
                 <DocAccordionSection 
                   id="inventory" 
                   title="საწყობი & მასალები" 
                   subtitle="ავტომატიზირებული ჩამოწერა და ნაშთების კონტროლი"
                   icon={Package}
-                  isOpen={!!openSections.inventory}
+                  isOpen={isSectionOpen('inventory')}
                   onToggle={() => toggleSection('inventory')}
                 >
                   <FeatureCard 
@@ -441,20 +481,22 @@ const Documentation = () => {
                     desc="როგორ უკავშირდება მკურნალობა საწყობს."
                     roles={["Admin", "Manager", "Accountant"]}
                     logic={[
-                      "მასალების ხელით ჩამოწერა არ არის საჭირო. როდესაც ექიმი ან რეგისტრატორი ხურავს ვიზიტს, სისტემა თავად ამოწმებს რომელი სერვისები ჩატარდა და რა მასალები იყო მათზე მიბმული.",
-                      "თუ მასალის რაოდენობა კრიტიკულ ზღვარს ქვემოთ ჩამოდის, სისტემა დაშბორდზე აგდებს წითელ გაფრთხილებას, რათა ადმინისტრატორმა დროულად მოახდინოს შესყიდვა.",
+                      "მასალების ხელით ჩამოწერა არ არის საჭირო. როდესაც რეგისტრატორი ან მენეჯერი ხურავს ვიზიტს, სისტემა თავად ამოწმებს რომელი სერვისები ჩატარდა და რა მასალები იყო მათზე მიბმული.",
+                      "თუ მასალის რაოდენობა კრიტიკულ ზღვარს ქვემოთ ჩამოდის, სისტემა დაშბორდზე აგდებს გაფრთხილებას, რათა ადმინისტრატორმა დროულად მოახდინოს შესყიდვა.",
                       "ბუღალტერს და მენეჯერს აქვთ უფლება ნახონ ნაშთები და ფასები, რათა აწარმოონ ფინანსური ანგარიშგება, თუმცა რაოდენობის ხელით ცვლილება მათთვის აკრძალულია."
                     ]}
                   />
                 </DocAccordionSection>
+                )}
 
                 {/* 6. პერსონალი */}
+                {visibleIds.has('staff') && (
                 <DocAccordionSection 
                   id="staff" 
                   title="პერსონალის უსაფრთხოება" 
                   subtitle="წვდომის კონტროლი, თანამშრომელთა როლები და PIN დაცვა"
                   icon={UserPlus}
-                  isOpen={!!openSections.staff}
+                  isOpen={isSectionOpen('staff')}
                   onToggle={() => toggleSection('staff')}
                 >
                   <FeatureCard 
@@ -468,14 +510,16 @@ const Documentation = () => {
                     ]}
                   />
                 </DocAccordionSection>
+                )}
 
                 {/* 7. პარამეტრები & პაკეტები */}
+                {visibleIds.has('settings') && (
                 <DocAccordionSection 
                   id="settings" 
                   title="კლინიკის პარამეტრები & პაკეტები" 
                   subtitle="კონფიგურაცია, პაკეტები (Billing) და პორტფოლიო"
                   icon={Settings}
-                  isOpen={!!openSections.settings}
+                  isOpen={isSectionOpen('settings')}
                   onToggle={() => toggleSection('settings')}
                 >
                   <FeatureCard 
@@ -495,6 +539,7 @@ const Documentation = () => {
                     ]}
                   />
                 </DocAccordionSection>
+                )}
 
                 {/* Footer Banner */}
                 <div className="bg-brand-deep p-8 sm:p-14 rounded-[36px] sm:rounded-[48px] text-white text-center space-y-4 sm:space-y-6 relative overflow-hidden">

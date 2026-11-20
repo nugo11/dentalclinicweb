@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
-import { db, auth } from "../firebase";
+import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { collection, query, where, onSnapshot, doc, getDoc } from "firebase/firestore";
 import Sidebar from "../components/Dashboard/Sidebar";
@@ -107,15 +107,13 @@ const OrderArchive = () => {
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredData, currentPage]);
 
-  // 3. ექსპორტის ფუნქცია
-  const handleExportReport = () => {
-    handlePrintOrder(currentItems[0]); // Placeholder for generic print
-  };
-
-  // თუ ფილტრი შეიცვალა, ვბრუნდებით პირველ გვერდზე
-  useEffect(() => {
+  // ფილტრის შეცვლისას ვბრუნდებით პირველ გვერდზე
+  const filterKey = `${searchTerm}|${dateFrom}|${dateTo}|${filterMethod}|${filterPayerType}`;
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (filterKey !== prevFilterKey) {
+    setPrevFilterKey(filterKey);
     setCurrentPage(1);
-  }, [searchTerm, dateFrom, dateTo, filterMethod, filterPayerType]);
+  }
 
   return (
     <>
@@ -196,7 +194,7 @@ const OrderArchive = () => {
                       type="date" 
                       value={dateFrom}
                       onClick={(e) => {
-                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch { /* ignore */ }
                       }}
                       onChange={(e) => setDateFrom(e.target.value)}
                       className="w-full bg-surface-soft pl-10 sm:pl-11 pr-3 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-main min-w-0 box-border cursor-pointer"
@@ -214,7 +212,7 @@ const OrderArchive = () => {
                       type="date" 
                       value={dateTo}
                       onClick={(e) => {
-                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                        try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch { /* ignore */ }
                       }}
                       onChange={(e) => setDateTo(e.target.value)}
                       className="w-full bg-surface-soft pl-10 sm:pl-11 pr-3 py-3.5 rounded-2xl outline-none text-xs font-bold border border-transparent focus:border-brand-purple text-text-main min-w-0 box-border cursor-pointer"

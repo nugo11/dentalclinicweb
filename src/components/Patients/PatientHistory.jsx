@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Clock, Calendar, ChevronRight, Activity, Inbox, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const PatientHistory = ({ patientId }) => {
-  const { role } = useAuth();
+  const { role, userData } = useAuth();
   const isDoctor = role === 'doctor';
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedVisit, setSelectedVisit] = useState(null);
 
   useEffect(() => {
-    if (!patientId) return;
+    if (!patientId || !userData?.clinicId) return;
 
     const q = query(
       collection(db, "appointments"),
+      where("clinicId", "==", userData.clinicId),
       where("patientId", "==", patientId)
     );
 
@@ -29,7 +30,7 @@ const PatientHistory = ({ patientId }) => {
       console.error("PatientHistory error:", error);
       setLoading(false);
     });
-  }, [patientId]);
+  }, [patientId, userData?.clinicId]);
 
   if (loading) return <div className="p-8 text-center text-text-muted animate-pulse font-black uppercase text-[10px]">იტვირთება...</div>;
 

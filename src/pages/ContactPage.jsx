@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import MainHeader from "../components/Common/MainHeader";
+import { db } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { 
   Mail, Phone, MapPin, Send, MessageSquare, 
   Clock, Globe, ArrowRight, CheckCircle2, Sparkles, AlertCircle
@@ -9,18 +11,50 @@ import { formatPhone, cleanPhone, validatePhone } from "../utils/phoneFormatter"
 
 const ContactPage = ({ user }) => {
   const [formStatus, setFormStatus] = useState(null); // 'sending', 'sent', null
+  const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError("");
     const err = validatePhone(phone, true);
     if (err) {
       setPhoneError(err);
       return;
     }
+
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedMessage = message.trim();
+    if (!trimmedName || !trimmedEmail || !trimmedMessage) {
+      setSubmitError("გთხოვთ შეავსოთ ყველა სავალდებულო ველი.");
+      return;
+    }
+
     setFormStatus('sending');
-    setTimeout(() => setFormStatus('sent'), 1500);
+    try {
+      await addDoc(collection(db, "contact_messages"), {
+        name: trimmedName,
+        phone: cleanPhone(phone),
+        email: trimmedEmail,
+        message: trimmedMessage,
+        createdAt: serverTimestamp(),
+        status: "new",
+      });
+      setName("");
+      setPhone("");
+      setEmail("");
+      setMessage("");
+      setFormStatus('sent');
+    } catch (submitErr) {
+      console.error("Contact submit error:", submitErr);
+      setSubmitError("შეტყობინების გაგზავნა ვერ მოხერხდა. სცადეთ ხელახლა ან დაგვიკავშირდით ტელეფონით.");
+      setFormStatus(null);
+    }
   };
 
   return (
@@ -151,7 +185,7 @@ const ContactPage = ({ user }) => {
                      <div className="grid sm:grid-cols-2 gap-8">
                        <div className="space-y-3">
                           <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-2 italic">თქვენი სახელი</label>
-                          <input required type="text" placeholder="მაგ: დავითი" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-3xl px-8 py-5 outline-none font-bold text-sm transition-all focus:bg-surface shadow-sm" />
+                          <input required type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="მაგ: დავითი" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-3xl px-8 py-5 outline-none font-bold text-sm transition-all focus:bg-surface shadow-sm" />
                        </div>
                        <div className="space-y-3">
                           <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-2 italic">ტელეფონი</label>
@@ -178,13 +212,19 @@ const ContactPage = ({ user }) => {
                      
                      <div className="space-y-3">
                         <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-2 italic">ელ-ფოსტა</label>
-                        <input required type="email" placeholder="example@dental.ge" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-3xl px-8 py-5 outline-none font-bold text-sm transition-all focus:bg-surface shadow-sm" />
+                        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@dental.ge" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-3xl px-8 py-5 outline-none font-bold text-sm transition-all focus:bg-surface shadow-sm" />
                      </div>
 
                      <div className="space-y-3">
                         <label className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] ml-2 italic">შეტყობინება</label>
-                        <textarea required rows="4" placeholder="რით შეგვიძლია დაგეხმაროთ?" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[32px] px-8 py-6 outline-none font-bold text-sm transition-all focus:bg-surface shadow-sm resize-none" />
+                        <textarea required rows="4" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="რით შეგვიძლია დაგეხმაროთ?" className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-[32px] px-8 py-6 outline-none font-bold text-sm transition-all focus:bg-surface shadow-sm resize-none" />
                      </div>
+
+                     {submitError && (
+                       <p className="text-xs font-black text-red-500 flex items-center gap-2">
+                         <AlertCircle size={16} /> {submitError}
+                       </p>
+                     )}
 
                      <button 
                        type="submit" 

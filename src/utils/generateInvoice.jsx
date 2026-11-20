@@ -1,14 +1,28 @@
-export const generateInvoice = async (order, clinicData, targetWindow = null) => {
+import { escapeHtml, sanitizeUrl } from "./sanitize";
+
+export const generateInvoice = async (order, clinicData = {}, targetWindow = null) => {
   const vatAmount = order.vatAmount !== undefined 
     ? Number(order.vatAmount) 
     : (order.applyVat ? (Number(order.price || 0) * 0.18) : 0);
   const materialsAmount = order.extraMaterials?.reduce((sum, m) => sum + (Number(m.amount) * Number(m.pricePerUnit || 0)), 0) || 0;
   const servicesAmount = order.billedServices?.reduce((sum, s) => sum + Number(s.price || 0), 0) || Math.max(0, Number(order.price || 0) - materialsAmount - vatAmount);
 
+  const clinicDisplayName = clinicData?.clinicName || clinicData?.name || "AiDent";
+  const safeClinicName = escapeHtml(clinicDisplayName);
+  const safeLegalName = escapeHtml(clinicData?.legalName || clinicDisplayName);
+  const safeIdCode = escapeHtml(clinicData?.idCode || "---");
+  const safeAddress = escapeHtml(clinicData?.address || "---");
+  const safePhone = escapeHtml(clinicData?.phone || "---");
+  const safeLogoUrl = sanitizeUrl(clinicData?.logoUrl);
+  const safeStampUrl = sanitizeUrl(clinicData?.stampUrl);
+  const safePatientName = escapeHtml(order.patientName || "");
+  const safePersonalId = escapeHtml(order.personalId || "");
+  const safeOrderId = escapeHtml(order.id?.slice(-8).toUpperCase() || "");
+
   const content = `
     <html>
       <head>
-        <title>ინვოისი - ${order.patientName}</title>
+        <title>ინვოისი - ${safePatientName}</title>
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
           body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; background: #fff; }
@@ -56,17 +70,17 @@ export const generateInvoice = async (order, clinicData, targetWindow = null) =>
         <div class="card">
           <div class="header">
             <div class="clinic-branding">
-              ${clinicData.logoUrl ? `<img src="${clinicData.logoUrl}" class="logo-img" />` : `<h2>${clinicData.name || 'DENTAL HUB'}</h2>`}
+              ${safeLogoUrl ? `<img src="${safeLogoUrl}" class="logo-img" />` : `<h2>${safeClinicName}</h2>`}
               <div class="clinic-legal">
-                <div>${clinicData.legalName || clinicData.name}</div>
-                <div>ს/კ: ${clinicData.idCode || '---'}</div>
-                <div>მის: ${clinicData.address || '---'}</div>
-                <div>ტელ: ${clinicData.phone || '---'}</div>
+                <div>${safeLegalName}</div>
+                <div>ს/კ: ${safeIdCode}</div>
+                <div>მის: ${safeAddress}</div>
+                <div>ტელ: ${safePhone}</div>
               </div>
             </div>
             <div class="invoice-info">
               <div class="title-label">ინვოისი</div>
-              <div class="invoice-id">#INV-${order.id?.slice(-8).toUpperCase()}</div>
+              <div class="invoice-id">#INV-${safeOrderId}</div>
               <div class="date-val">${new Date(order.finalizedAt || Date.now()).toLocaleDateString('ka-GE')}</div>
             </div>
           </div>
@@ -74,12 +88,12 @@ export const generateInvoice = async (order, clinicData, targetWindow = null) =>
           <div class="customer-section">
             <div>
               <div class="label">პაციენტი</div>
-              <div class="value">${order.patientName}</div>
+              <div class="value">${safePatientName}</div>
             </div>
-            ${order.personalId ? `
+            ${safePersonalId ? `
             <div>
               <div class="label">პირადი ნომერი</div>
-              <div class="value">${order.personalId}</div>
+              <div class="value">${safePersonalId}</div>
             </div>
             ` : ''}
           </div>
@@ -98,34 +112,34 @@ export const generateInvoice = async (order, clinicData, targetWindow = null) =>
                 <tr>
                   <td>
                     <span class="item-category">მომსახურება</span>
-                    ${s.name}
+                    ${escapeHtml(s.name)}
                   </td>
                   <td style="text-align: center">1</td>
                   <td style="text-align: right">₾${Number(s.price).toFixed(2)}</td>
                   <td style="text-align: right; font-weight: 700; color: #0f172a;">₾${Number(s.price).toFixed(2)}</td>
                 </tr>
-              `).join('')}
+              `).join('') || ''}
               ${order.extraMaterials?.map(m => `
                 <tr>
                   <td>
                     <span class="item-category">დამატებითი მასალა</span>
-                    ${m.name}
+                    ${escapeHtml(m.name)}
                   </td>
-                  <td style="text-align: center">${m.amount} ${m.unit || ''}</td>
+                  <td style="text-align: center">${escapeHtml(m.amount)} ${escapeHtml(m.unit || '')}</td>
                   <td style="text-align: right">₾${Number(m.pricePerUnit || 0).toFixed(2)}</td>
                   <td style="text-align: right; font-weight: 700; color: #0f172a;">₾${(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)}</td>
                 </tr>
-              `).join('')}
+              `).join('') || ''}
             </tbody>
           </table>
 
           <div class="summary-section">
             <div class="bank-info">
               <div class="label" style="margin-bottom: 15px;">საბანკო რეკვიზიტები</div>
-              ${clinicData.bankAccounts?.map(acc => `
+              ${clinicData?.bankAccounts?.map(acc => `
                 <div class="bank-item">
-                  <div style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">${acc.bankName}</div>
-                  <div style="font-family: monospace; font-size: 12px; letter-spacing: 0.05em;">${acc.iban}</div>
+                  <div style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">${escapeHtml(acc.bankName)}</div>
+                  <div style="font-family: monospace; font-size: 12px; letter-spacing: 0.05em;">${escapeHtml(acc.iban)}</div>
                 </div>
               `).join('') || '<div class="bank-item">---</div>'}
             </div>
@@ -150,7 +164,7 @@ export const generateInvoice = async (order, clinicData, targetWindow = null) =>
             </div>
           </div>
 
-          ${clinicData.stampUrl ? `<img src="${clinicData.stampUrl}" class="stamp" />` : ''}
+          ${safeStampUrl ? `<img src="${safeStampUrl}" class="stamp" />` : ''}
 
           <div class="footer">გმადლობთ, რომ სარგებლობთ ჩვენი მომსახურებით!</div>
         </div>

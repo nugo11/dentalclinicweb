@@ -28,6 +28,7 @@ import {
 import Sidebar from "../components/Dashboard/Sidebar";
 import TopNav from "../components/Dashboard/TopNav";
 import DentalChart from "../components/Patients/DentalChart/DentalChart";
+import { getLocalDateString } from "../utils/dateUtils";
 import { useAuth } from "../context/AuthContext";
 import { transliterateToGeorgian } from "../utils/transliterateKa";
 import { logActivity } from "../utils/activityLogger";
@@ -146,6 +147,7 @@ const PatientProfile = () => {
       // ექიმს ეზღუდება პირადი მონაცემების ცვლილება (ტელეფონი, ელ-ფოსტა, მისამართი, სქესი, დაბადების თარიღი, პირადი ნომერი)
       const dataToSave = {
         ...patientData,
+        chronicDiseases: patientData.chronicDiseases ?? patientData.diseases ?? "",
         fullName: patientData.fullName.trim(),
         personalId: isDoctor && originalPatientData ? (originalPatientData.personalId || "") : (patientData.personalId ? patientData.personalId.replace(/\D/g, '') : ""),
         phone: isDoctor && originalPatientData ? (originalPatientData.phone || "") : (patientData.phone ? formatPhone(patientData.phone) : ""),
@@ -419,7 +421,7 @@ const PatientProfile = () => {
                     value={patientData.birthDate}
                     editable={isEditing && !isDoctor}
                     type="date"
-                    max={new Date().toISOString().split("T")[0]}
+                    max={getLocalDateString()}
                     error={editErrors.birthDate}
                     onChange={(val) => {
                       setPatientData({ ...patientData, birthDate: val });
@@ -519,11 +521,11 @@ const PatientProfile = () => {
                   </label>
                   {isEditing && canEditMedical ? (
                     <textarea
-                      value={patientData.diseases || ""}
+                      value={patientData.chronicDiseases ?? patientData.diseases ?? ""}
                       onChange={(e) =>
                         setPatientData({
                           ...patientData,
-                          diseases: e.target.value,
+                          chronicDiseases: e.target.value,
                         })
                       }
                       placeholder="მაგ: დიაბეტი..."
@@ -531,9 +533,9 @@ const PatientProfile = () => {
                     />
                   ) : (
                     <p
-                      className={`font-black text-sm italic ${patientData.diseases ? "text-blue-500" : "text-text-muted"}`}
+                      className={`font-black text-sm italic ${patientData.chronicDiseases || patientData.diseases ? "text-blue-500" : "text-text-muted"}`}
                     >
-                      {patientData.diseases || "არ არის დაფიქსირებული"}
+                      {patientData.chronicDiseases || patientData.diseases || "არ არის დაფიქსირებული"}
                     </p>
                   )}
                 </div>
@@ -812,7 +814,7 @@ const InfoBlock = ({
               max={max}
               onClick={(e) => {
                 if (type === 'date' || type === 'time') {
-                  try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                  try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch { /* ignore */ }
                 }
               }}
               onChange={(e) => onChange(e.target.value)}

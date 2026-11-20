@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import Sidebar from "../components/Dashboard/Sidebar";
 import TopNav from "../components/Dashboard/TopNav";
 import { Wallet, History, Search, Filter, Download, ArrowLeft, Edit, X, Loader2, Printer, FileDown, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { logActivity } from "../utils/activityLogger";
+import { escapeHtml, sanitizeUrl } from "../utils/sanitize";
+import { getLocalMonthString } from "../utils/dateUtils";
 
 const SalaryArchive = () => {
-  const { userData, isAdmin, role, clinicData, activeStaff } = useAuth();
+  const { userData, isAdmin, clinicData, activeStaff } = useAuth();
   const navigate = useNavigate();
   // ... (states remain same)
 
@@ -18,10 +20,19 @@ const SalaryArchive = () => {
 
   const handlePrint = async (h) => {
     setPrintingId(h.id);
+    const safeLogo = sanitizeUrl(clinicData?.logoUrl);
+    const safeStamp = sanitizeUrl(clinicData?.stampUrl);
+    const safeTitleDesc = escapeHtml(h.description || "");
+    const safeEmployeeName = escapeHtml(h.description?.replace('ხელფასი: ', '') || "");
+    const safeClinicName = escapeHtml(clinicData?.clinicName || 'AiDent');
+    const safeLegalName = escapeHtml(clinicData?.legalName || "");
+    const safeIdCode = escapeHtml(clinicData?.idCode || "");
+    const safePaidMonth = escapeHtml(h.paidMonth || 'მიმდინარე');
+    const safeAmount = escapeHtml(h.amount);
     const content = `
       <html>
         <head>
-          <title>ქვითარი - ${h.description}</title>
+          <title>ქვითარი - ${safeTitleDesc}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
             body { font-family: 'Inter', sans-serif; padding: 50px; color: #1e293b; line-height: 1.5; }
@@ -43,28 +54,28 @@ const SalaryArchive = () => {
           <div class="card">
             <div class="header">
               <div class="clinic-branding">
-                ${clinicData?.logoUrl ? `<img src="${clinicData.logoUrl}" class="logo-img" />` : `<div style="font-weight:900; font-size:20px; color:#6366f1;">${clinicData?.clinicName || 'AiDent'}</div>`}
+                ${safeLogo ? `<img src="${safeLogo}" class="logo-img" />` : `<div style="font-weight:900; font-size:20px; color:#6366f1;">${safeClinicName}</div>`}
                 <div class="clinic-legal">
-                  ${clinicData?.legalName ? `<div>${clinicData.legalName}</div>` : ''}
-                  ${clinicData?.idCode ? `<div>ს/კ: ${clinicData.idCode}</div>` : ''}
+                  ${safeLegalName ? `<div>${safeLegalName}</div>` : ''}
+                  ${safeIdCode ? `<div>ს/კ: ${safeIdCode}</div>` : ''}
                 </div>
               </div>
               <div class="title text-right">ხელფასის ამონაწერი</div>
             </div>
             <div class="item">
               <div class="label">თანამშრომელი</div>
-              <div class="value">${h.description?.replace('ხელფასი: ', '')}</div>
+              <div class="value">${safeEmployeeName}</div>
             </div>
             <div class="item">
               <div class="label">თარიღი და პერიოდი</div>
-              <div class="value">${new Date(h.date).toLocaleDateString('ka-GE')} (${h.paidMonth || 'მიმდინარე'})</div>
+              <div class="value">${new Date(h.date).toLocaleDateString('ka-GE')} (${safePaidMonth})</div>
             </div>
             <div class="amount-box">
               <div class="label" style="margin:0">გადახდილი თანხა</div>
-              <div class="value" style="font-size: 24px; color: #10b981;">${h.amount} ₾</div>
+              <div class="value" style="font-size: 24px; color: #10b981;">${safeAmount} ₾</div>
             </div>
 
-            ${clinicData?.stampUrl ? `<img src="${clinicData.stampUrl}" class="stamp" />` : ''}
+            ${safeStamp ? `<img src="${safeStamp}" class="stamp" />` : ''}
 
             <div class="footer">დოკუმენტი გენერირებულია ავტომატურად</div>
           </div>
@@ -200,7 +211,7 @@ const SalaryArchive = () => {
         date: new Date().toISOString(),
         createdAt: serverTimestamp(),
         staffId: targetStaff.id,
-        paidMonth: new Date().toISOString().slice(0, 7)
+        paidMonth: getLocalMonthString()
       });
       await logActivity(
         userData.clinicId,

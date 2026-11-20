@@ -9,8 +9,8 @@ service cloud.firestore {
 
     // პლატფორმის სუპერ ადმინისტრატორები - მკაცრი შემოწმება ელ-ფოსტით
     function isSuperAdmin() {
-      return isAuthenticated() && 
-        request.auth.token.email != null && 
+      return isAuthenticated() &&
+        request.auth.token.email != null &&
         (
           request.auth.token.email.lower() == 'nugoxucishvili@gmail.com' ||
           request.auth.token.email.lower() == 'khvedelidzezura77@gmail.com'
@@ -26,32 +26,51 @@ service cloud.firestore {
       return isAuthenticated() && (
         isSuperAdmin() ||
         (clinicId != null && (
-          request.auth.uid == clinicId || 
+          request.auth.uid == clinicId ||
           getUserClinicId() == clinicId
         ))
       );
     }
 
     // 2. კლინიკები (Clinics)
-    // წაკითხვა დაშვებულია ყველასთვის (საჭიროა ლოგინისთვის loginName-ით, რეგისტრაციისას უნიკალურობის შემოწმებისთვის და საჯარო კატალოგისთვის)
-    // შექმნა შეუძლია ნებისმიერ ავტორიზებულ პირს (რეგისტრაციის დროს)
-    // რედაქტირება და წაშლა შეუძლია კლინიკის ადმინს ან სუპერ ადმინს
+    // საჯარო კითხვა დაშვებულია ლოგინისა და კატალოგისთვის (სენსიტიური EHR ველები შენახულია /private ქვეკოლექციაში)
     match /clinics/{clinicId} {
       allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && (
-        isSuperAdmin() || 
-        resource.data.ownerId == request.auth.uid ||
-        request.auth.uid == clinicId
+      allow create: if isAuthenticated() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        (isSuperAdmin() || request.resource.data.plan == 'free');
+      allow update: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (
+          (resource.data.ownerId == request.auth.uid || request.auth.uid == clinicId) &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan', 'subscriptionStatus', 'customMaxDoctors', 'ownerId'])
+        )
       );
+      allow delete: if isSuperAdmin() || (
+        isAuthenticated() && (
+          resource.data.ownerId == request.auth.uid ||
+          request.auth.uid == clinicId
+        )
+      );
+
+      // კლინიკის კონფიდენციალური პარამეტრები (მაგ. EHR მომხმარებელი/პაროლი)
+      match /private/{docId} {
+        allow read, write: if belongsToUserClinic(clinicId);
+      }
     }
 
-    // 3. მომხმარებლები და პერსონალი (Users / Staff)
-    // წაკითხვა დაშვებულია (საჭიროა რეგისტრაციისას ტელეფონის/მეილის შემოწმებისთვის, ლოგინისას პერსონალის სიისთვის და საჯარო პროფილზე ექიმებისთვის)
-    // რედაქტირება/წაშლა შეზღუდულია საკუთარ კლინიკაზე ან სუპერ ადმინზე
+    // 3. მომხმარებლები და პერსონალი (Users / Staff) - დახურულია არაავტორიზებული და უცხო კლინიკის კითხვისგან
     match /users/{userId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() ||
+        request.auth.uid == userId ||
+        belongsToUserClinic(resource.data.clinicId)
+      );
+      allow create: if isAuthenticated() && (
+        isSuperAdmin() ||
+        request.auth.uid == userId ||
+        belongsToUserClinic(request.resource.data.clinicId)
+      );
       allow update, delete: if isAuthenticated() && (
         isSuperAdmin() ||
         request.auth.uid == userId ||
@@ -60,7 +79,6 @@ service cloud.firestore {
     }
 
     // 4. სუპერ ადმინის აუდიტის ჟურნალი (SuperAdmin Audit Log)
-    // წაკითხვა და შექმნა შეუძლია მხოლოდ სუპერ ადმინისტრატორს. შეცვლა ან წაშლა დაუშვებელია!
     match /admin_audit_logs/{logId} {
       allow read, create: if isSuperAdmin();
       allow update, delete: if false;
@@ -74,13 +92,12 @@ service cloud.firestore {
                        (request.resource.data.clinicId == null || belongsToUserClinic(request.resource.data.clinicId));
     }
 
-    // 6. ვიზიტები და ჯავშნები (Appointments / Calendar)
-    // წაკითხვა დაშვებულია ავტორიზებულთათვის, რათა სხვადასხვა კლინიკაში მოღვაწე ექიმების გრაფიკის გადაკვეთა არ მოხდეს (Overlap / Double-Booking Prevention)
-    // შექმნა, რედაქტირება და წაშლა მკაცრად დაშვებულია მხოლოდ საკუთარი კლინიკის ჩანაწერებზე
+    // 6. ვიზიტები და ჯავშნები (Appointments / Calendar) - მკაცრი Multi-Tenant იზოლაცია
     match /appointments/{appointmentId} {
-      allow read: if isAuthenticated();
+      allow read, delete: if belongsToUserClinic(resource.data.clinicId);
       allow create: if belongsToUserClinic(request.resource.data.clinicId);
-      allow update, delete: if belongsToUserClinic(resource.data.clinicId);
+      allow update: if belongsToUserClinic(resource.data.clinicId) &&
+                       (request.resource.data.clinicId == null || belongsToUserClinic(request.resource.data.clinicId));
     }
 
     // 7. პაციენტის რენტგენები (Patient X-Rays)
@@ -95,17 +112,16 @@ service cloud.firestore {
     match /inventory/{itemId} {
       allow read, delete: if belongsToUserClinic(resource.data.clinicId);
       allow create: if belongsToUserClinic(request.resource.data.clinicId);
-      allow update: if belongsToUserClinic(resource.data.clinicId) &&
+      allow update: if belongsToUserClinic(request.resource.data.clinicId) &&
                        (request.resource.data.clinicId == null || belongsToUserClinic(request.resource.data.clinicId));
     }
 
     // 9. მომსახურებები და ტარიფები (Services)
-    // წაკითხვა დაშვებულია საჯარო პროფილისთვისაც, მართვა მხოლოდ საკუთარი კლინიკისთვის
     match /services/{serviceId} {
       allow read: if true;
       allow delete: if belongsToUserClinic(resource.data.clinicId);
       allow create: if belongsToUserClinic(request.resource.data.clinicId);
-      allow update: if belongsToUserClinic(resource.data.clinicId) &&
+      allow update: if belongsToUserClinic(request.resource.data.clinicId) &&
                        (request.resource.data.clinicId == null || belongsToUserClinic(request.resource.data.clinicId));
     }
 
@@ -113,18 +129,26 @@ service cloud.firestore {
     match /finance/{financeId} {
       allow read, delete: if belongsToUserClinic(resource.data.clinicId);
       allow create: if belongsToUserClinic(request.resource.data.clinicId);
-      allow update: if belongsToUserClinic(resource.data.clinicId) &&
+      allow update: if belongsToUserClinic(request.resource.data.clinicId) &&
                        (request.resource.data.clinicId == null || belongsToUserClinic(request.resource.data.clinicId));
     }
 
-    // 11. აქტივობების ლოგი (Audit Log) - ჩანაწერის შეცვლა/წაშლა დაუშვებელია
+    // 11. აქტივობების ლოგი (Audit Log)
     match /activity/{activityId} {
       allow read: if belongsToUserClinic(resource.data.clinicId);
       allow create: if belongsToUserClinic(request.resource.data.clinicId);
       allow update, delete: if isSuperAdmin();
     }
 
-    // 12. სხვა ნებისმიერი დამხმარე კოლექცია
+    // 12. საკონტაქტო გვერდის შეტყობინებები
+    match /contact_messages/{msgId} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'phone', 'email', 'message', 'createdAt']) &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 200 &&
+        request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 3000;
+      allow read, update, delete: if isSuperAdmin();
+    }
+
+    // 13. სხვა ნებისმიერი დამხმარე კოლექცია
     match /{document=**} {
       allow read, write: if isSuperAdmin();
     }

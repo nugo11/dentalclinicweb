@@ -31,7 +31,8 @@ import FormInput from "../Common/FormInput";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 import { formatPhone, cleanPhone, validatePhone } from "../../utils/phoneFormatter";
 import { scrollToFirstError } from "../../utils/scrollHelper";
-import { normalizePlanId } from "../../config/plans";
+import { normalizePlanId, canAddPatient } from "../../config/plans";
+import { logActivity } from "../../utils/activityLogger";
 
 const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
   useLockBodyScroll(isOpen);
@@ -80,7 +81,7 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
       }
     };
     if (isOpen) fetchDoctors();
-  }, [userData?.clinicId, isReceptionist, isOpen]);
+  }, [userData?.clinicId, canSelectDoctor, isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -146,6 +147,18 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
     setLoading(true);
     try {
       const clinicId = userData?.clinicId;
+      const existingSnap = await getDocs(
+        query(collection(db, "patients"), where("clinicId", "==", clinicId))
+      );
+      if (!canAddPatient(clinicData?.plan, existingSnap.size)) {
+        const limitErr = "პაციენტების ლიმიტი ამოწურულია. გთხოვთ განაახლოთ ტარიფი.";
+        setFormErrors({ ...formErrors, quickAddPhone: limitErr });
+        setToast({ show: true, message: limitErr });
+        setTimeout(() => setToast({ show: false, message: "" }), 3500);
+        setLoading(false);
+        return;
+      }
+
       const docRef = await addDoc(collection(db, "patients"), {
         fullName: searchTerm,
         phone: cleaned,
@@ -153,6 +166,13 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
         createdAt: serverTimestamp(),
         status: "active",
       });
+      await logActivity(
+        clinicId,
+        activeStaff || userData || { uid: auth.currentUser?.uid, fullName: "Unknown", role: "unknown" },
+        "patient_create",
+        `დაემატა ახალი პაციენტი (სწრაფი დამატება): ${searchTerm}`,
+        { patientId: docRef.id, fullName: searchTerm }
+      );
       setSelectedPatient({ id: docRef.id, fullName: searchTerm, phone: cleaned });
       setSearchTerm(searchTerm);
       setSearchResults([]);
@@ -220,16 +240,18 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
     }
 
     try {
-      const apiKey = import.meta.env.VITE_UBILL_API_KEY;
-      const resp = await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+      const idToken = await auth.currentUser?.getIdToken?.();
+      if (!idToken) return;
+      const resp = await fetch(`/api/send-appointment-sms`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
         body: JSON.stringify({
-          brandID: 2, 
-          numbers: [formattedPhone],
+          phone: formattedPhone,
           text: message,
-          otp: true // აუცილებელია ოპერატორების (Magti, Silknet, Cellfie) მიერ SMS-ის დაუყოვნებლივ მისატანად
-        })
+        }),
       });
       const data = await resp.json().catch(() => null);
       console.log("Appointment SMS Sent successfully:", data);
@@ -300,10 +322,11 @@ const AddAppointmentModal = ({ isOpen, onClose, selectedDate }) => {
       const targetDoctorId = canSelectDoctor ? formData.doctorId : (activeStaff?.id || userData?.uid);
       const targetDoctorName = canSelectDoctor ? formData.doctorName : (activeStaff?.fullName || userData?.fullName);
 
-      // Overlap check for doctor across clinics
-      if (targetDoctorId) {
+      // Overlap check for doctor within clinic
+      if (targetDoctorId && clinicId) {
         const qOverlap = query(
           collection(db, "appointments"),
+          where("clinicId", "==", clinicId),
           where("doctorId", "==", targetDoctorId)
         );
         const overlapSnapshot = await getDocs(qOverlap);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { db, auth } from '../../firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
@@ -11,8 +11,9 @@ import FormInput from '../Common/FormInput';
 import PhoneInput from '../Common/PhoneInput';
 import { logActivity } from '../../utils/activityLogger';
 import useLockBodyScroll from '../../hooks/useLockBodyScroll';
-import { validatePhone, formatPhone } from '../../utils/phoneFormatter';
+import { validatePhone } from '../../utils/phoneFormatter';
 import { scrollToFirstError } from '../../utils/scrollHelper';
+import { getLocalDateString } from '../../utils/dateUtils';
 
 const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
   useLockBodyScroll(isOpen);
@@ -33,8 +34,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
     actualResidenceAddress: ''
   });
   const [formErrors, setFormErrors] = useState({});
-
-  const cardNumber = useMemo(() => Math.floor(Math.random() * 9000) + 1000, [isOpen]);
+  const [cardNumber] = useState(() => Math.floor(Math.random() * 9000) + 1000);
 
   if (!isOpen) return null;
 
@@ -138,9 +138,6 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
     }
   };
 
-  const inputStyle = "w-full pl-12 pr-4 py-3.5 bg-surface-soft border-2 border-transparent focus:bg-surface focus:border-brand-purple rounded-2xl outline-none font-bold text-sm text-text-main transition-all";
-  const labelStyle = "text-[10px] font-black text-text-muted uppercase tracking-widest ml-4 mb-2 block";
-
   return (
     <>
       <div className="app-overlay fixed inset-0 touch-none z-40 animate-in fade-in duration-300" onClick={onClose} onTouchMove={(e) => e.preventDefault()} />
@@ -206,7 +203,7 @@ const AddPatientSlideOver = ({ isOpen, onClose, currentCount }) => {
                     type="date"
                     label="დაბადების თარიღი" 
                     icon={Calendar} 
-                    max={new Date().toISOString().split("T")[0]}
+                    max={getLocalDateString()}
                     placeholder="mm/dd/yyyy"
                     value={formData.birthDate}
                     error={formErrors.birthDate}

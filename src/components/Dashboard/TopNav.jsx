@@ -18,19 +18,12 @@ const TopNav = ({ onMenuClick }) => {
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef(null);
   const userMenuRef = useRef(null);
+  const patientsCacheRef = useRef({ clinicId: null, list: [], fetchedAt: 0 });
   
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const displayName = activeStaff?.fullName || userData?.fullName || "მომხმარებელი";
   const displayRole = activeStaff?.role || userData?.role || "პერსონალი";
-
-  const roleMap = {
-    admin: "ადმინისტრატორი",
-    doctor: "ექიმი",
-    receptionist: "რეგისტრატორი",
-    manager: "მენეჯერი",
-    accountant: "ბუღალტერი"
-  };
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
@@ -38,10 +31,11 @@ const TopNav = ({ onMenuClick }) => {
     }
   };
 
-  // Live Search Logic
+  // Live Search Logic (with 60s per-clinic cache to avoid repeated full collection reads)
   useEffect(() => {
+    const PATIENT_CACHE_TTL_MS = 60 * 1000;
     const searchPatients = async () => {
-      if (searchQuery.trim().length < 2) {
+      if (searchQuery.trim().length < 2 || !userData?.clinicId) {
         setSearchResults([]);
         setTotalCount(0);
         setShowResults(false);
@@ -52,13 +46,24 @@ const TopNav = ({ onMenuClick }) => {
       setShowResults(true);
 
       try {
-        const q = query(
-          collection(db, "patients"),
-          where("clinicId", "==", userData.clinicId)
-        );
-        const snapshot = await getDocs(q);
-        const allPatients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
+        const cache = patientsCacheRef.current;
+        const now = Date.now();
+        let allPatients = cache.list;
+
+        if (cache.clinicId !== userData.clinicId || now - cache.fetchedAt > PATIENT_CACHE_TTL_MS) {
+          const q = query(
+            collection(db, "patients"),
+            where("clinicId", "==", userData.clinicId)
+          );
+          const snapshot = await getDocs(q);
+          allPatients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          patientsCacheRef.current = {
+            clinicId: userData.clinicId,
+            list: allPatients,
+            fetchedAt: now,
+          };
+        }
+
         const filtered = allPatients.filter(p => 
           (p.fullName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
           (p.personalId || "").includes(searchQuery) ||
@@ -91,9 +96,6 @@ const TopNav = ({ onMenuClick }) => {
 
     const handleScroll = () => {
       setShowUserMenu(false);
-      if (window.scrollY > 0) {
-        window.scrollTo(0, 0);
-      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -243,7 +245,7 @@ const TopNav = ({ onMenuClick }) => {
             <div className="text-right hidden lg:block">
               <p className="text-[13px] font-black text-text-main uppercase tracking-tighter leading-none mb-1">{displayName}</p>
               <p className="text-[10px] font-black text-brand-purple uppercase tracking-widest opacity-70">
-                  {roleMap[displayRole] || displayRole}
+                  {getRoleLabel(displayRole)}
               </p>
             </div>
             
@@ -267,7 +269,7 @@ const TopNav = ({ onMenuClick }) => {
                         <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-1">სესია</p>
                         <p className="text-xs font-black text-text-main truncate">{displayName}</p>
                         <p className="text-[10px] font-bold text-brand-purple uppercase tracking-widest mt-0.5">
-                          {roleMap[displayRole] || displayRole}
+                          {getRoleLabel(displayRole)}
                         </p>
                       </div>
                       {role === 'admin' && (

@@ -4,28 +4,24 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { Clock, Building2, Calendar as CalendarIcon, Search, Loader2, Archive, CalendarDays } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getLocalDateString } from '../../utils/dateUtils';
 
 const AppointmentsList = () => {
   const { userData, role, activeStaff } = useAuth();
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState("");
   const navigate = useNavigate();
-
-  const isReceptionist = role === "receptionist";
 
   useEffect(() => {
     if (!userData?.clinicId) return;
 
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString();
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
-
     let q;
     if (role === "doctor") {
-      // ვიყენებთ მხოლოდ doctorId-ს ინდექსების შეცდომის ასაცილებლად
+      // ვიყენებთ clinicId + doctorId ფილტრს მკაცრი იზოლაციისთვის
       q = query(
         collection(db, "appointments"),
+        where("clinicId", "==", userData.clinicId),
         where("doctorId", "==", activeStaff?.id || userData?.uid)
       );
     } else {
@@ -38,12 +34,12 @@ const AppointmentsList = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
-      const todayDate = now.toISOString().split('T')[0];
+      const todayDate = getLocalDateString();
 
-      // ფილტრაცია კლიენტის მხარეს: კლინიკის ID (ექიმისთვის) და დღევანდელი თარიღი
+      // ფილტრაცია კლიენტის მხარეს: კლინიკის ID (ექიმისთვის) და დღევანდელი ადგილობრივი თარიღი
       const todayData = allData.filter(app => {
         const isCorrectClinic = role === "doctor" ? app.clinicId === userData.clinicId : true;
-        const appDate = app.start?.split('T')[0];
+        const appDate = app.start ? getLocalDateString(new Date(app.start)) : "";
         return isCorrectClinic && appDate === todayDate;
       });
 
@@ -55,7 +51,7 @@ const AppointmentsList = () => {
     });
 
     return () => unsubscribe();
-  }, [userData]);
+  }, [userData?.clinicId, userData?.uid, role, activeStaff?.id]);
 
   const filteredAndSorted = useMemo(() => {
     const now = new Date();
@@ -120,7 +116,7 @@ const AppointmentsList = () => {
           <div className="flex justify-center py-20 opacity-20"><Loader2 className="animate-spin" /></div>
         ) : filteredAndSorted.length > 0 ? (
           <div className="space-y-0 relative before:absolute before:left-[27px] before:top-4 before:bottom-4 before:w-0.5 before:bg-surface-soft">
-            {filteredAndSorted.map((app, idx) => {
+            {filteredAndSorted.map((app) => {
               const status = getTimeStatus(app);
               const isNext = new Date(app.start) > new Date() && (new Date(app.start) - new Date() < 1800000);
               const timeStr = new Date(app.start).toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' });

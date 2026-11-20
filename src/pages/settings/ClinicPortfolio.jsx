@@ -9,7 +9,7 @@ import TopNav from "../../components/Dashboard/TopNav";
 import FormInput from "../../components/Common/FormInput";
 import PhoneInput from "../../components/Common/PhoneInput";
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
-import { formatPhone, cleanPhone, validatePhone } from "../../utils/phoneFormatter";
+import { cleanPhone, validatePhone } from "../../utils/phoneFormatter";
 import { 
   Globe, 
   Image as ImageIcon, 
@@ -80,43 +80,28 @@ const ClinicPortfolio = () => {
   });
 
   const [showSmsModal, setShowSmsModal] = useState(false);
-  const [generatedOtpHash, setGeneratedOtpHash] = useState("");
+  const [otpChallengeToken, setOtpChallengeToken] = useState("");
   const [userOtp, setUserOtp] = useState("");
   const [smsStatus, setSmsStatus] = useState("idle"); // idle, loading, sent, verified
   const [resendTimer, setResendTimer] = useState(0);
 
-  const hashOtp = async (code) => {
-    const enc = new TextEncoder().encode(code);
-    const buf = await crypto.subtle.digest("SHA-256", enc);
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  };
-
   useLockBodyScroll(showSmsModal);
 
   useEffect(() => {
-    // შემოწმება localStorage-დან
-    const lastSent = localStorage.getItem(`sms_cooldown_${formData.phone}`);
-    const savedOtpData = localStorage.getItem(`sms_otp_hash_${formData.phone}`);
-    
-    if (savedOtpData) {
-      try {
-        const parsed = JSON.parse(savedOtpData);
-        if (parsed.expiresAt && Date.now() <= parsed.expiresAt) {
-          setGeneratedOtpHash(parsed.hash);
-        } else {
-          localStorage.removeItem(`sms_otp_hash_${formData.phone}`);
-        }
-      } catch (e) {
-        localStorage.removeItem(`sms_otp_hash_${formData.phone}`);
-      }
+    const cleaned = cleanPhone(formData.phone);
+    const lastSent = localStorage.getItem(`sms_cooldown_${cleaned}`);
+    const savedChallenge = sessionStorage.getItem(`sms_otp_challenge_portfolio_${cleaned}`);
+
+    if (savedChallenge) {
+      setOtpChallengeToken(savedChallenge);
     }
 
     if (lastSent) {
-      const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+      const remaining = Math.floor((parseInt(lastSent, 10) + 120000 - Date.now()) / 1000);
       if (remaining > 0) setResendTimer(remaining);
       else {
-          localStorage.removeItem(`sms_cooldown_${formData.phone}`);
-          localStorage.removeItem(`sms_otp_hash_${formData.phone}`);
+        localStorage.removeItem(`sms_cooldown_${cleaned}`);
+        sessionStorage.removeItem(`sms_otp_challenge_portfolio_${cleaned}`);
       }
     }
 
@@ -274,10 +259,11 @@ const ClinicPortfolio = () => {
   };
 
   const handleSendSms = async (targetPhone) => {
+    const cleanedTarget = cleanPhone(targetPhone);
     // სპამის პრევენცია - შემოწმება გაგზავნამდე
-    const lastSent = localStorage.getItem(`sms_cooldown_${targetPhone}`);
+    const lastSent = localStorage.getItem(`sms_cooldown_${cleanedTarget}`);
     if (lastSent) {
-        const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+        const remaining = Math.floor((parseInt(lastSent, 10) + 120000 - Date.now()) / 1000);
         if (remaining > 0) {
             setResendTimer(remaining);
             setSmsStatus("sent");
@@ -287,36 +273,31 @@ const ClinicPortfolio = () => {
     
     if (resendTimer > 0) return;
     
-    const finalPhone = "995" + targetPhone;
     setSmsStatus("loading");
     
-    // ვქმნით 6 ნიშნა კოდს
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = await hashOtp(otp);
-    setGeneratedOtpHash(otpHash);
-    
     try {
-      const apiKey = import.meta.env.VITE_UBILL_API_KEY;
-      await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+      const resp = await fetch(`/api/sms-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandID: 2,
-          numbers: [finalPhone],
-          text: `AiDent code: ${otp}`,
-          otp: true
+          action: "send",
+          phone: cleanedTarget,
+          purpose: "portfolio"
         })
       });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.challengeToken) {
+        throw new Error(data.error || "SMS-ის გაგზავნა ვერ მოხერხდა");
+      }
+
+      setOtpChallengeToken(data.challengeToken);
+      sessionStorage.setItem(`sms_otp_challenge_portfolio_${cleanedTarget}`, data.challengeToken);
       setSmsStatus("sent");
       setResendTimer(120); // 2 წუთიანი ტაიმერი
-      localStorage.setItem(`sms_cooldown_${targetPhone}`, Date.now().toString());
-      localStorage.setItem(`sms_otp_hash_${targetPhone}`, JSON.stringify({
-        hash: otpHash,
-        expiresAt: Date.now() + 5 * 60 * 1000
-      }));
+      localStorage.setItem(`sms_cooldown_${cleanedTarget}`, Date.now().toString());
     } catch (err) {
       console.error("SMS Error:", err);
-      setToast({ type: "error", text: "SMS-ის გაგზავნა ვერ მოხერხდა" });
+      setToast({ type: "error", text: err.message || "SMS-ის გაგზავნა ვერ მოხერხდა" });
       setSmsStatus("idle");
     }
   };
@@ -336,19 +317,19 @@ const ClinicPortfolio = () => {
     }
 
     // თუ ნომერი მობილურია, შეიცვალა და ჯერ არ არის ვერიფიცირებული
-    if (cleanPhoneDigits && cleanPhoneDigits.startsWith("5") && cleanPhoneDigits !== clinicData.phone && smsStatus !== "verified") {
+    if (cleanPhoneDigits && cleanPhoneDigits.startsWith("5") && cleanPhoneDigits !== cleanPhone(clinicData.phone) && smsStatus !== "verified") {
       setShowSmsModal(true);
       
-      const lastSent = localStorage.getItem(`sms_cooldown_${cleanPhone}`);
+      const lastSent = localStorage.getItem(`sms_cooldown_${cleanPhoneDigits}`);
       if (lastSent) {
-          const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+          const remaining = Math.floor((parseInt(lastSent, 10) + 120000 - Date.now()) / 1000);
           if (remaining > 0) {
               setSmsStatus("sent");
               return;
           }
       }
 
-      handleSendSms(cleanPhone);
+      handleSendSms(cleanPhoneDigits);
       return;
     }
 
@@ -363,7 +344,7 @@ const ClinicPortfolio = () => {
 
       await updateDoc(clinicRef, {
         ...formData,
-        phone: cleanPhone,
+        phone: cleanPhoneDigits,
         mapUrl: mapUrlValue,
         updatedAt: new Date().toISOString()
       });
@@ -700,35 +681,40 @@ const ClinicPortfolio = () => {
               </button>
               <button 
                 onClick={async () => {
-                  const enteredHash = await hashOtp(userOtp);
-                  const savedRaw = localStorage.getItem(`sms_otp_hash_${formData.phone}`);
-                  let isValid = false;
+                  const cleaned = cleanPhone(formData.phone);
+                  const challengeToken =
+                    otpChallengeToken ||
+                    sessionStorage.getItem(`sms_otp_challenge_portfolio_${cleaned}`) ||
+                    "";
 
-                  if (savedRaw) {
-                    try {
-                      const parsed = JSON.parse(savedRaw);
-                      if (parsed.expiresAt && Date.now() <= parsed.expiresAt && enteredHash === parsed.hash) {
-                        isValid = true;
-                      }
-                    } catch (e) {
-                      if (enteredHash === generatedOtpHash) isValid = true;
+                  try {
+                    const verifyRes = await fetch(`/api/sms-otp`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        action: "verify",
+                        phone: cleaned,
+                        code: userOtp.trim(),
+                        purpose: "portfolio",
+                        challengeToken,
+                      }),
+                    });
+                    const verifyData = await verifyRes.json().catch(() => ({}));
+                    if (verifyRes.ok && verifyData.verified) {
+                      sessionStorage.removeItem(`sms_otp_challenge_portfolio_${cleaned}`);
+                      setOtpChallengeToken("");
+                      setSmsStatus("verified");
+                      setShowSmsModal(false);
+                      setUserOtp("");
+                      setResendTimer(0);
+                      setTimeout(() => {
+                        document.querySelector('button[type="submit"]')?.click();
+                      }, 100);
+                    } else {
+                      setToast({ type: "error", text: verifyData.error || "კოდი არასწორია ან ვადაგასულია" });
                     }
-                  } else if (enteredHash === generatedOtpHash) {
-                    isValid = true;
-                  }
-
-                  if (isValid) {
-                    localStorage.removeItem(`sms_otp_hash_${formData.phone}`);
-                    setSmsStatus("verified");
-                    setShowSmsModal(false);
-                    setUserOtp("");
-                    setResendTimer(0);
-                    // Trigger save again with verified status
-                    setTimeout(() => {
-                      document.querySelector('button[type="submit"]')?.click();
-                    }, 100);
-                  } else {
-                    setToast({ type: "error", text: "კოდი არასწორია ან ვადაგასულია" });
+                  } catch {
+                    setToast({ type: "error", text: "კოდის შემოწმება ვერ მოხერხდა" });
                   }
                 }}
                 className="py-5 bg-brand-purple text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-purple/20 hover:bg-brand-deep transition-all active:scale-95 cursor-pointer"

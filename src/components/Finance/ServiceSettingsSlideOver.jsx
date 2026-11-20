@@ -5,10 +5,12 @@ import { X, Plus, Trash2, Tag, DollarSign, Loader2, Package, Minus, Search } fro
 import { useAuth } from '../../context/AuthContext';
 import useLockBodyScroll from '../../hooks/useLockBodyScroll';
 import { scrollToFirstError } from '../../utils/scrollHelper';
+import { canAddService, getPlan } from '../../config/plans';
+import { logActivity } from '../../utils/activityLogger';
 
 const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
   useLockBodyScroll(isOpen);
-  const { userData } = useAuth();
+  const { userData, clinicData, activeStaff } = useAuth();
   const [services, setServices] = useState([]);
   const [inventory, setInventory] = useState([]); // საწყობის სია
   const [loading, setLoading] = useState(false);
@@ -84,19 +86,35 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
       scrollToFirstError('.app-sheet');
       return;
     }
+
+    if (!canAddService(clinicData?.plan, services.length)) {
+      const planInfo = getPlan(clinicData?.plan);
+      setErrors({ name: `თქვენს (${planInfo.title}) ტარიფში სერვისების ლიმიტი (${planInfo.maxServices}) ამოწურულია.` });
+      scrollToFirstError('.app-sheet');
+      return;
+    }
     setErrors({});
 
     setLoading(true);
     try {
       const user = auth.currentUser;
       const clinicId = userData?.clinicId || user.uid;
-      await addDoc(collection(db, "services"), {
+      const trimmedName = newService.name.trim();
+      const servicePrice = Number(newService.price);
+      const docRef = await addDoc(collection(db, "services"), {
         clinicId,
-        name: newService.name.trim(),
-        price: Number(newService.price),
+        name: trimmedName,
+        price: servicePrice,
         materials: newService.materials.map(m => ({ ...m, amount: Number(m.amount) || 1 })),
         createdAt: serverTimestamp()
       });
+      await logActivity(
+        clinicId,
+        activeStaff || userData || { uid: user.uid, fullName: 'Unknown', role: 'unknown' },
+        'service_create',
+        `დაემატა სერვისი: ${trimmedName} (${servicePrice}₾)`,
+        { serviceId: docRef.id, name: trimmedName, price: servicePrice }
+      );
       setNewService({ name: '', price: '', materials: [] });
       setErrors({});
     } catch (error) {
@@ -108,7 +126,18 @@ const ServiceSettingsSlideOver = ({ isOpen, onClose }) => {
 
   const handleDelete = async (id) => {
     try {
+      const target = services.find(s => s.id === id);
       await deleteDoc(doc(db, "services", id));
+      const clinicId = userData?.clinicId || auth.currentUser?.uid;
+      if (clinicId) {
+        await logActivity(
+          clinicId,
+          activeStaff || userData || { uid: auth.currentUser?.uid, fullName: 'Unknown', role: 'unknown' },
+          'service_delete',
+          `წაიშალა სერვისი: ${target?.name || id}`,
+          { serviceId: id, name: target?.name || '' }
+        );
+      }
     } catch (error) {
       console.error(error);
     }

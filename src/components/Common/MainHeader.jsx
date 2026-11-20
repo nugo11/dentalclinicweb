@@ -12,7 +12,6 @@ const MainHeader = ({ user }) => {
   const location = useLocation();
 
   useLockBodyScroll(isMobileMenuOpen);
-  const isLanding = location.pathname === "/";
 
   const handleHomeClick = (e) => {
     if (location.pathname === "/") {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Sparkles, Building2, Check, Shield, AlertTriangle, Loader2, Users } from "lucide-react";
-import { doc, updateDoc, deleteField } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { logAdminAudit } from "../../utils/superAdmin";
 import { normalizePlanId } from "../../config/plans";

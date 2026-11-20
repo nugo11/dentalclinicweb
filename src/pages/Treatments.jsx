@@ -18,7 +18,6 @@ import {
 
 const Treatments = () => {
   const { userData, role, activeStaff } = useAuth();
-  const isReadOnly = role === 'accountant';
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [rawOrders, setRawOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);

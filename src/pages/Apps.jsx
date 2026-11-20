@@ -7,6 +7,7 @@ import MainHeader from '../components/Common/MainHeader';
 
 const Apps = () => {
   const { currentUser } = useAuth();
+  const windowsDownloadUrl = import.meta.env.VITE_DESKTOP_DOWNLOAD_URL;
   const platforms = [
     {
       id: 'windows',
@@ -15,11 +16,17 @@ const Apps = () => {
       description: 'სრული სამუშაო გამოცდილება თქვენი კომპიუტერისთვის. მუშაობს Windows 10 და 11-ზე.',
       badge: 'რეკომენდირებულია კლინიკისთვის',
       features: ['ავტონომიური აპლიკაცია', 'სწრაფი წვდომა დესკტოპიდან', 'მაღალი წარმადობა'],
-      action: {
-        text: 'გადმოწერა Windows-ისთვის',
-        link: '/DentalHub_Setup.exe',
-        type: 'download'
-      }
+      action: windowsDownloadUrl
+        ? {
+            text: 'გადმოწერა Windows-ისთვის',
+            link: windowsDownloadUrl,
+            type: 'download'
+          }
+        : {
+            text: 'მალე დაემატება — გამოიყენეთ Web/PWA ვერსია',
+            link: null,
+            type: 'unavailable'
+          }
     },
     {
       id: 'web',
@@ -111,14 +118,21 @@ const Apps = () => {
               </div>
 
               {p.action ? (
-                <a 
-                  href={p.action.link} 
-                  download={p.action.type === 'download' ? true : undefined}
-                  className="w-full py-4 bg-brand-deep text-white rounded-2xl flex items-center justify-center gap-3 group transition-all hover:bg-brand-purple shadow-lg shadow-brand-deep/10"
-                >
-                  {p.action.type === 'download' ? <Download size={20} /> : <Globe size={20} />}
-                  <span className="text-xs font-black uppercase tracking-widest">{p.action.text}</span>
-                </a>
+                p.action.type === 'unavailable' ? (
+                  <div className="w-full py-4 px-4 bg-surface-soft text-text-muted border border-border-main rounded-2xl flex items-center justify-center gap-3 text-center">
+                    <Monitor size={18} className="shrink-0" />
+                    <span className="text-[11px] font-black uppercase tracking-wider">{p.action.text}</span>
+                  </div>
+                ) : (
+                  <a 
+                    href={p.action.link} 
+                    download={p.action.type === 'download' ? true : undefined}
+                    className="w-full py-4 bg-brand-deep text-white rounded-2xl flex items-center justify-center gap-3 group transition-all hover:bg-brand-purple shadow-lg shadow-brand-deep/10"
+                  >
+                    {p.action.type === 'download' ? <Download size={20} /> : <Globe size={20} />}
+                    <span className="text-xs font-black uppercase tracking-widest">{p.action.text}</span>
+                  </a>
+                )
               ) : (
                 <div className="space-y-3 pt-4 border-t border-border-main">
                   <p className="text-[10px] font-black text-text-muted uppercase tracking-widest mb-2">ინსტალაციის ნაბიჯები:</p>
@@ -164,7 +178,7 @@ const Apps = () => {
 
       <footer className="py-12 border-t border-border-dark bg-surface">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-text-muted text-xs font-bold uppercase tracking-widest">© 2024 AiDent — ყველა უფლება დაცულია</p>
+          <p className="text-text-muted text-xs font-bold uppercase tracking-widest">© {new Date().getFullYear()} AiDent — ყველა უფლება დაცულია</p>
         </div>
       </footer>
     </div>

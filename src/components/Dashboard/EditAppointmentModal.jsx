@@ -36,7 +36,7 @@ import DentalChart from '../Patients/DentalChart/DentalChart';
 const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
   useLockBodyScroll(isOpen);
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { role, userData } = useAuth();
   const isDoctor = role === 'doctor';
   const isReadOnly = role === 'manager';
 
@@ -119,9 +119,10 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
 
           setPatientDetails(pData);
 
-          if (targetPatId) {
+          if (targetPatId && userData?.clinicId) {
             const qHist = query(
               collection(db, "appointments"),
+              where("clinicId", "==", userData.clinicId),
               where("patientId", "==", targetPatId)
             );
             const snapHist = await getDocs(qHist);
@@ -143,7 +144,7 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
 
       fetchPatientData();
     }
-  }, [isOpen, appointmentData, patientId, isExternal]);
+  }, [isOpen, appointmentData, patientId, isExternal, userData?.clinicId]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -180,11 +181,12 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
       const startDateTime = new Date(yearStr, monthStr - 1, dayStr, hoursStr, minutesStr);
       const endDateTime = new Date(startDateTime.getTime() + parseInt(formData.duration) * 60000);
 
-      // Overlap check for doctor
+      // Overlap check for doctor within clinic
       const doctorId = appointmentData.doctorId || appointmentData.extendedProps?.doctorId;
-      if (doctorId) {
+      if (doctorId && userData?.clinicId) {
         const qOverlap = query(
           collection(db, "appointments"),
+          where("clinicId", "==", userData.clinicId),
           where("doctorId", "==", doctorId)
         );
         const overlapSnapshot = await getDocs(qOverlap);
@@ -675,10 +677,10 @@ const EditAppointmentModal = ({ isOpen, onClose, appointmentData }) => {
                   </div>
 
                   {/* Chronic Diseases */}
-                  {patientDetails.chronicDiseases && (
+                  {(patientDetails.chronicDiseases || patientDetails.diseases) && (
                     <div className="bg-surface-soft p-4 rounded-2xl border border-border-main/50 space-y-1">
                       <span className="text-[9px] font-black uppercase tracking-widest text-text-muted block">ქრონიკული დაავადებები</span>
-                      <p className="text-xs font-bold text-text-main">{patientDetails.chronicDiseases}</p>
+                      <p className="text-xs font-bold text-text-main">{patientDetails.chronicDiseases || patientDetails.diseases}</p>
                     </div>
                   )}
 

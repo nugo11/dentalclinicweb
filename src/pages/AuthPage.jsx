@@ -32,13 +32,6 @@ const extractSafeStaff = (docSnap) => {
   };
 };
 
-// დამხმარე ფუნქცია: OTP კოდის უსაფრთხო ჰეშირება (რათა localStorage-ში ღია ტექსტი არ შეინახოს)
-const hashOtp = async (phoneNum, rawOtp) => {
-  const enc = new TextEncoder();
-  const buff = await crypto.subtle.digest("SHA-256", enc.encode(`${cleanPhone(phoneNum)}:${rawOtp}:aident_otp_salt`));
-  return Array.from(new Uint8Array(buff)).map(b => b.toString(16).padStart(2, '0')).join('');
-};
-
 const AuthPage = () => {
   const location = useLocation();
   const [isLogin, setIsLogin] = useState(
@@ -49,7 +42,6 @@ const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const [resetMessage, setResetMessage] = useState("");
   const navigate = useNavigate();
   const { staffLogin, currentUser, clinicData, activeStaff } = useAuth(); 
 
@@ -73,7 +65,8 @@ const AuthPage = () => {
   const [phone, setPhone] = useState(""); // ახალი: ტელეფონის ნომერი
   const [smsStatus, setSmsStatus] = useState("idle"); // idle, loading, sent, verified
   const [showSmsModal, setShowSmsModal] = useState(false); // ახალი მოდალის სტეიტი
-  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [otpChallengeToken, setOtpChallengeToken] = useState("");
+  const [recoveryChallengeToken, setRecoveryChallengeToken] = useState("");
   const [userOtp, setUserOtp] = useState("");
   const [loginName, setLoginName] = useState(""); 
   const [password, setPassword] = useState("");
@@ -114,19 +107,18 @@ const AuthPage = () => {
 
   useLockBodyScroll(showSmsModal);
   React.useEffect(() => {
-    // შემოწმება localStorage-დან (მხოლოდ დაცული ჰეში)
     const cleaned = cleanPhone(phone);
     const lastSent = localStorage.getItem(`sms_cooldown_${cleaned}`);
-    const savedOtpHash = localStorage.getItem(`sms_otp_hash_${cleaned}`);
-    
-    if (savedOtpHash) setGeneratedOtp(savedOtpHash);
+    const savedChallenge = sessionStorage.getItem(`sms_otp_challenge_register_${cleaned}`);
+
+    if (savedChallenge) setOtpChallengeToken(savedChallenge);
 
     if (lastSent) {
-      const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+      const remaining = Math.floor((parseInt(lastSent, 10) + 120000 - Date.now()) / 1000);
       if (remaining > 0) setResendTimer(remaining);
       else {
-          localStorage.removeItem(`sms_cooldown_${cleaned}`);
-          localStorage.removeItem(`sms_otp_hash_${cleaned}`);
+        localStorage.removeItem(`sms_cooldown_${cleaned}`);
+        sessionStorage.removeItem(`sms_otp_challenge_register_${cleaned}`);
       }
     }
 
@@ -134,11 +126,11 @@ const AuthPage = () => {
     if (resendTimer > 0) {
       interval = setInterval(() => {
         setResendTimer(prev => {
-            if (prev <= 1) {
-                clearInterval(interval);
-                return 0;
-            }
-            return prev - 1;
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
         });
       }, 1000);
     }
@@ -232,8 +224,7 @@ const AuthPage = () => {
         const ownerEmail = clinicInfo.ownerEmail; // ვინახავთ მფლობელის მეილს კლინიკის დოკუმენტში
 
         // 2. ვახდენთ ავტორიზაციას რეალური მეილით
-        const userCredential = await signInWithEmailAndPassword(auth, ownerEmail, password);
-        const uid = userCredential.user.uid;
+        await signInWithEmailAndPassword(auth, ownerEmail, password);
         
         const q = query(collection(db, "users"), where("clinicId", "==", clinicSnap.docs[0].id));
         const snap = await getDocs(q);
@@ -261,12 +252,12 @@ const AuthPage = () => {
               return;
           }
 
-          // 2. ვამოწმებთ ტელეფონის ნომერს
+          // 2. ვამოწმებთ ტელეფონის ნომერს კლინიკების კოლექციაში
           const cleanedPhone = cleanPhone(phone);
-          let phoneQuery = query(collection(db, "users"), where("phone", "==", cleanedPhone));
+          let phoneQuery = query(collection(db, "clinics"), where("phone", "==", cleanedPhone));
           let phoneSnap = await getDocs(phoneQuery);
           if (phoneSnap.empty && phone !== cleanedPhone) {
-              phoneQuery = query(collection(db, "users"), where("phone", "==", phone));
+              phoneQuery = query(collection(db, "clinics"), where("phone", "==", phone));
               phoneSnap = await getDocs(phoneQuery);
           }
           if (!phoneSnap.empty) {
@@ -280,9 +271,9 @@ const AuthPage = () => {
               setShowSmsModal(true);
               
               // შემოწმება უკვე ხომ არ არის ტაიმერი აქტიური
-              const lastSent = localStorage.getItem(`sms_cooldown_${phone}`);
+              const lastSent = localStorage.getItem(`sms_cooldown_${cleanedPhone}`);
               if (lastSent) {
-                  const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+                  const remaining = Math.floor((parseInt(lastSent, 10) + 120000 - Date.now()) / 1000);
                   if (remaining > 0) {
                       setSmsStatus("sent"); // თუ უკვე გაგზავნილია, გადავდივართ კოდის შეყვანაზე
                       return;
@@ -311,7 +302,7 @@ const AuthPage = () => {
     if (!emailToTest || !emailToTest.includes("@")) return;
     const testEmail = emailToTest.toLowerCase();
     try {
-      const q = query(collection(db, "users"), where("email", "==", testEmail));
+      const q = query(collection(db, "clinics"), where("ownerEmail", "==", testEmail));
       const snap = await getDocs(q);
       if (!snap.empty) {
         setFormErrors(prev => ({ ...prev, email: "ეს ელ-ფოსტა უკვე დაკავებულია" }));
@@ -325,10 +316,10 @@ const AuthPage = () => {
     const cleaned = cleanPhone(phoneToTest);
     if (!cleaned || cleaned.length < 9) return;
     try {
-      let q = query(collection(db, "users"), where("phone", "==", cleaned));
+      let q = query(collection(db, "clinics"), where("phone", "==", cleaned));
       let snap = await getDocs(q);
       if (snap.empty && phoneToTest !== cleaned) {
-        q = query(collection(db, "users"), where("phone", "==", phoneToTest));
+        q = query(collection(db, "clinics"), where("phone", "==", phoneToTest));
         snap = await getDocs(q);
       }
       if (!snap.empty) {
@@ -536,6 +527,7 @@ const AuthPage = () => {
         await setDoc(newClinicRef, {
           clinicName,
           loginName: loginName.toLowerCase(),
+          phone: cleanPhone(phone),
           plan: "free", 
           subscriptionStatus: "active",
           ownerId: uid,
@@ -557,7 +549,8 @@ const AuthPage = () => {
         await setDoc(doc(db, "users", uid), newUser);
         
         // localStorage-ში შესანახად ვშლით სენსიტიურ მონაცემებს
-        const { adminPinHash, ...safeUser } = newUser;
+        const { adminPinHash: _removedAdminPinHash, ...safeUser } = newUser;
+        void _removedAdminPinHash;
         staffLogin({ id: uid, ...safeUser });
         setAuthStep("success");
       }
@@ -574,33 +567,6 @@ const AuthPage = () => {
     }
   };
 
-  const handlePasswordReset = async () => {
-    if (!email || !email.includes("@")) {
-      setFormErrors((prev) => ({
-        ...prev,
-        email: "პაროლის აღსადგენად ჩაწერეთ სწორი ელ-ფოსტა",
-      }));
-      setResetMessage("");
-      return;
-    }
-
-    setIsLoading(true);
-    setFormErrors((prev) => ({ ...prev, email: undefined, general: undefined }));
-    setResetMessage("");
-    try {
-      await sendPasswordResetEmail(auth, email);
-      setResetMessage("პაროლის აღდგენის ლინკი გამოგზავნილია ელ-ფოსტაზე.");
-    } catch (error) {
-      console.error("Reset password error:", error);
-      setFormErrors((prev) => ({
-        ...prev,
-        general: "პაროლის აღდგენა ვერ მოხერხდა. სცადეთ ხელახლა.",
-      }));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleSendSms = async () => {
     const cleaned = cleanPhone(phone);
     if (!cleaned.startsWith("5") || cleaned.length !== 9) {
@@ -611,7 +577,7 @@ const AuthPage = () => {
     // სპამის პრევენცია - შემოწმება გაგზავნამდე
     const lastSent = localStorage.getItem(`sms_cooldown_${cleaned}`);
     if (lastSent) {
-        const remaining = Math.floor((parseInt(lastSent) + 120000 - Date.now()) / 1000);
+        const remaining = Math.floor((parseInt(lastSent, 10) + 120000 - Date.now()) / 1000);
         if (remaining > 0) {
             setResendTimer(remaining);
             setSmsStatus("sent");
@@ -619,46 +585,33 @@ const AuthPage = () => {
         }
     }
     
-    const finalPhone = "995" + cleaned;
     setFormErrors(prev => ({ ...prev, phone: undefined, general: undefined }));
     setSmsStatus("loading");
     
-    // ვქმნით 6 ნიშნა კოდს
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = await hashOtp(cleaned, otp);
-    setGeneratedOtp(otpHash);
-    
     try {
-      const apiKey = import.meta.env.VITE_UBILL_API_KEY;
-      const response = await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+      const response = await fetch(`/api/sms-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          brandID: 2,
-          numbers: [finalPhone],
-          text: `AiDent code: ${otp}`,
-          otp: true
+          action: "send",
+          phone: cleaned,
+          purpose: "register"
         })
       });
-      
-      if (!response.ok) {
-        throw new Error("SMS-ის გაგზავნა ვერ მოხერხდა API-დან");
-      }
 
-      const data = await response.json();
-      if (data.statusID === 10) {
-          throw new Error("გამგზავნის სახელი (Brand ID) არ არის ვერიფიცირებული UBill-ზე.");
-      } else if (data.statusID !== undefined && data.statusID !== 0) {
-          throw new Error(`UBill შეცდომა: ${data.message || "უცნობი შეცდომა"}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.challengeToken) {
+        throw new Error(data.error || "SMS-ის გაგზავნა ვერ მოხერხდა API-დან");
       }
       
       localStorage.setItem(`sms_cooldown_${cleaned}`, Date.now().toString());
-      localStorage.setItem(`sms_otp_hash_${cleaned}`, otpHash);
+      sessionStorage.setItem(`sms_otp_challenge_register_${cleaned}`, data.challengeToken);
+      setOtpChallengeToken(data.challengeToken);
       setSmsStatus("sent");
       setResendTimer(120); // 2 წუთი
     } catch (err) {
       console.error("UBill Error:", err);
-      setFormErrors({ general: "სისტემური შეცდომა SMS-ის გაგზავნისას. გადაამოწმეთ API კავშირი." });
+      setFormErrors({ general: err.message || "სისტემური შეცდომა SMS-ის გაგზავნისას. გადაამოწმეთ API კავშირი." });
       setSmsStatus("idle");
     }
   };
@@ -863,14 +816,6 @@ const AuthPage = () => {
                     >
                       პაროლის აღდგენა
                     </button>
-                  </div>
-                )}
-
-                {resetMessage && (
-                  <div className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
-                    <p className="text-[11px] text-emerald-600 font-black text-center uppercase tracking-tight">
-                      {resetMessage}
-                    </p>
                   </div>
                 )}
 
@@ -1101,83 +1046,55 @@ const AuthPage = () => {
                 }
                 setIsLoading(true);
                 try {
-                  // ვეძებთ ადმინისტრატორს ამ ტელეფონით
-                  let q = query(collection(db, "users"), where("phone", "==", cleaned), where("role", "==", "admin"));
+                  // ვეძებთ კლინიკას მითითებული ტელეფონით
+                  let q = query(collection(db, "clinics"), where("phone", "==", cleaned));
                   let snap = await getDocs(q);
                   if (snap.empty && phone !== cleaned) {
-                    q = query(collection(db, "users"), where("phone", "==", phone), where("role", "==", "admin"));
+                    q = query(collection(db, "clinics"), where("phone", "==", phone));
                     snap = await getDocs(q);
                   }
-                  
-                  // თუ ადმინისტრატორი არ მოიძებნა, ვეძებთ ნებისმიერ მომხმარებელს ამ ტელეფონით
+
                   if (snap.empty) {
-                    q = query(collection(db, "users"), where("phone", "==", cleaned));
-                    snap = await getDocs(q);
-                  }
-                  if (snap.empty && phone !== cleaned) {
-                    q = query(collection(db, "users"), where("phone", "==", phone));
-                    snap = await getDocs(q);
-                  }
-                  
-                  if (snap.empty) {
-                    setFormErrors({ phone: "ამ ნომრით მომხმარებელი არ მოიძებნა" });
+                    setFormErrors({ phone: "ამ ნომრით კლინიკა ვერ მოიძებნა" });
                     setIsLoading(false);
                     return;
                   }
-                  
-                  const uDoc = snap.docs[0].data();
-                  let userEmail = uDoc.email;
-                  let clinicLogin = "";
-                  
-                  // ყოველთვის ვიღებთ კლინიკის მონაცემებს (მათ შორის ლოგინსაც)
-                  if (uDoc.clinicId) {
-                    const clinicRef = doc(db, "clinics", uDoc.clinicId);
-                    const clinicSnap = await getDoc(clinicRef);
-                    if (clinicSnap.exists()) {
-                      const clinicData = clinicSnap.data();
-                      clinicLogin = clinicData.loginName || "";
-                      if (!userEmail) {
-                        userEmail = clinicData.ownerEmail;
-                      }
-                    }
-                  }
-                  
+
+                  const matchedClinic = snap.docs[0].data();
+                  const userEmail = matchedClinic.ownerEmail;
+                  const clinicLogin = matchedClinic.loginName || "";
+
                   if (!userEmail) {
-                    setFormErrors({ phone: "ამ მომხმარებლისთვის ელ-ფოსტა ვერ მოიძებნა" });
+                    setFormErrors({ phone: "ამ კლინიკისთვის ელ-ფოსტა ვერ მოიძებნა" });
                     setIsLoading(false);
                     return;
                   }
-                  
+
                   setEmail(userEmail); // ვინახავთ მეილს პაროლის აღსადგენად
                   setRecoveredLoginName(clinicLogin); // ვინახავთ ლოგინს საჩვენებლად
-                  
-                  // Generate OTP
-                  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                  setGeneratedOtp(otp);
-                  
-                  // Send SMS via UBill API
-                  const finalPhone = "995" + cleaned;
-                  const apiKey = import.meta.env.VITE_UBILL_API_KEY;
-                  const response = await fetch(`/api/ubill/v1/sms/send?key=${apiKey}`, {
+
+                  // Send recovery OTP via server API
+                  const response = await fetch(`/api/sms-otp`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                      brandID: 2,
-                      numbers: [finalPhone],
-                      text: `AiDent recovery code: ${otp}`,
-                      otp: true
+                      action: "send",
+                      phone: cleaned,
+                      purpose: "recovery"
                     })
                   });
 
-                  if (!response.ok) {
-                    throw new Error("SMS-ის გაგზავნა ვერ მოხერხდა");
+                  const data = await response.json().catch(() => ({}));
+                  if (!response.ok || !data.challengeToken) {
+                    throw new Error(data.error || "SMS-ის გაგზავნა ვერ მოხერხდა");
                   }
-                  
+
+                  setRecoveryChallengeToken(data.challengeToken);
                   setFormErrors({});
                   setAuthStep("forgot_password_otp");
                 } catch (err) {
                   console.error(err);
-                  setFormErrors({ general: "SMS-ის გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით." });
+                  setFormErrors({ general: err.message || "SMS-ის გაგზავნა ვერ მოხერხდა. სცადეთ მოგვიანებით." });
                 } finally {
                   setIsLoading(false);
                 }
@@ -1238,15 +1155,29 @@ const AuthPage = () => {
 
               <form onSubmit={async (e) => {
                 e.preventDefault();
-                if (userOtp !== generatedOtp) {
-                  setFormErrors({ otp: "კოდი არასწორია" });
-                  return;
-                }
-                
                 setIsLoading(true);
                 try {
+                  const verifyRes = await fetch(`/api/sms-otp`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      action: "verify",
+                      phone: cleanPhone(phone),
+                      code: userOtp.trim(),
+                      purpose: "recovery",
+                      challengeToken: recoveryChallengeToken
+                    })
+                  });
+                  const verifyData = await verifyRes.json().catch(() => ({}));
+                  if (!verifyRes.ok || !verifyData.verified) {
+                    setFormErrors({ otp: verifyData.error || "კოდი არასწორია" });
+                    setIsLoading(false);
+                    return;
+                  }
+
                   // Trigger Firebase Password Reset Email automatically
                   await sendPasswordResetEmail(auth, email);
+                  setRecoveryChallengeToken("");
                   setFormErrors({});
                   setAuthStep("forgot_password_success");
                 } catch (err) {
@@ -1368,19 +1299,41 @@ const AuthPage = () => {
 
                     <button 
                         onClick={async () => {
-                            const enteredHash = await hashOtp(phone, userOtp.trim());
-                            if (enteredHash === generatedOtp && userOtp.trim().length === 6) {
+                            const cleaned = cleanPhone(phone);
+                            const challengeToken =
+                              otpChallengeToken ||
+                              sessionStorage.getItem(`sms_otp_challenge_register_${cleaned}`) ||
+                              "";
+
+                            try {
+                              const verifyRes = await fetch(`/api/sms-otp`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  action: "verify",
+                                  phone: cleaned,
+                                  code: userOtp.trim(),
+                                  purpose: "register",
+                                  challengeToken,
+                                }),
+                              });
+                              const verifyData = await verifyRes.json().catch(() => ({}));
+                              if (verifyRes.ok && verifyData.verified) {
                                 setSmsStatus("verified");
                                 setFormErrors(prev => ({...prev, otp: undefined}));
                                 setResendTimer(0);
-                                localStorage.removeItem(`sms_otp_hash_${cleanPhone(phone)}`);
+                                sessionStorage.removeItem(`sms_otp_challenge_register_${cleaned}`);
+                                setOtpChallengeToken("");
                                 // ვაჩვენებთ დადასტურებულს წამიერად და მერე ვხურავთ მოდალს
                                 setTimeout(() => {
                                     setShowSmsModal(false);
                                     setAuthStep("pin");
                                 }, 800);
-                            } else {
-                                setFormErrors(prev => ({...prev, otp: "კოდი არასწორია"}));
+                              } else {
+                                setFormErrors(prev => ({...prev, otp: verifyData.error || "კოდი არასწორია"}));
+                              }
+                            } catch {
+                              setFormErrors(prev => ({...prev, otp: "კოდის შემოწმება ვერ მოხერხდა"}));
                             }
                         }}
                         className="w-full bg-brand-purple hover:bg-brand-deep text-white py-5 rounded-[20px] text-[11px] font-black uppercase tracking-widest transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-brand-purple/20"

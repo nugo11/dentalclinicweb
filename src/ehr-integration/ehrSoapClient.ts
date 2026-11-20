@@ -89,8 +89,8 @@ export async function sendPlannedAmbulatory(patient: Patient, doctor: Doctor, vi
   // 3. Build SOAP Body
   const bodyContent = `
     <SendPlannedAmbulatory xmlns="http://tempuri.org/">
-      <UserName>${creds.username}</UserName>
-      <UserPass>${creds.password}</UserPass>
+      <UserName>${encodeXmlForSoap(String(creds.username || ''))}</UserName>
+      <UserPass>${encodeXmlForSoap(String(creds.password || ''))}</UserPass>
       <EHRXml>${encodeXmlForSoap(ehrXml)}</EHRXml>
     </SendPlannedAmbulatory>
   `;
@@ -117,9 +117,9 @@ export async function replacePlannedAmbulatory(patient: Patient, doctor: Doctor,
   // 3. Build SOAP Body
   const bodyContent = `
     <ReplacePlannedAmbulatory xmlns="http://tempuri.org/">
-      <UserName>${creds.username}</UserName>
-      <UserPass>${creds.password}</UserPass>
-      <EHRID>${visit.ehrId}</EHRID>
+      <UserName>${encodeXmlForSoap(String(creds.username || ''))}</UserName>
+      <UserPass>${encodeXmlForSoap(String(creds.password || ''))}</UserPass>
+      <EHRID>${encodeXmlForSoap(String(visit.ehrId || ''))}</EHRID>
       <EHRXml>${encodeXmlForSoap(ehrXml)}</EHRXml>
     </ReplacePlannedAmbulatory>
   `;
@@ -141,9 +141,9 @@ export async function sendCalculation(visit: Visit, creds: EHRCredentials) {
 
   const bodyContent = `
     <SendCalculation xmlns="http://tempuri.org/">
-      <UserName>${creds.username}</UserName>
-      <UserPass>${creds.password}</UserPass>
-      <EHRID>${visit.ehrId}</EHRID>
+      <UserName>${encodeXmlForSoap(String(creds.username || ''))}</UserName>
+      <UserPass>${encodeXmlForSoap(String(creds.password || ''))}</UserPass>
+      <EHRID>${encodeXmlForSoap(String(visit.ehrId || ''))}</EHRID>
       <EHRXml>${encodeXmlForSoap(calcXml)}</EHRXml>
     </SendCalculation>
   `;

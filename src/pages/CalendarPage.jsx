@@ -9,7 +9,7 @@ import Sidebar from "../components/Dashboard/Sidebar";
 import TopNav from "../components/Dashboard/TopNav";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { collection, query, where, onSnapshot, getDocs } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { Plus, Calendar as CalendarIcon } from "lucide-react";
 import AddAppointmentModal from "../components/Dashboard/AddAppointmentModal";
 import EditAppointmentModal from "../components/Dashboard/EditAppointmentModal";
@@ -18,14 +18,15 @@ const CalendarPage = () => {
   const { userData, role, activeStaff } = useAuth();
   const calendarRef = useRef(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -40,6 +41,7 @@ const CalendarPage = () => {
     if (role === "doctor") {
       q = query(
         collection(db, "appointments"),
+        where("clinicId", "==", userData.clinicId),
         where("doctorId", "==", activeStaff?.id || userData?.uid)
       );
     } else {

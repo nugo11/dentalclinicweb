@@ -31,6 +31,7 @@ import {
 import { logActivity } from "../../utils/activityLogger";
 import { sendPlannedAmbulatory, replacePlannedAmbulatory, sendCalculation } from "../../ehr-integration/ehrSoapClient";
 import { validateForEHR, EHRValidationError } from "../../ehr-integration/ehrValidationGuard";
+import { getClinicEhrCredentials } from "../../utils/ehrCredentials";
 import { HeartPulse } from "lucide-react"; // HeartPulse for UI
 import useLockBodyScroll from "../../hooks/useLockBodyScroll";
 
@@ -65,7 +66,6 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   // დამატებითი მასალების State
   const [availableMaterials, setAvailableMaterials] = useState([]);
   const [selectedExtraMaterials, setSelectedExtraMaterials] = useState([]);
-  const [materialSearch, setMaterialSearch] = useState("");
 
   // Common ICD-10 codes for dentistry
   const COMMON_DIAGNOSES = [
@@ -77,9 +77,27 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
   ];
 
   // EHR Data
-  const hasEhrCredentials = !!(clinicData?.ehrUsername && clinicData?.ehrPassword);
+  const [ehrCredsState, setEhrCredsState] = useState({ ehrUsername: "", ehrPassword: "" });
+  const hasEhrCredentials = !!(ehrCredsState.ehrUsername && ehrCredsState.ehrPassword);
   const [primaryIcd10, setPrimaryIcd10] = useState("");
-  const [syncEHR, setSyncEHR] = useState(hasEhrCredentials);
+  const [syncEHR, setSyncEHR] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const targetClinicId = orderData?.clinicId || userData?.clinicId;
+    if (!isOpen || !targetClinicId) return;
+
+    const loadEhrCreds = async () => {
+      const creds = await getClinicEhrCredentials(targetClinicId, clinicData);
+      if (cancelled) return;
+      setEhrCredsState(creds);
+      setSyncEHR(Boolean(creds.ehrUsername && creds.ehrPassword));
+    };
+    loadEhrCreds();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, orderData?.clinicId, userData?.clinicId, clinicData]);
 
   // 1. წამოვიღოთ სერვისების კატალოგი
   useEffect(() => {
@@ -235,7 +253,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
         return;
       }
 
-      if (!clinicData?.ehrUsername || !clinicData?.ehrPassword) {
+      if (!ehrCredsState.ehrUsername || !ehrCredsState.ehrPassword) {
         setError("EHR ავტორიზაციის მონაცემები არ არის მითითებული პარამეტრებში.");
         setLoading(false);
         return;
@@ -312,7 +330,9 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                 const day = String(dt.getDate()).padStart(2, '0');
                 return `${y}-${m}-${day}`;
              }
-           } catch(e){}
+           } catch {
+             /* fallback to string representation */
+           }
            return String(d);
         };
 
@@ -399,8 +419,8 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
 
         try {
           const ehrCreds = {
-            username: clinicData.ehrUsername,
-            password: clinicData.ehrPassword
+            username: ehrCredsState.ehrUsername,
+            password: ehrCredsState.ehrPassword
           };
 
           // Step 1: Main EHR Service
@@ -558,7 +578,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
             </div>
             <div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white italic tracking-tight">
-                ანგარიშსწორება
+                {isDoctor ? 'ვიზიტის დეტალები' : 'ანგარიშსწორება'}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-300 font-extrabold uppercase tracking-wider mt-0.5">
                 პაციენტი: <span className="text-slate-900 dark:text-white font-black">{orderData.patientName}</span>
@@ -652,7 +672,7 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                 <option value="" className="bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-300">+ მომსახურების დამატება</option>
                 {availableServices.map((s) => (
                   <option key={s.id} value={s.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    {s.name} — {s.price}₾
+                    {isDoctor ? s.name : `${s.name} — ${s.price}₾`}
                   </option>
                 ))}
               </select>
@@ -742,7 +762,9 @@ const OrderCompletionModal = ({ isOpen, onClose, orderData }) => {
                         onChange={(e) => setSelectedExtraMaterials(selectedExtraMaterials.map(mat => mat.id === m.id ? { ...mat, itemGroupId: e.target.value } : mat))}
                         className="w-20 py-1 px-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg text-[10px] font-bold text-center outline-none border border-slate-300 dark:border-slate-700"
                       />
-                      <span className="text-[11px] font-black text-amber-600 dark:text-amber-400">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)}₾</span>
+                      {!isDoctor && (
+                        <span className="text-[11px] font-black text-amber-600 dark:text-amber-400">{(Number(m.amount) * Number(m.pricePerUnit || 0)).toFixed(2)}₾</span>
+                      )}
                       <div className="flex items-center gap-2">
                         <input 
                           type="number" 

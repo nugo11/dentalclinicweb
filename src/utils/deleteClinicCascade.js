@@ -116,9 +116,16 @@ export const deleteClinicPermanently = async (clinic, superAdminEmail, onProgres
     if (ownerId) {
       try {
         await deleteDoc(doc(db, "users", ownerId));
-      } catch (e) {
+      } catch {
         // უკვე წაიშალა usersQ-ში
       }
+    }
+
+    // 7.1 კლინიკის კონფიდენციალური პარამეტრების წაშლა (private/ehr)
+    try {
+      await deleteDoc(doc(db, "clinics", clinicId, "private", "ehr"));
+    } catch {
+      // ignore if private/ehr does not exist
     }
 
     // 8. კლინიკის მთავარი დოკუმენტის წაშლა (clinics)

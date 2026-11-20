@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
-import { Plus, Users, Loader2 } from 'lucide-react';
+import { Plus, Users, FileSpreadsheet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { PLANS } from '../config/plans';
+import { getPlan } from '../config/plans';
 import Sidebar from '../components/Dashboard/Sidebar';
 import TopNav from '../components/Dashboard/TopNav';
 import PatientsTable from '../components/Patients/PatientsTable';
 import AddPatientSlideOver from '../components/Patients/AddPatientSlideOver';
+import ImportPatientsModal from '../components/Patients/ImportPatientsModal';
 
 const Patients = () => {
   const { clinicData, role } = useAuth();
@@ -17,24 +18,28 @@ const Patients = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [patientsCount, setPatientsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const currentPlan = PLANS[(clinicData?.plan || "free").toLowerCase()] || PLANS.free;
+  const currentPlan = getPlan(clinicData?.plan);
   const maxPatients = currentPlan.maxPatients;
   const isLimitReached = maxPatients !== Infinity && patientsCount >= maxPatients;
 
   useEffect(() => {
-    if (searchParams.get('add') === 'true' && !loading) {
-      if (role !== 'doctor') {
-        if (!isLimitReached) {
-          setIsAddModalOpen(true);
-        } else {
-          alert("პაციენტების ლიმიტი ამოწურულია. გთხოვთ განაახლოთ ტარიფი.");
+    const params = new URLSearchParams(location.search);
+    if (params.get('add') === 'true' && !loading) {
+      Promise.resolve().then(() => {
+        if (role !== 'doctor') {
+          if (!isLimitReached) {
+            setIsAddModalOpen(true);
+          } else {
+            alert("პაციენტების ლიმიტი ამოწურულია. გთხოვთ განაახლოთ ტარიფი.");
+          }
         }
-      }
-      // წავშალოთ პარამეტრი URL-დან სისუფთავისთვის
-      window.history.replaceState({}, '', window.location.pathname);
+        // წავშალოთ პარამეტრი URL-დან სისუფთავისთვის
+        window.history.replaceState({}, '', window.location.pathname);
+      });
     }
   }, [location.search, isLimitReached, loading, role]);
 
@@ -70,24 +75,40 @@ const Patients = () => {
                 </div>
 
                 {role !== 'doctor' && (
-                  <button
-                    disabled={isLimitReached}
-                    onClick={() => setIsAddModalOpen(true)}
-                    className={`flex items-center gap-3 px-6 py-4 rounded-[20px] shadow-xl transition-all active:scale-95 group
-                      ${isLimitReached
-                        ? 'bg-surface-soft text-text-muted cursor-not-allowed shadow-none'
-                        : 'bg-brand-purple text-white hover:bg-brand-deep shadow-brand-purple/20'
-                      }`}
-                  >
-                    {isLimitReached ? (
-                      <span className="text-[11px] font-black uppercase tracking-widest italic">ლიმიტი ამოწურულია</span>
-                    ) : (
-                      <>
-                        <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-                        <span className="text-[11px] font-black uppercase tracking-widest">ახალი პაციენტი</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      disabled={isLimitReached}
+                      onClick={() => setIsImportModalOpen(true)}
+                      className={`flex items-center gap-2.5 px-5 py-4 rounded-[20px] border transition-all active:scale-95 cursor-pointer
+                        ${isLimitReached
+                          ? 'bg-surface-soft border-border-main text-text-muted cursor-not-allowed opacity-60'
+                          : 'bg-surface border-border-main text-text-main hover:border-brand-purple hover:text-brand-purple shadow-sm'
+                        }`}
+                    >
+                      <FileSpreadsheet size={18} />
+                      <span className="text-[11px] font-black uppercase tracking-widest">ექსელით იმპორტი</span>
+                    </button>
+
+                    <button
+                      disabled={isLimitReached}
+                      onClick={() => setIsAddModalOpen(true)}
+                      className={`flex items-center gap-3 px-6 py-4 rounded-[20px] shadow-xl transition-all active:scale-95 group
+                        ${isLimitReached
+                          ? 'bg-surface-soft text-text-muted cursor-not-allowed shadow-none'
+                          : 'bg-brand-purple text-white hover:bg-brand-deep shadow-brand-purple/20'
+                        }`}
+                    >
+                      {isLimitReached ? (
+                        <span className="text-[11px] font-black uppercase tracking-widest italic">ლიმიტი ამოწურულია</span>
+                      ) : (
+                        <>
+                          <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                          <span className="text-[11px] font-black uppercase tracking-widest">ახალი პაციენტი</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -107,6 +128,13 @@ const Patients = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         currentCount={patientsCount}
+      />
+
+      <ImportPatientsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        currentCount={patientsCount}
+        maxPatients={maxPatients}
       />
     </>
   );

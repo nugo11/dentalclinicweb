@@ -40,18 +40,24 @@ const PatientsTable = ({ externalSearch = "", onCountChange, onLoadingChange }) 
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [searchTerm, setSearchTerm] = useState(externalSearch);
-
-  // Update search term if external prop changes
-  useEffect(() => {
-    if (externalSearch) {
-        setSearchTerm(externalSearch);
-        setCurrentPage(1);
-    }
-  }, [externalSearch]);
-
-  // --- Pagination-ის სტეიტები ---
+  const [prevExternalSearch, setPrevExternalSearch] = useState(externalSearch);
   const [currentPage, setCurrentPage] = useState(1);
   const patientsPerPage = 20;
+
+  if (externalSearch !== prevExternalSearch) {
+    setPrevExternalSearch(externalSearch);
+    if (externalSearch) {
+      setSearchTerm(externalSearch);
+      setCurrentPage(1);
+    }
+  }
+
+  const onCountChangeRef = useRef(onCountChange);
+  const onLoadingChangeRef = useRef(onLoadingChange);
+  useEffect(() => {
+    onCountChangeRef.current = onCountChange;
+    onLoadingChangeRef.current = onLoadingChange;
+  }, [onCountChange, onLoadingChange]);
 
   // --- მოდალის სტეიტები ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,14 +112,14 @@ const PatientsTable = ({ externalSearch = "", onCountChange, onLoadingChange }) 
           ...doc.data(),
         }));
         setPatients(patientsData);
-        if (onCountChange) onCountChange(patientsData.length);
-        if (onLoadingChange) onLoadingChange(false);
+        if (onCountChangeRef.current) onCountChangeRef.current(patientsData.length);
+        if (onLoadingChangeRef.current) onLoadingChangeRef.current(false);
         setFetchError(null);
         setLoading(false);
       },
       (error) => {
         console.error("Error fetching patients:", error);
-        if (onLoadingChange) onLoadingChange(false);
+        if (onLoadingChangeRef.current) onLoadingChangeRef.current(false);
         setFetchError(error.message || "მონაცემების ჩატვირთვა ვერ მოხერხდა");
         setLoading(false);
       },

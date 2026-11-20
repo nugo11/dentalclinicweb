@@ -34,7 +34,7 @@ import {
   Globe,
   Rocket,
 } from "lucide-react";
-import { auth, db } from "../firebase";
+import { db } from "../firebase";
 import { collection, query, getDocs, limit, where } from "firebase/firestore";
 import MainHeader from "../components/Common/MainHeader";
 
@@ -78,7 +78,6 @@ const FAQItem = ({ question, answer }) => {
 };
 
 const LandingPage = ({ user }) => {
-  const [activeTooltip, setActiveTooltip] = useState(null);
   const [selectedPlanForDetails, setSelectedPlanForDetails] = useState(null);
   
   const [clinics, setClinics] = useState([]);
@@ -87,7 +86,6 @@ const LandingPage = ({ user }) => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setWindowWidth(window.innerWidth);
       const handleResize = () => setWindowWidth(window.innerWidth);
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
@@ -648,7 +646,7 @@ const LandingPage = ({ user }) => {
                 პაკეტის გაუმჯობესება ხდება პირადი ხელშეკრულების საფუძველზე. დაგვიკავშირდით და ჩვენ გააქტიურებთ სასურველ პაკეტს.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <a href="tel:+99555102030" className="flex items-center gap-3 bg-surface/10 hover:bg-surface/20 border border-white/20 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all">
+                <a href="tel:+995555102030" className="flex items-center gap-3 bg-surface/10 hover:bg-surface/20 border border-white/20 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all">
                   <Phone size={18} /> +995 555 10 20 30
                 </a>
                 <a href="mailto:upgrade@AiDent.ge" className="flex items-center gap-3 bg-brand-purple hover:bg-purple-600 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-brand-purple/30 transition-all">

@@ -8,8 +8,10 @@ const CriticalAlertsWidget = ({ role, clinicData }) => {
 
   const criticalItems = [];
 
+  const hasEhr = Boolean(clinicData?.ehrConfigured || (clinicData?.ehrUsername && clinicData?.ehrPassword));
+
   // 1. Missing EHR Credentials
-  if ((role === 'admin' || role === 'manager') && (!clinicData?.ehrUsername || !clinicData?.ehrPassword)) {
+  if ((role === 'admin' || role === 'manager') && !hasEhr) {
     criticalItems.push({
       id: 'ehr',
       title: 'EHR მონაცემები არ არის შეყვანილი!',

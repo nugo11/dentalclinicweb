@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
@@ -26,22 +26,6 @@ const Finance = () => {
   
   // ფინანსური სტატისტიკის State
   const [generalExpenses, setGeneralExpenses] = useState(0);
-  const [stats, setStats] = useState({
-    total: 0,
-    paid: 0,
-    vat: 0,
-    materialExpenses: 0,
-    generalExpenses: 0,
-    netProfit: 0
-  });
-
-  // კლინიკის მონაცემები ინვოისისთვის
-  const clinicInfo = {
-    name: dbClinicData?.clinicName || "AiDent Clinic",
-    address: dbClinicData?.address || "თბილისი, საქართველო",
-    phone: dbClinicData?.phone || userData?.phone || "+995 555 00 00 00",
-    tin: dbClinicData?.tin || "123456789",
-  };
 
   useEffect(() => {
     if (!userData?.clinicId) return;
@@ -94,7 +78,7 @@ const Finance = () => {
     };
   }, [userData]);
 
-  useEffect(() => {
+  const stats = useMemo(() => {
     let total = 0,
         paid = 0,
         totalVat = 0,
@@ -107,14 +91,14 @@ const Finance = () => {
       totalVat += item.vatAmount;
     });
 
-    setStats({
+    return {
       total,
       paid,
       vat: totalVat,
       materialExpenses,
       generalExpenses,
       netProfit: (paid - totalVat) - materialExpenses - generalExpenses
-    });
+    };
   }, [transactions, generalExpenses]);
 
   return (

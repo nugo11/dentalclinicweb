@@ -19,8 +19,9 @@ import { logActivity } from "../utils/activityLogger";
 import useLockBodyScroll from "../hooks/useLockBodyScroll";
 import PhoneInput from "../components/Common/PhoneInput";
 import { formatPhone, validatePhone } from "../utils/phoneFormatter";
-import { getRoleLabel } from "../utils/roleUtils";
+import { getRoleLabel, normalizeRole } from "../utils/roleUtils";
 import { scrollToFirstError } from "../utils/scrollHelper";
+import { getLocalMonthString } from "../utils/dateUtils";
 
 const Staff = () => {
   const { userData, clinicData, activeStaff, isAdmin } = useAuth();
@@ -31,7 +32,6 @@ const Staff = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
-  const [visiblePins, setVisiblePins] = useState({});
   const [staffErrors, setStaffErrors] = useState({});
   const [paymentModal, setPaymentModal] = useState({ isOpen: false, member: null, amount: "" });
   
@@ -77,6 +77,23 @@ const Staff = () => {
   }
   const doctorLimitReached = staff.filter(s => s.role === 'doctor').length >= maxDocs;
 
+  const syncPublicDoctors = async (clinicId, staffDocs) => {
+    if (!clinicId || !Array.isArray(staffDocs)) return;
+    try {
+      const publicDoctors = staffDocs
+        .filter((s) => normalizeRole(s.role) === "doctor" && s.status !== "suspended")
+        .map((d) => ({
+          id: d.id,
+          fullName: d.fullName || "",
+          role: "doctor",
+          specialty: d.specialty || "",
+        }));
+      await updateDoc(doc(db, "clinics", clinicId), { publicDoctors });
+    } catch (err) {
+      console.warn("Failed to sync publicDoctors:", err);
+    }
+  };
+
   useEffect(() => {
     if (!userData?.clinicId) return;
 
@@ -89,10 +106,14 @@ const Staff = () => {
       const staffList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setStaff(staffList);
       setLoading(false);
+
+      if (clinicData?.publicDoctors === undefined && isAdmin) {
+        syncPublicDoctors(userData.clinicId, staffList);
+      }
     });
 
     return () => unsubscribe();
-  }, [userData]);
+  }, [userData?.clinicId, clinicData?.publicDoctors, isAdmin]);
 
   const hashPin = async (pin) => {
     const encoder = new TextEncoder();
@@ -136,7 +157,7 @@ const Staff = () => {
     try {
       const pinHash = await hashPin(newDoctor.pin);
 
-      await addDoc(collection(db, "users"), {
+      const newStaffPayload = {
         fullName: newDoctor.fullName,
         email: newDoctor.email,
         phone: newDoctor.phone ? formatPhone(newDoctor.phone) : "",
@@ -153,7 +174,9 @@ const Staff = () => {
         failedPinAttempts: 0,
         pinLockedUntil: null,
         createdAt: new Date().toISOString(),
-      });
+      };
+      const addedRef = await addDoc(collection(db, "users"), newStaffPayload);
+      await syncPublicDoctors(userData.clinicId, [...staff, { id: addedRef.id, ...newStaffPayload }]);
       
       // LOG ACTIVITY
       await logActivity(userData.clinicId, activeStaff || userData || { uid: userData.uid, fullName: 'Unknown', role: 'unknown' }, 'staff_create', `დაემატა ახალი თანამშრომელი: ${newDoctor.fullName} (${newDoctor.role})`, { name: newDoctor.fullName, role: newDoctor.role });
@@ -233,6 +256,10 @@ const Staff = () => {
       }
 
       await updateDoc(doc(db, "users", editTarget), updates);
+      await syncPublicDoctors(
+        userData.clinicId,
+        staff.map((m) => (m.id === editTarget ? { ...m, ...updates } : m))
+      );
 
       // LOG ACTIVITY
       await logActivity(userData.clinicId, activeStaff || userData || { uid: userData.uid, fullName: 'Unknown', role: 'unknown' }, 'staff_update', `განახლდა თანამშრომლის მონაცემები: ${updates.fullName}`, { staffId: editTarget, name: updates.fullName });
@@ -282,7 +309,7 @@ const Staff = () => {
         date: new Date().toISOString(),
         createdAt: serverTimestamp(),
         staffId: member.id,
-        paidMonth: new Date().toISOString().slice(0, 7)
+        paidMonth: getLocalMonthString()
       });
 
       // LOG ACTIVITY
@@ -296,10 +323,6 @@ const Staff = () => {
     }
   };
 
-  const handleUpdateRole = async (id, newRole) => {
-    await updateDoc(doc(db, "users", id), { role: newRole });
-  };
-
   const handleDeleteStaff = (id, role) => {
     if (role === 'admin') return;
     setDeleteTargetId(id);
@@ -309,6 +332,7 @@ const Staff = () => {
     if (deleteTargetId) {
       const staffMember = staff.find(s => s.id === deleteTargetId);
       await deleteDoc(doc(db, "users", deleteTargetId));
+      await syncPublicDoctors(userData.clinicId, staff.filter((s) => s.id !== deleteTargetId));
       
       // LOG ACTIVITY
       if (staffMember) {
@@ -562,7 +586,7 @@ const Staff = () => {
                         className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" 
                         value={newDoctor.birthDate} 
                         onClick={(e) => {
-                          try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                          try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch { /* ignore */ }
                         }}
                         onChange={e => setNewDoctor({...newDoctor, birthDate: e.target.value})} 
                       />
@@ -703,7 +727,7 @@ const Staff = () => {
                         className="w-full bg-surface-soft border-2 border-transparent focus:border-brand-purple rounded-2xl px-4 sm:px-6 py-3.5 sm:py-4 outline-none font-bold text-sm transition-all min-w-0 box-border" 
                         value={editFormData.birthDate} 
                         onClick={(e) => {
-                          try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch (err) {}
+                          try { if (e.target && typeof e.target.showPicker === 'function') e.target.showPicker(); } catch { /* ignore */ }
                         }}
                         onChange={e => setEditFormData({...editFormData, birthDate: e.target.value})} 
                       />

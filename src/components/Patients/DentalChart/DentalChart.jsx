@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import Tooth, { SvgTooth, TEETH_COORDINATES, STATUS_CONFIG, TOOTH_NAMES_KA } from './Tooth';
+import Tooth, { SvgTooth } from './Tooth';
+import { TEETH_COORDINATES, STATUS_CONFIG, TOOTH_NAMES_KA } from './toothConstants';
 import { 
   Layers, 
   ArrowUp, 

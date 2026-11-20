@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../../firebase';
-import { collection, query, where, onSnapshot, addDoc, orderBy, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
 import { useAuth } from "../../context/AuthContext";
 import { Image as ImageIcon, Download, Eye, Upload, Loader2, MessageSquare, X, Camera, AlertTriangle, Save, Trash2 } from 'lucide-react';
 import { logActivity } from "../../utils/activityLogger";
@@ -210,48 +210,26 @@ const PatientXRays = ({ patientId, patientName }) => {
 
   const deleteFromCloudinary = async (imageUrl) => {
     try {
-        const cloudName = "dxyhm9ftw";
-        const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
-        const apiSecret = import.meta.env.VITE_CLOUDINARY_API_SECRET;
-        
-        if (!apiKey || !apiSecret) {
-            console.warn("Cloudinary API credentials missing. Cannot delete from Cloudinary.");
-            return true; // Pretend it succeeded so we can still delete from DB
-        }
-
-        // Extract public_id from URL
-        const parts = imageUrl.split('/');
-        const filename = parts.pop();
-        const publicId = filename.split('.')[0];
-        
-        const timestamp = Math.round(new Date().getTime() / 1000);
-        
-        // Generate signature: SHA-1 of "public_id={publicId}&timestamp={timestamp}{apiSecret}"
-        const stringToSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
-        
-        // Use Web Crypto API
-        const encoder = new TextEncoder();
-        const data = encoder.encode(stringToSign);
-        const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        
-        const formData = new FormData();
-        formData.append('public_id', publicId);
-        formData.append('signature', signature);
-        formData.append('api_key', apiKey);
-        formData.append('timestamp', timestamp);
-        
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await res.json();
-        return result.result === 'ok';
-    } catch (e) {
-        console.error("Cloudinary delete error:", e);
+      const idToken = await auth.currentUser?.getIdToken?.();
+      if (!idToken) {
         return false;
+      }
+
+      const res = await fetch('/api/cloudinary-delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ imageUrl }),
+      });
+
+      if (!res.ok) return false;
+      const result = await res.json().catch(() => ({}));
+      return Boolean(result.ok || result.skipped);
+    } catch (e) {
+      console.error("Cloudinary delete error:", e);
+      return false;
     }
   };
 

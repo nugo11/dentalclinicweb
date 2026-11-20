@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { db } from '../firebase';
-import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { getLocalMonthString } from '../utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Dashboard/Sidebar';
@@ -11,7 +12,6 @@ import AppointmentsList from '../components/Dashboard/AppointmentsList';
 import QuickActions from '../components/Dashboard/QuickActions';
 import RecentTreatments from '../components/Dashboard/RecentTreatments';
 import SalaryReminder from '../components/Dashboard/SalaryReminder';
-import PWAInstallBanner from '../components/PWAInstallBanner';
 import CriticalAlertsWidget from '../components/Dashboard/CriticalAlertsWidget';
 import { 
   AlertTriangle, PackageSearch, ChevronRight, Crown, Loader2, Clock, 
@@ -19,12 +19,18 @@ import {
   TrendingUp, Wallet, FileText, Users, Tag, Phone
 } from 'lucide-react';
 
+const getGreetingLabel = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'დილა მშვიდობისა';
+  if (hour < 18) return 'შუადღე მშვიდობისა';
+  return 'საღამო მშვიდობისა';
+};
+
 const Dashboard = () => {
   const { userData, loading, role, activeStaff, clinicData } = useAuth(); 
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [greeting, setGreeting] = useState('');
-  const [todayVisitsCount, setTodayVisitsCount] = useState(0);
+  const [greeting] = useState(getGreetingLabel);
   const [appointments, setAppointments] = useState([]);
   const [lowStockItems, setLowStockItems] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -35,116 +41,127 @@ const Dashboard = () => {
   const [monthlyExpenses, setMonthlyExpenses] = useState(0);
   const [incomeTrend, setIncomeTrend] = useState('+0%');
 
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('დილა მშვიდობისა');
-    else if (hour < 18) setGreeting('შუადღე მშვიდობისა');
-    else setGreeting('საღამო მშვიდობისა');
-  }, []);
+  const canViewFinance = role === 'admin' || role === 'manager' || role === 'accountant';
+  const canViewSalary = role === 'admin' || role === 'accountant';
+  const canViewInventory = role === 'admin' || role === 'manager' || role === 'accountant';
+  const canViewArchive = role === 'admin' || role === 'manager' || role === 'accountant' || role === 'receptionist';
 
   useEffect(() => {
     if (!userData?.clinicId) return;
 
-    // თანამშრომლები
-    const qStaff = query(collection(db, "users"), where("clinicId", "==", userData.clinicId));
-    const unsubStaff = onSnapshot(qStaff, (snap) => {
-      setStaff(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+    // თანამშრომლები (ხელფასების შეხსენებისთვის - მხოლოდ ადმინი/ბუღალტერი)
+    let unsubStaff = null;
+    if (canViewSalary) {
+      const qStaff = query(collection(db, "users"), where("clinicId", "==", userData.clinicId));
+      unsubStaff = onSnapshot(qStaff, (snap) => {
+        setStaff(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    }
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-    const currentMonthStr = now.toISOString().slice(0, 7);
+    const currentMonthStr = getLocalMonthString(now);
 
-    // ფინანსები: შემოსავალი მოდის appointments-იდან, ხარჯები ორივედან
-    const qFinance = query(collection(db, 'finance'), where('clinicId', '==', userData.clinicId));
-    const qAptsFinance = query(
-      collection(db, 'appointments'),
-      where('clinicId', '==', userData.clinicId),
-      where('status', '==', 'completed_and_billed')
-    );
+    // ფინანსები: მხოლოდ ფინანსური უფლების მქონე როლებისთვის (ექიმებს ეზღუდებათ)
+    let unsubAptsFinance = null;
+    let unsubFinance = null;
 
-    let aptInc = 0;
-    let prevAptInc = 0;
-    let aptExp = 0;
-    let finInc = 0;
-    let prevFinInc = 0;
-    let finExp = 0;
-    let paidIds = [];
+    if (canViewFinance) {
+      const qFinance = query(collection(db, 'finance'), where('clinicId', '==', userData.clinicId));
+      const qAptsFinance = query(
+        collection(db, 'appointments'),
+        where('clinicId', '==', userData.clinicId),
+        where('status', '==', 'completed_and_billed')
+      );
 
-    const updateFinancials = () => {
-      const curInc = aptInc + finInc;
-      const prevInc = prevAptInc + prevFinInc;
-      setMonthlyIncome(curInc);
-      setMonthlyExpenses(aptExp + finExp);
-      setPaidStaffIds(paidIds);
+      let aptInc = 0;
+      let prevAptInc = 0;
+      let aptExp = 0;
+      let finInc = 0;
+      let prevFinInc = 0;
+      let finExp = 0;
+      let paidIds = [];
 
-      if (prevInc > 0) {
-        const diffPercent = Math.round(((curInc - prevInc) / prevInc) * 100);
-        setIncomeTrend(diffPercent >= 0 ? `+${diffPercent}%` : `${diffPercent}%`);
-      } else if (curInc > 0) {
-        setIncomeTrend('+100%');
-      } else {
-        setIncomeTrend('0%');
-      }
-    };
+      const updateFinancials = () => {
+        const curInc = aptInc + finInc;
+        const prevInc = prevAptInc + prevFinInc;
+        setMonthlyIncome(curInc);
+        setMonthlyExpenses(aptExp + finExp);
+        setPaidStaffIds(paidIds);
 
-    const unsubAptsFinance = onSnapshot(qAptsFinance, (snap) => {
-      let inc = 0;
-      let pInc = 0;
-      let exp = 0;
-      snap.docs.forEach(doc => {
-        const d = doc.data();
-        if (d.isExternal) return; // skip external clinic visits
-        const rawDate = d.finalizedAt || d.start;
-        let dt = rawDate?.toDate ? rawDate.toDate() : new Date(rawDate || 0);
-        if (dt >= startOfMonth) {
-          inc += Number(d.price || 0);
-          exp += Number(d.materialCost || 0);
-        } else if (dt >= prevMonthStart && dt <= prevMonthEnd) {
-          pInc += Number(d.price || 0);
+        if (prevInc > 0) {
+          const diffPercent = Math.round(((curInc - prevInc) / prevInc) * 100);
+          setIncomeTrend(diffPercent >= 0 ? `+${diffPercent}%` : `${diffPercent}%`);
+        } else if (curInc > 0) {
+          setIncomeTrend('+100%');
+        } else {
+          setIncomeTrend('0%');
         }
+      };
+
+      unsubAptsFinance = onSnapshot(qAptsFinance, (snap) => {
+        let inc = 0;
+        let pInc = 0;
+        let exp = 0;
+        snap.docs.forEach(doc => {
+          const d = doc.data();
+          if (d.isExternal) return; // skip external clinic visits
+          const price = Number(d.price || 0);
+          const paid = d.paidAmount !== undefined ? Number(d.paidAmount || 0) : price;
+          const vat = d.vatAmount !== undefined ? Number(d.vatAmount || 0) : (d.applyVat ? price * 0.18 : 0);
+          const netRevenue = Math.max(0, paid - vat);
+          const rawDate = d.finalizedAt || d.start;
+          const dt = rawDate?.toDate ? rawDate.toDate() : new Date(rawDate || 0);
+          if (dt >= startOfMonth) {
+            inc += netRevenue;
+            exp += Number(d.materialCost || 0);
+          } else if (dt >= prevMonthStart && dt <= prevMonthEnd) {
+            pInc += netRevenue;
+          }
+        });
+        aptInc = inc;
+        prevAptInc = pInc;
+        aptExp = exp;
+        updateFinancials();
       });
-      aptInc = inc;
-      prevAptInc = pInc;
-      aptExp = exp;
-      updateFinancials();
-    });
 
-    const unsubFinance = onSnapshot(qFinance, (snap) => {
-      let inc = 0;
-      let pInc = 0;
-      let exp = 0;
-      let pIds = [];
-      snap.docs.forEach(doc => {
-        const d = doc.data();
-        const rawDate = d.date || d.createdAt;
-        let dt = rawDate?.toDate ? rawDate.toDate() : new Date(rawDate || 0);
-        
-        if (dt >= startOfMonth) {
-          if (d.category === 'შემოსავალი' || d.type === 'income') inc += Number(d.amount || 0);
-          if (d.category === 'ხელფასი' || d.type === 'expense') exp += Number(d.amount || 0);
-        } else if (dt >= prevMonthStart && dt <= prevMonthEnd) {
-          if (d.category === 'შემოსავალი' || d.type === 'income') pInc += Number(d.amount || 0);
-        }
+      unsubFinance = onSnapshot(qFinance, (snap) => {
+        let inc = 0;
+        let pInc = 0;
+        let exp = 0;
+        let pIds = [];
+        snap.docs.forEach(doc => {
+          const d = doc.data();
+          const rawDate = d.date || d.createdAt;
+          let dt = rawDate?.toDate ? rawDate.toDate() : new Date(rawDate || 0);
+          
+          if (dt >= startOfMonth) {
+            if (d.category === 'შემოსავალი' || d.type === 'income') inc += Number(d.amount || 0);
+            if (d.category === 'ხელფასი' || d.type === 'expense') exp += Number(d.amount || 0);
+          } else if (dt >= prevMonthStart && dt <= prevMonthEnd) {
+            if (d.category === 'შემოსავალი' || d.type === 'income') pInc += Number(d.amount || 0);
+          }
 
-        if (d.category === 'ხელფასი' && d.paidMonth === currentMonthStr) {
-          pIds.push(d.staffId);
-        }
+          if (d.category === 'ხელფასი' && d.paidMonth === currentMonthStr) {
+            pIds.push(d.staffId);
+          }
+        });
+        finInc = inc;
+        prevFinInc = pInc;
+        finExp = exp;
+        paidIds = pIds;
+        updateFinancials();
       });
-      finInc = inc;
-      prevFinInc = pInc;
-      finExp = exp;
-      paidIds = pIds;
-      updateFinancials();
-    });
+    }
 
     // ჯავშნები
     let qAppointments;
     if (role === "doctor") {
       qAppointments = query(
         collection(db, "appointments"),
+        where("clinicId", "==", userData.clinicId),
         where("doctorId", "==", activeStaff?.id || userData?.uid)
       );
     } else {
@@ -161,12 +178,6 @@ const Dashboard = () => {
         : allData;
 
       setAppointments(allApts);
-
-      const todayStr = new Date().toISOString().split('T')[0];
-      const count = allApts.filter(apt => 
-        apt.start && apt.start.startsWith(todayStr) && apt.status !== 'cancelled'
-      ).length;
-      setTodayVisitsCount(count);
 
       const pending = allApts.filter(apt => {
         const aptEnd = new Date(apt.end);
@@ -190,27 +201,30 @@ const Dashboard = () => {
       setMonthlyPatientsCount(recent);
     });
 
-    // ინვენტარის განგაში
-    const qInventory = query(
-      collection(db, "inventory"),
-      where("clinicId", "==", userData.clinicId)
-    );
-    const unsubInventory = onSnapshot(qInventory, (snapshot) => {
-      const lowStock = snapshot.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(item => item.quantity <= item.minThreshold);
-      setLowStockItems(lowStock);
-    });
+    // ინვენტარის განგაში (მხოლოდ საწყობზე წვდომის მქონე როლებისთვის)
+    let unsubInventory = null;
+    if (canViewInventory) {
+      const qInventory = query(
+        collection(db, "inventory"),
+        where("clinicId", "==", userData.clinicId)
+      );
+      unsubInventory = onSnapshot(qInventory, (snapshot) => {
+        const lowStock = snapshot.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(item => item.quantity <= item.minThreshold);
+        setLowStockItems(lowStock);
+      });
+    }
 
     return () => {
-      unsubStaff();
-      unsubAptsFinance();
-      unsubFinance();
+      if (unsubStaff) unsubStaff();
+      if (unsubAptsFinance) unsubAptsFinance();
+      if (unsubFinance) unsubFinance();
       unsubAppointments();
       unsubPatients();
-      unsubInventory();
+      if (unsubInventory) unsubInventory();
     };
-  }, [userData, role, activeStaff]);
+  }, [userData, role, activeStaff, canViewFinance, canViewSalary, canViewInventory]);
 
   if (loading) {
     return (
@@ -230,7 +244,6 @@ const Dashboard = () => {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <TopNav onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
-        <PWAInstallBanner />
 
         {/* Floating Critical Requirements Widget (EHR, Contact etc.) */}
         <CriticalAlertsWidget role={role} clinicData={clinicData} />
@@ -320,7 +333,7 @@ const Dashboard = () => {
                 })()}
 
                 {/* Pending Closures Section */}
-                {(role === 'admin' || role === 'manager' || role === 'accountant') && (
+                {canViewFinance && (
                   <div className="bg-surface rounded-[40px] p-8 border border-border-main shadow-sm">
                     <div className="flex items-center gap-4 mb-8">
                       <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-2xl flex items-center justify-center">
@@ -355,18 +368,18 @@ const Dashboard = () => {
               <div className="lg:col-span-4 space-y-8">
                 <StatsGrid 
                   patientsGrowth={monthlyPatientsCount}
-                  inventoryAlerts={lowStockItems.length}
-                  monthlyIncome={monthlyIncome}
-                  monthlyExpenses={monthlyExpenses}
-                  incomeTrend={incomeTrend}
+                  inventoryAlerts={canViewInventory ? lowStockItems.length : 0}
+                  monthlyIncome={canViewFinance ? monthlyIncome : 0}
+                  monthlyExpenses={canViewFinance ? monthlyExpenses : 0}
+                  incomeTrend={canViewFinance ? incomeTrend : '0%'}
                   role={role}
                 />
 
-                {(role === 'admin' || role === 'accountant') && (
+                {canViewSalary && (
                   <SalaryReminder staff={staff} paidStaffIds={paidStaffIds} />
                 )}
 
-                {role !== 'doctor' && (
+                {canViewArchive && (
                   <RecentTreatments appointments={appointments} />
                 )}
 

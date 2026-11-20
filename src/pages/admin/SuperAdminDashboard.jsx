@@ -25,7 +25,7 @@ import ClinicPlanModal from "../../components/Admin/ClinicPlanModal";
 import { normalizePlanId } from "../../config/plans";
 
 const SuperAdminDashboard = () => {
-  const { currentUser, userData, staffLogout } = useAuth();
+  const { currentUser, staffLogout } = useAuth();
   const navigate = useNavigate();
 
   // Active Tab: 'overview' | 'clinics' | 'inventory' | 'staff' | 'audit'
@@ -37,7 +37,6 @@ const SuperAdminDashboard = () => {
   const [inventory, setInventory] = useState([]);
   const [patients, setPatients] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
-  const [loadingData, setLoadingData] = useState(true);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,8 +79,6 @@ const SuperAdminDashboard = () => {
 
   // 1. Subscribe to all collections in Firestore (Real-time)
   useEffect(() => {
-    setLoadingData(true);
-
     const unsubClinics = onSnapshot(collection(db, "clinics"), (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setClinics(list);
@@ -92,12 +89,12 @@ const SuperAdminDashboard = () => {
       setUsers(list);
     }, (err) => console.error("Users sub error:", err));
 
-    const unsubInventory = onSnapshot(collection(db, "inventory"), (snap) => {
+    const unsubInventory = onSnapshot(query(collection(db, "inventory"), limit(1000)), (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setInventory(list);
     }, (err) => console.error("Inventory sub error:", err));
 
-    const unsubPatients = onSnapshot(collection(db, "patients"), (snap) => {
+    const unsubPatients = onSnapshot(query(collection(db, "patients"), limit(1000)), (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setPatients(list);
     }, (err) => console.error("Patients sub error:", err));
@@ -106,10 +103,8 @@ const SuperAdminDashboard = () => {
     const unsubAudit = onSnapshot(auditQ, (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setAuditLogs(list);
-      setLoadingData(false);
     }, (err) => {
       console.warn("Audit logs error (may require index):", err);
-      setLoadingData(false);
     });
 
     return () => {
@@ -180,7 +175,7 @@ const SuperAdminDashboard = () => {
       lowStockItems,
       outOfStockItems,
     };
-  }, [clinics, users, inventory, patients]);
+  }, [clinics, users, inventory, patients, currentTimestamp]);
 
   // ტოპ 5 კომპანია ყველაზე კრიტიკული/დაბალი მარაგით (B2B მომარაგების შეთავაზებისთვის)
   const topDeficitCompanies = useMemo(() => {
@@ -321,46 +316,6 @@ const SuperAdminDashboard = () => {
     } catch (err) {
       console.error("Unlock error:", err);
       showToast("განბლოკვა ვერ მოხერხდა: " + err.message, "error");
-    }
-  };
-
-  // Change Clinic Subscription Plan
-  const handleChangeClinicPlan = async (clinicId, newPlan, customMaxDocs) => {
-    try {
-      const clinicRef = doc(db, "clinics", clinicId);
-      const updates = {
-        plan: newPlan,
-        planUpdatedAt: new Date().toISOString(),
-        planUpdatedBy: currentUser?.email || SUPERADMIN_EMAIL,
-      };
-
-      if (newPlan === "custom") {
-        const parsed = parseInt(customMaxDocs, 10);
-        updates.customMaxDoctors = (!isNaN(parsed) && parsed > 0) ? parsed : 15;
-      }
-
-      await updateDoc(clinicRef, updates);
-
-      const planSummary = newPlan === "custom"
-        ? `CUSTOM (${updates.customMaxDoctors} ექიმის ლიმიტი)`
-        : newPlan.toUpperCase();
-
-      await logAdminAudit({
-        adminEmail: currentUser?.email || SUPERADMIN_EMAIL,
-        action: "PLAN_CHANGED",
-        targetType: "clinic",
-        targetId: clinicId,
-        targetName: clinicMap[clinicId] || "კლინიკა",
-        clinicId,
-        clinicName: clinicMap[clinicId] || "კლინიკა",
-        details: `კლინიკის ტარიფი შეიცვალა ➔ ${planSummary}`,
-        metadata: { newPlan, customMaxDoctors: updates.customMaxDoctors || null },
-      });
-
-      showToast(`კლინიკის ტარიფი განახლდა: ${planSummary}`, "success");
-    } catch (err) {
-      console.error("Error updating plan:", err);
-      showToast("ტარიფის განახლება ვერ მოხერხდა: " + err.message, "error");
     }
   };
 
@@ -893,7 +848,6 @@ const SuperAdminDashboard = () => {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
                   {topDeficitCompanies.map((company, index) => {
                     const clinic = company.clinic;
-                    const isSuspended = clinic.subscriptionStatus === "suspended";
 
                     return (
                       <div

@@ -17,6 +17,7 @@ import { getRoleLabel } from "../utils/roleUtils";
 const ClinicPublicProfile = () => {
   const { id } = useParams();
   const { currentUser } = useAuth();
+  const isAuthenticated = Boolean(currentUser);
   const [clinic, setClinic] = useState(null);
   const [doctors, setStaff] = useState([]);
   const [services, setServices] = useState([]);
@@ -41,9 +42,17 @@ const ClinicPublicProfile = () => {
           const pFeatures = PLANS[pKey]?.portfolioFeatures || PLANS.free.portfolioFeatures;
 
           if (pFeatures.canShowDoctors) {
-            const qDoctors = query(collection(db, "users"), where("clinicId", "==", id), where("role", "==", "doctor"));
-            const dSnap = await getDocs(qDoctors);
-            setStaff(dSnap.docs.map(d => d.data()));
+            if (Array.isArray(data.publicDoctors)) {
+              setStaff(data.publicDoctors);
+            } else if (isAuthenticated) {
+              try {
+                const qDoctors = query(collection(db, "users"), where("clinicId", "==", id), where("role", "==", "doctor"));
+                const dSnap = await getDocs(qDoctors);
+                setStaff(dSnap.docs.map(d => ({ id: d.id, fullName: d.data().fullName || "", role: d.data().role })));
+              } catch {
+                setStaff([]);
+              }
+            }
           }
 
           if (pFeatures.canShowServices) {
@@ -59,7 +68,7 @@ const ClinicPublicProfile = () => {
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-surface">

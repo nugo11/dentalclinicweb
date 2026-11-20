@@ -1,55 +1,9 @@
-import admin from "firebase-admin";
-import fs from "fs";
-import path from "path";
+import { applyCors, getAdminInstance } from "./_utils.js";
 
-// Initialize Firebase Admin if not already initialized
-function getAdminInstance() {
-  if (admin.apps.length > 0) {
-    return admin;
-  }
-
-  // 1. Check for serviceAccountKey.json in root or current dir
-  const keyPaths = [
-    path.resolve(process.cwd(), "serviceAccountKey.json"),
-    path.resolve(process.cwd(), "..", "serviceAccountKey.json"),
-  ];
-
-  for (const kp of keyPaths) {
-    if (fs.existsSync(kp)) {
-      try {
-        const serviceAccount = JSON.parse(fs.readFileSync(kp, "utf8"));
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount)
-        });
-        return admin;
-      } catch (e) {
-        console.warn("Failed to load serviceAccountKey.json:", e);
-      }
-    }
-  }
-
-  // 2. Check for FIREBASE_SERVICE_ACCOUNT environment variable
-  const envServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (envServiceAccount) {
-    try {
-      const serviceAccount = JSON.parse(envServiceAccount);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-      return admin;
-    } catch (e) {
-      console.warn("Failed to parse FIREBASE_SERVICE_ACCOUNT env:", e);
-    }
-  }
-
-  return null;
-}
+const SUPERADMIN_EMAILS = ["nugoxucishvili@gmail.com", "khvedelidzezura77@gmail.com"];
 
 export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  applyCors(req, res, "POST, OPTIONS");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -60,18 +14,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { ownerId, ownerEmail, superAdminEmail } = req.body || {};
+    const { ownerId, ownerEmail } = req.body || {};
 
     const adminApp = getAdminInstance();
     if (!adminApp) {
       return res.status(200).json({
         authDeleted: false,
         requiresServiceAccount: true,
-        message: "Firebase Admin SDK-ს გასაღები (serviceAccountKey.json) არ არის ატვირთული."
+        message: "Firebase Admin SDK-ს გასაღები (serviceAccountKey.json) არ არის ატვირთული.",
       });
     }
 
-    // Security check: Must be authenticated and verified as platform super admin
     const authHeader = req.headers.authorization || req.headers.Authorization || "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
 
@@ -83,11 +36,10 @@ export default async function handler(req, res) {
     try {
       const decoded = await adminApp.auth().verifyIdToken(token);
       decodedEmail = (decoded.email || "").toLowerCase().trim();
-    } catch (tokErr) {
+    } catch {
       return res.status(401).json({ error: "არასწორი ან ვადაგასული ავტორიზაციის ტოკენი." });
     }
 
-    const SUPERADMIN_EMAILS = ["nugoxucishvili@gmail.com", "khvedelidzezura77@gmail.com"];
     if (!decodedEmail || !SUPERADMIN_EMAILS.includes(decodedEmail)) {
       return res.status(403).json({ error: "წვდომა უარყოფილია: მხოლოდ სუპერ ადმინისტრატორს აქვს წაშლის უფლება." });
     }
@@ -101,10 +53,10 @@ export default async function handler(req, res) {
       try {
         const userRecord = await adminApp.auth().getUserByEmail(ownerEmail.toLowerCase().trim());
         targetUid = userRecord.uid;
-      } catch (notFound) {
+      } catch {
         return res.status(200).json({
           authDeleted: true,
-          message: "მომხმარებელი ვერ მოიძებნა Firebase Auth-ში (შესაძლოა უკვე წაშლილია)."
+          message: "მომხმარებელი ვერ მოიძებნა Firebase Auth-ში (შესაძლოა უკვე წაშლილია).",
         });
       }
     }
@@ -114,13 +66,13 @@ export default async function handler(req, res) {
         await adminApp.auth().deleteUser(targetUid);
         return res.status(200).json({
           authDeleted: true,
-          message: `მომხმარებელი ${ownerEmail || targetUid} წარმატებით წაიშალა Firebase Authentication-იდან.`
+          message: `მომხმარებელი ${ownerEmail || targetUid} წარმატებით წაიშალა Firebase Authentication-იდან.`,
         });
       } catch (delErr) {
         if (delErr.code === "auth/user-not-found") {
           return res.status(200).json({
             authDeleted: true,
-            message: "მომხმარებელი უკვე აღარ არსებობს Firebase Authentication-ში."
+            message: "მომხმარებელი უკვე აღარ არსებობს Firebase Authentication-ში.",
           });
         }
         throw delErr;
@@ -132,7 +84,7 @@ export default async function handler(req, res) {
     console.error("Auth deletion error:", err);
     return res.status(500).json({
       authDeleted: false,
-      error: err.message || "შეცდომა Firebase Auth-იდან წაშლისას"
+      error: err.message || "შეცდომა Firebase Auth-იდან წაშლისას",
     });
   }
 }

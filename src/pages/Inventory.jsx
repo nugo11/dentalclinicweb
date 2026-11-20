@@ -163,7 +163,7 @@ const Inventory = () => {
       setEditingItem(null);
       setFormErrors({});
       setFormData({ name: "", category: "consumable", quantity: "", unit: "ცალი", minThreshold: "", pricePerUnit: "" });
-    } catch (err) {
+    } catch {
       setFormErrors({ general: "შენახვა ვერ მოხერხდა." });
     }
   };

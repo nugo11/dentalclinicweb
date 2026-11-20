@@ -1,6 +1,5 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { geofont } from './fontBase64';
 
 export const generateFinancialReport = async (data, dateFrom, dateTo, clinicData) => {
   try {
@@ -9,6 +8,7 @@ export const generateFinancialReport = async (data, dateFrom, dateTo, clinicData
 
     // --- 1. ფონტის რეგისტრაცია ---
     try {
+      const { geofont } = await import('./fontBase64');
       doc.addFileToVFS("Geofont.ttf", geofont);
       doc.addFont("Geofont.ttf", "Geofont", "normal");
       doc.setFont("Geofont");
@@ -26,7 +26,7 @@ export const generateFinancialReport = async (data, dateFrom, dateTo, clinicData
     doc.text("ფინანსური ანგარიშგება", 14, 20);
     
     doc.setFontSize(10);
-    doc.text(clinicData.name || "DENTAL HUB", 14, 30);
+    doc.text(clinicData?.clinicName || clinicData?.name || "AiDent", 14, 30);
     doc.text(`პერიოდი: ${dateFrom || 'დასაწყისიდან'} - ${dateTo || 'დღემდე'}`, pageWidth - 14, 20, { align: 'right' });
     doc.text(`შექმნილია: ${new Date().toLocaleString('ka-GE')}`, pageWidth - 14, 30, { align: 'right' });
 

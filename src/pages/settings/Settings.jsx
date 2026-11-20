@@ -11,6 +11,7 @@ import {
   CheckCircle2, Camera, Mail, Shield, Smartphone, Activity, AlertTriangle
 } from "lucide-react";
 import { scrollToFirstError } from "../../utils/scrollHelper";
+import { getClinicEhrCredentials, saveClinicEhrCredentials } from "../../utils/ehrCredentials";
 
 const Settings = () => {
   const { userData, clinicData, isAdmin } = useAuth();
@@ -42,14 +43,28 @@ const Settings = () => {
     if (userData) {
       setPersonalInfo({ fullName: userData.fullName || "", email: userData.email || "" });
     }
-    if (clinicData) {
-      setClinicInfo({ 
+  }, [userData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const clinicId = userData?.clinicId;
+    if (!clinicId || !clinicData) return;
+
+    const loadEhr = async () => {
+      const creds = await getClinicEhrCredentials(clinicId, clinicData);
+      if (cancelled) return;
+      setClinicInfo({
         clinicName: clinicData.clinicName || "",
-        ehrUsername: clinicData.ehrUsername || "",
-        ehrPassword: clinicData.ehrPassword || ""
+        ehrUsername: creds.ehrUsername || "",
+        ehrPassword: creds.ehrPassword || "",
       });
-    }
-  }, [userData, clinicData]);
+    };
+
+    loadEhr();
+    return () => {
+      cancelled = true;
+    };
+  }, [userData?.clinicId, clinicData]);
 
   // შეტყობინების ავტომატური გაქრობა
   useEffect(() => {
@@ -110,15 +125,15 @@ const Settings = () => {
         fullName: trimmedFullName
       });
       
-      // კლინიკის მონაცემების განახლება
+      // კლინიკის მონაცემების განახლება (EHR პარამეტრები ინახება private ქვეკოლექციაში)
       if (userData?.clinicId) {
-        const clinicUpdates = {
-          clinicName: trimmedClinicName,
+        await updateDoc(doc(db, "clinics", userData.clinicId), {
+          clinicName: trimmedClinicName
+        });
+        await saveClinicEhrCredentials(userData.clinicId, {
           ehrUsername: clinicInfo.ehrUsername?.trim() || "",
           ehrPassword: clinicInfo.ehrPassword || ""
-        };
-        
-        await updateDoc(doc(db, "clinics", userData.clinicId), clinicUpdates);
+        });
       }
       
       setProfileMessage({ type: "success", text: "მონაცემები წარმატებით განახლდა!" });

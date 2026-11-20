@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { isSuperAdminUser } from "../utils/superAdmin";
+import { normalizeRole } from "../utils/roleUtils";
 
 const AuthContext = createContext();
 
@@ -17,18 +18,34 @@ export const AuthProvider = ({ children }) => {
   const unsubClinicRef = useRef(null); // რეფი კლინიკის მოსასმენად
   const unsubStaffRef = useRef(null); // რეფი პერსონალის რეალურ დროში შესამოწმებლად
 
-  // პერსონალის ავტორიზაცია PIN-ით
-  const staffLogin = (staffMember) => {
-    setActiveStaff(staffMember);
-    localStorage.setItem(`activeStaff_${currentUser?.uid}`, JSON.stringify(staffMember));
-  };
+  const toMinimalStaffSession = useCallback((staffMember, fallbackClinicId = null) => {
+    if (!staffMember) return null;
+    return {
+      id: staffMember.id || staffMember.uid || null,
+      fullName: staffMember.fullName || "",
+      role: normalizeRole(staffMember.role) || staffMember.role || "",
+      clinicId: staffMember.clinicId || fallbackClinicId || null,
+    };
+  }, []);
 
-  const staffLogout = () => {
-    setActiveStaff(null);
-    if (currentUser?.uid) {
-      localStorage.removeItem(`activeStaff_${currentUser.uid}`);
+  const currentUid = currentUser?.uid;
+  const currentClinicId = userData?.clinicId;
+
+  // პერსონალის ავტორიზაცია PIN-ით
+  const staffLogin = useCallback((staffMember) => {
+    const sanitized = toMinimalStaffSession(staffMember, currentClinicId);
+    setActiveStaff(sanitized);
+    if (currentUid) {
+      localStorage.setItem(`activeStaff_${currentUid}`, JSON.stringify(sanitized));
     }
-  };
+  }, [currentUid, toMinimalStaffSession, currentClinicId]);
+
+  const staffLogout = useCallback(() => {
+    setActiveStaff(null);
+    if (currentUid) {
+      localStorage.removeItem(`activeStaff_${currentUid}`);
+    }
+  }, [currentUid]);
 
   // პერსონალის სტატუსის და როლის რეალურ დროში სინქრონიზაცია
   useEffect(() => {
@@ -37,24 +54,63 @@ export const AuthProvider = ({ children }) => {
       unsubStaffRef.current = null;
     }
 
-    if (currentUser && activeStaff?.id && activeStaff.id !== currentUser.uid) {
-      unsubStaffRef.current = onSnapshot(doc(db, "users", activeStaff.id), (staffSnap) => {
-        if (!staffSnap.exists()) {
-          staffLogout();
+    if (!currentUser || !activeStaff?.id) {
+      return;
+    }
+
+    // თუ არჩეულია კლინიკის მფლობელის ანგარიში, სინქრონიზდება უშუალოდ Firestore-ის userData-დან
+    if (activeStaff.id === currentUser.uid) {
+      if (userData) {
+        if (userData.status === "suspended") {
+          Promise.resolve().then(() => staffLogout());
         } else {
-          const sData = staffSnap.data();
-          if (sData.status === "suspended" || (userData?.clinicId && sData.clinicId !== userData.clinicId)) {
-            staffLogout();
-          } else if (sData.role !== activeStaff.role || sData.fullName !== activeStaff.fullName) {
-            const updated = { ...activeStaff, role: sData.role, fullName: sData.fullName };
-            setActiveStaff(updated);
-            localStorage.setItem(`activeStaff_${currentUser.uid}`, JSON.stringify(updated));
+          const liveOwnerRole = normalizeRole(userData.role);
+          const liveOwnerName = userData.fullName || "";
+          if (
+            liveOwnerRole !== normalizeRole(activeStaff.role) ||
+            liveOwnerName !== activeStaff.fullName
+          ) {
+            const synced = toMinimalStaffSession(
+              { id: currentUser.uid, fullName: liveOwnerName, role: liveOwnerRole, clinicId: userData.clinicId },
+              userData.clinicId
+            );
+            Promise.resolve().then(() => {
+              setActiveStaff(synced);
+              localStorage.setItem(`activeStaff_${currentUser.uid}`, JSON.stringify(synced));
+            });
           }
         }
-      }, (err) => {
-        console.warn("Staff live sync error:", err);
-      });
+      }
+      return;
     }
+
+    unsubStaffRef.current = onSnapshot(doc(db, "users", activeStaff.id), (staffSnap) => {
+      if (!staffSnap.exists()) {
+        staffLogout();
+      } else {
+        const sData = staffSnap.data();
+        if (sData.status === "suspended" || (userData?.clinicId && sData.clinicId !== userData.clinicId)) {
+          staffLogout();
+        } else if (
+          normalizeRole(sData.role) !== normalizeRole(activeStaff.role) ||
+          sData.fullName !== activeStaff.fullName
+        ) {
+          const updated = toMinimalStaffSession(
+            {
+              id: activeStaff.id,
+              role: normalizeRole(sData.role),
+              fullName: sData.fullName,
+              clinicId: sData.clinicId,
+            },
+            userData?.clinicId
+          );
+          setActiveStaff(updated);
+          localStorage.setItem(`activeStaff_${currentUser.uid}`, JSON.stringify(updated));
+        }
+      }
+    }, (err) => {
+      console.warn("Staff live sync error:", err);
+    });
 
     return () => {
       if (unsubStaffRef.current) {
@@ -62,7 +118,7 @@ export const AuthProvider = ({ children }) => {
         unsubStaffRef.current = null;
       }
     };
-  }, [currentUser?.uid, activeStaff?.id, userData?.clinicId]);
+  }, [currentUser, activeStaff, userData, staffLogout, toMinimalStaffSession]);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -76,7 +132,14 @@ export const AuthProvider = ({ children }) => {
         
         const savedStaff = localStorage.getItem(`activeStaff_${user.uid}`);
         if (savedStaff) {
-            try { setActiveStaff(JSON.parse(savedStaff)); } catch (e) {}
+          try {
+            const parsed = JSON.parse(savedStaff);
+            if (parsed && parsed.id) {
+              setActiveStaff(toMinimalStaffSession(parsed));
+            }
+          } catch {
+            localStorage.removeItem(`activeStaff_${user.uid}`);
+          }
         }
 
         // 1. მომხმარებლის დოკუმენტის მოსმენა
@@ -112,18 +175,27 @@ export const AuthProvider = ({ children }) => {
       if (unsubClinicRef.current) unsubClinicRef.current();
       if (unsubStaffRef.current) unsubStaffRef.current();
     };
-  }, []);
+  }, [toMinimalStaffSession]);
+
+  const isOwnerSession = Boolean(currentUser && activeStaff?.id === currentUser.uid && userData);
+  const effectiveStaff = isOwnerSession
+    ? { ...activeStaff, fullName: userData.fullName, role: normalizeRole(userData.role) }
+    : activeStaff;
+
+  const normalizedRole = effectiveStaff
+    ? normalizeRole(effectiveStaff.role)
+    : normalizeRole(userData?.role);
 
   const value = {
     currentUser,
     userData,
     clinicData,
-    activeStaff, // ვინ არის რეალურად სისტემაში
+    activeStaff: effectiveStaff, // ვინ არის რეალურად სისტემაში
     staffLogin,
     staffLogout,
     loading,
-    role: activeStaff?.role || userData?.role, // ვიყენებთ პერსონალის როლს თუ არჩეულია
-    isAdmin: (activeStaff?.role || userData?.role) === "admin",
+    role: normalizedRole, // ვიყენებთ პერსონალის როლს თუ არჩეულია
+    isAdmin: normalizedRole === "admin",
     isSuperAdmin: isSuperAdminUser(currentUser, userData),
   };
 
@@ -134,4 +206,5 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

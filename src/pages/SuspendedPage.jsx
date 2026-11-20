@@ -50,7 +50,7 @@ const SuspendedPage = () => {
               </div>
               <div className="text-left">
                 <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">დაგვიკავშირდით</p>
-                <p className="text-sm font-black text-text-main tracking-tight">+995 555 123 456</p>
+                <p className="text-sm font-black text-text-main tracking-tight">+995 555 10 20 30</p>
               </div>
             </div>
             <div className="p-6 bg-surface-soft rounded-[32px] border border-border-main flex items-center gap-4 group hover:bg-surface hover:border-brand-purple transition-all">

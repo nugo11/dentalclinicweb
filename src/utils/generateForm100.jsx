@@ -1,6 +1,5 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { geofont } from "./fontBase64";
 
 // პროფესიონალური სტატუსების თარგმანი
 const statusTranslations = {
@@ -24,6 +23,7 @@ export const generateForm100 = async (patient, clinicData, doctorNotes = "") => 
   const contentWidth = pageWidth - (margin * 2);
 
   // ფონტის რეგისტრაცია და აქტივაცია
+  const { geofont } = await import("./fontBase64");
   doc.addFileToVFS("GeoFont.ttf", geofont);
   doc.addFont("GeoFont.ttf", "GeoFont", "normal");
   doc.setFont("GeoFont");
@@ -57,7 +57,7 @@ export const generateForm100 = async (patient, clinicData, doctorNotes = "") => 
       ['პირადი ნომერი:', patient.personalId || "---"],
       ['ტელეფონი:', patient.phone || "---"],
       ['ალერგია:', patient.allergies || "არ ფიქსირდება"],
-      ['ქრონიკული დაავადებები:', patient.chronicDiseases || "არ ფიქსირდება"],
+      ['ქრონიკული დაავადებები:', patient.chronicDiseases || patient.diseases || "არ ფიქსირდება"],
     ],
     tableWidth: contentWidth,
     theme: 'grid'
